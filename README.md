@@ -97,12 +97,30 @@ replace the files in `public/images`, and (optionally) change the colour tokens 
 
 ## Deployment
 
-The app is a standard Next.js project and deploys to any Next-compatible host.
+The app is configured as a **static export** (`output: 'export'` in `next.config.ts`):
+`npm run build` writes a self-contained static site to `out/`, deployable to any static
+host. (Because it is a static export, `next start` is not used; to preview the build
+locally serve the folder, e.g. `npx serve out`.)
 
-- **Vercel**: push to a Git repo and import it, or run `npx vercel`. Zero configuration.
-- **Node host**: `npm run build` then `npm run start` (serves on `PORT`, default 3000).
-- Set the production URL in `src/config/site.ts` (`seo.url`) so canonical links, OpenGraph
-  images, `robots.txt` and `sitemap.xml` resolve to the right domain.
+### GitHub Pages (configured)
+
+`.github/workflows/deploy.yml` builds and publishes `out/` on every push to `main`.
+One-time setup: in the GitHub repo, **Settings → Pages → Build and deployment → Source**,
+choose **GitHub Actions**. The site is served from a project sub-path, so two values must
+agree:
+
+- `basePath` in `next.config.ts` (currently `"/mangocat-test"`)
+- `seo.url` in `src/config/site.ts` (currently `"https://wh14-ua.github.io/mangocat-test"`)
+
+Rename the repo? Update both. `basePath` is also exposed as `NEXT_PUBLIC_BASE_PATH` so the
+image map in `src/config/images.ts` prefixes it onto `next/image` sources.
+
+### Root domain (Vercel, Netlify, a custom domain, …)
+
+Set `basePath` to `""` in `next.config.ts` and `seo.url` to the real origin. Every link and
+image path then resolves at the domain root with no other changes. On Vercel you can also
+drop `output: 'export'` to use the full Next runtime; the app has no server-only features,
+so either mode works.
 
 ## Notes and limitations
 

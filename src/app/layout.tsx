@@ -22,6 +22,11 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+// Fully-qualified OG/Twitter image URL. Built from `seo.url` (which includes the
+// deployment sub-path) so social scrapers resolve it correctly; a relative path
+// alone would be resolved against the origin root and drop the basePath.
+const ogImageUrl = `${site.seo.url}${site.seo.ogImage}`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.seo.url),
   title: {
@@ -42,7 +47,7 @@ export const metadata: Metadata = {
     description: site.seo.description,
     images: [
       {
-        url: site.seo.ogImage,
+        url: ogImageUrl,
         width: 1200,
         height: 630,
         alt: `${site.name}, ${site.cuisine} in ${site.address.city}`,
@@ -53,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: site.seo.defaultTitle,
     description: site.seo.description,
-    images: [site.seo.ogImage],
+    images: [ogImageUrl],
   },
   robots: {
     index: true,

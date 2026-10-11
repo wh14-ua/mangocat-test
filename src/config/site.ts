@@ -70,7 +70,10 @@ export const site: SiteConfig = {
   ],
 
   seo: {
-    url: "https://atelier.restaurant",
+    // Public URL of the deployed site. On GitHub Pages this includes the
+    // "/mangocat-test" project sub-path and MUST match `basePath` in next.config.ts.
+    // For a real root-domain deployment, set this to e.g. "https://atelier.restaurant".
+    url: "https://wh14-ua.github.io/mangocat-test",
     defaultTitle: "ATELIER · Contemporary Gastronomy in Lyon",
     titleTemplate: "%s · ATELIER",
     description:
