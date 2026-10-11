@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   ATELIER - Nocturne design tokens
+   This block IS the colour/type config for the theme. Re-skinning for another
+   restaurant is mostly editing the hex values here (and the two font imports in
+   layout.tsx). See DESIGN.md §2, §3, §11 and src/config/theme.ts.
+   NOTE: token names are brand-specific (noir/coal/onyx/graphite/porcelain/mist/
+   ash/ember) so they never collide with Tailwind's default palette.
+   ========================================================================== */
+@theme {
+  /* Canvas ladder (cool near-black). Never #000, never warm espresso. */
+  --color-noir: #0c0c0d;
+  --color-coal: #141416;
+  --color-onyx: #1b1c1f;
+  --color-graphite: #272829;
+
+  /* Text on dark */
+  --color-porcelain: #f3f2ee;
+  --color-mist: #a7a8a3;
+  --color-ash: #80817c;
+
+  /* The single accent, candlelight amber. Locked across the whole site. */
+  --color-ember: #e4a54c;
+  --color-ember-deep: #c98a39;
+  --color-on-ember: #0c0c0d;
+
+  /* Hairlines + semantic (tuned for the dark canvas) */
+  --color-line: rgba(243, 242, 238, 0.12);
+  --color-line-strong: rgba(243, 242, 238, 0.24);
+  --color-positive: #86be8e;
+  --color-critical: #e3756a;
+
+  /* Motion easing */
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  /* next/font sets --font-cormorant / --font-hanken on <html> (see layout.tsx) */
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* ============================================================================
+   Base
+   ========================================================================== */
+@layer base {
+  :root {
+    color-scheme: dark;
+    --ember-soft: rgba(228, 165, 76, 0.1);
+  }
+
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* suppress page rubber-band on fine-pointer devices only (WIG) */
+  }
+  @media (pointer: fine) {
+    html {
+      overscroll-behavior-y: none;
+    }
+  }
+
+  body {
+    background-color: var(--color-noir);
+    color: var(--color-porcelain);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* prevent horizontal overflow from any full-bleed composition */
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: rgba(228, 165, 76, 0.18);
+  }
+
+  /* Headlines default to the serif; utilities can still override */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--color-porcelain);
+  }
+
+  /* Accessible focus ring, never removed without replacement (WIG) */
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 3px;
+    border-radius: 0;
+  }
+  /* avoid focus ring on mouse click, keep it for keyboard */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Anchor targets clear the fixed nav */
+  :target,
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-on-ember);
+  }
+
+  /* Honour reduced motion globally as a safety net (components also gate motion) */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ============================================================================
+   Reusable utilities
+   ========================================================================== */
+@layer utilities {
+  /* Cinematic scrim applied over photography so porcelain type stays legible */
+  .scrim-b {
+    background: linear-gradient(
+      to top,
+      rgba(12, 12, 13, 0.92) 0%,
+      rgba(12, 12, 13, 0.55) 35%,
+      rgba(12, 12, 13, 0.1) 70%,
+      rgba(12, 12, 13, 0.35) 100%
+    );
+  }
+  .scrim-full {
+    background: linear-gradient(
+      to top,
+      rgba(12, 12, 13, 0.85) 0%,
+      rgba(12, 12, 13, 0.45) 45%,
+      rgba(12, 12, 13, 0.55) 100%
+    );
+  }
+  .scrim-soft {
+    background: linear-gradient(
+      to top,
+      rgba(12, 12, 13, 0.75) 0%,
+      rgba(12, 12, 13, 0.15) 60%,
+      rgba(12, 12, 13, 0) 100%
+    );
+  }
+
+  /* Eyebrow label */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* Tabular figures for aligned prices / numbers */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Animated underline for text links (draws from the left on hover/focus) */
+  .link-underline {
+    background-image: linear-gradient(var(--color-ember), var(--color-ember));
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s var(--ease-editorial);
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  .touch-manip {
+    touch-action: manipulation;
+  }
+
+  /* Hide scrollbars on horizontally scrolling rows (keeps the row keyboard/scroll accessible) */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
