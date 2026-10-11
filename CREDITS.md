@@ -46,3 +46,88 @@ from.
 ---
 
 All images via Unsplash (Unsplash License, free for commercial use).
+
+---
+
+## Design Showcase (MERIDIA demos)
+
+Licensed photography for the web-design showcase: five demo design directions,
+four images each (`hero`, `room`, `dish`, `detail`), under
+`public/images/showcase/<slug>/`. Every photo is from **Unsplash** (Unsplash
+License, free for commercial use) and was downloaded from the official Unsplash
+image CDN (`images.unsplash.com`) using the stable direct form
+`?auto=format&fit=crop&w=<width>&q=80` (hero `w=2400`, room `w=1600`, dish &
+detail `w=1400`). The same attribution caveat as above applies: photographer
+names are not programmatically resolvable (the public photo pages are behind
+Unsplash's bot wall and the CDN JPEGs carry no embedded credit metadata), but
+each image remains fully traceable to Unsplash via the photo ID / CDN URL below.
+
+### luxury-dark — dark, cinematic, low-key fine dining
+
+| File | Subject | Unsplash photo ID | Source URL |
+|------|---------|-------------------|------------|
+| hero.jpg | Candlelit intimate fine-dining room, warm sconces | `photo-1552960226-639240203497` | https://images.unsplash.com/photo-1552960226-639240203497?auto=format&fit=crop&w=2400&q=80 |
+| room.jpg | Moody warm bar / dining interior, window light | `photo-1709548145082-04d0cde481d4` | https://images.unsplash.com/photo-1709548145082-04d0cde481d4?auto=format&fit=crop&w=1600&q=80 |
+| dish.jpg | Plated course on white plate, near-black background, wine | `photo-1750943036999-81e666b2296c` | https://images.unsplash.com/photo-1750943036999-81e666b2296c?auto=format&fit=crop&w=1400&q=80 |
+| detail.jpg | Chef's hands plating, warm low light | `photo-1681270543584-8e541a1bb056` | https://images.unsplash.com/photo-1681270543584-8e541a1bb056?auto=format&fit=crop&w=1400&q=80 |
+
+### editorial-minimalist — bright, high-key, airy
+
+| File | Subject | Unsplash photo ID | Source URL |
+|------|---------|-------------------|------------|
+| hero.jpg | Breakfast bowls overhead on white marble, soft daylight, negative space | `photo-1493770348161-369560ae357d` | https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&w=2400&q=80 |
+| room.jpg | Bright, airy daylit restaurant interior | `photo-1538334421852-687c439c92f4` | https://images.unsplash.com/photo-1538334421852-687c439c92f4?auto=format&fit=crop&w=1600&q=80 |
+| dish.jpg | Mushroom risotto, white bowl on white, single subject | `photo-1476124369491-e7addf5db371` | https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=1400&q=80 |
+| detail.jpg | Berries, rhubarb & citrus arranged on white, clean negative space | `photo-1490818387583-1baba5e638af` | https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=1400&q=80 |
+
+### traditional-authentic — warm, rustic, heritage
+
+| File | Subject | Unsplash photo ID | Source URL |
+|------|---------|-------------------|------------|
+| hero.jpg | Hands chopping vegetables on a rustic live-edge wood log | `photo-1507048331197-7d4ac70811cf` | https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?auto=format&fit=crop&w=2400&q=80 |
+| room.jpg | Cozy warm pub / tavern interior, wood tables | `photo-1544148103-0773bf10d330` | https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&w=1600&q=80 |
+| dish.jpg | BBQ ribs on a wooden board, warm rustic | `photo-1544025162-d76694265947` | https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1400&q=80 |
+| detail.jpg | Market produce crates (pears, oranges, pomegranates) | `photo-1498579397066-22750a3cb424` | https://images.unsplash.com/photo-1498579397066-22750a3cb424?auto=format&fit=crop&w=1400&q=80 |
+
+### modern-vibrant — colorful, high-saturation, energetic
+
+| File | Subject | Unsplash photo ID | Source URL |
+|------|---------|-------------------|------------|
+| hero.jpg | Colorful abundant fresh-food flatlay | `photo-1606787366850-de6330128bfc` | https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=2400&q=80 |
+| room.jpg | Retro American diner — red booths, checkerboard, neon (landscape crop) | `photo-1555992336-fb0d29498b13` | https://images.unsplash.com/photo-1555992336-fb0d29498b13?auto=format&fit=crop&w=1600&h=1067&q=80 |
+| dish.jpg | Rainbow-sprinkle donuts on a bold blue background | `photo-1490474418585-ba9bad8fd0ea` | https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=1400&q=80 |
+| detail.jpg | Ice-cream cone held against a bold yellow background | `photo-1467453678174-768ec283a940` | https://images.unsplash.com/photo-1467453678174-768ec283a940?auto=format&fit=crop&w=1400&q=80 |
+
+### natural-organic — earthy, natural light, artisanal
+
+| File | Subject | Unsplash photo ID | Source URL |
+|------|---------|-------------------|------------|
+| hero.jpg | Seasonal vegetable bowl on wood, natural light, linen | `photo-1490645935967-10de6ba17061` | https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=2400&q=80 |
+| room.jpg | Plant-filled boho cafe interior, wood + greenery | `photo-1600093463592-8e36ae95ef56` | https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?auto=format&fit=crop&w=1600&q=80 |
+| dish.jpg | Butternut / carrot soup bowls, earthy muted tones | `photo-1476718406336-bb5a9690ee2a` | https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=1400&q=80 |
+| detail.jpg | Green vegetables & herbs flatlay on green | `photo-1543362906-acfc16c67564` | https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1400&q=80 |
+
+---
+
+All showcase images via Unsplash (Unsplash License, free for commercial use).
+
+---
+
+### Playful Handcraft (MERIDIA demo)
+
+Warm, sunny Mediterranean / coastal-restaurant photography for the MERIDIA
+seasonal harbour-kitchen demo (seafood + fire + market produce). Every photo is
+from **Unsplash** (Unsplash License, free for commercial use), downloaded from
+the official Unsplash image CDN (`images.unsplash.com`). Unlike the sets above,
+each photographer name below was resolved and verified on the public Unsplash
+photo page linked in each entry.
+
+- `playful-handcraft/hero.jpg` — Photo by Max Mota on Unsplash (https://unsplash.com/photos/N6BTNbaKZMo)
+- `playful-handcraft/harbour.jpg` — Photo by Sterling Lanier on Unsplash (https://unsplash.com/photos/Fbx7rYZO0vs)
+- `playful-handcraft/fire.jpg` — Photo by Hybrid Storytellers on Unsplash (https://unsplash.com/photos/xw1fgF9-JIo)
+- `playful-handcraft/room.jpg` — Photo by Brands&People on Unsplash (https://unsplash.com/photos/iFyLBKmCrmQ)
+- `playful-handcraft/feature.jpg` — Photo by Olayinka Babalola on Unsplash (https://unsplash.com/photos/r01ZopTiEV8)
+- `playful-handcraft/dish-1.jpg` — Photo by blackieshoot on Unsplash (https://unsplash.com/photos/6eSTiaDe9mU)
+- `playful-handcraft/dish-2.jpg` — Photo by Emerson Vieira on Unsplash (https://unsplash.com/photos/cpkPJ-U9eUM)
+- `playful-handcraft/dish-3.jpg` — Photo by Sebastian Coman Photography on Unsplash (https://unsplash.com/photos/Co-T6odt0es)
+- `playful-handcraft/dish-4.jpg` — Photo by amirali mirhashemian on Unsplash (https://unsplash.com/photos/z1W2v1JWbKU)

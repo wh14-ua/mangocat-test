@@ -3,10 +3,7 @@ import { Cormorant_Garamond, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { site, theme } from "@/config";
 import { cn } from "@/lib/cn";
-import { SkipLink } from "@/components/layout/SkipLink";
-import { Nav } from "@/components/layout/Nav";
-import { Footer } from "@/components/layout/Footer";
-import { StructuredData } from "@/components/layout/StructuredData";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -79,13 +76,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(cormorant.variable, hanken.variable)}>
       <body className="min-h-[100dvh] bg-noir font-sans text-porcelain antialiased">
-        <SkipLink />
-        <Nav />
-        <main id="main" tabIndex={-1} className="outline-none">
-          {children}
-        </main>
-        <Footer />
-        <StructuredData />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

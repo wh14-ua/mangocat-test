@@ -49,6 +49,29 @@ Requirements: Node 18.18+ (developed on Node 22).
 Plus `not-found`, an error boundary, a loading state, `robots.txt`, `sitemap.xml`, and
 Restaurant structured data (schema.org JSON-LD).
 
+## Design Showcase (MangoCat Studios)
+
+A separate, self-contained section under `/showcase` that presents six distinct art
+directions for one fictional restaurant (MERIDIA), as an agency catalog.
+
+| Route                              | Direction |
+|------------------------------------|-----------|
+| `/showcase`                        | The catalog: six designs, each with a desktop and mobile preview and a link to its demo |
+| `/showcase/luxury-dark`            | Cinematic, nocturnal, gold on black (Cinzel / Jost) |
+| `/showcase/editorial-minimalist`   | White-space, big serif type, one vermilion accent (Spectral / Archivo) |
+| `/showcase/traditional-authentic`  | Warm heritage, brick and olive on ivory (Bitter / Work Sans) |
+| `/showcase/modern-vibrant`         | Color-block, giant type, a kinetic marquee (Bricolage Grotesque / Space Grotesk) |
+| `/showcase/natural-organic`        | Earthy, olive on oat, calm (Newsreader / Mulish) |
+| `/showcase/playful-handcraft`      | Warm hand-crafted collage, torn paper, cursor-parallax doodles (Anton / Hanken Grotesk) |
+
+It does not touch the ATELIER site: a small `SiteChrome` client component hides ATELIER's
+nav, footer and structured data on `/showcase` routes, so each demo renders standalone.
+Each demo defines its own fonts and palette and imports shared content from
+`src/config/showcase.ts` (one fictional restaurant, the same base content rendered five
+ways). To add or edit a direction, edit `src/config/showcase.ts` and the demo folder under
+`src/app/showcase/`. Catalog previews live in `public/images/showcase/previews/` and are
+Playwright captures of each demo at 1440 and 390 px. The demo pages are `noindex`.
+
 ## Architecture
 
 ```

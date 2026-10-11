@@ -10,3 +10,11 @@ export { story } from "./story";
 export { experiences, featuredDishes } from "./experiences";
 export { gallery } from "./gallery";
 export { images } from "./images";
+export {
+  meridia,
+  showcaseDesigns,
+  showcaseImages,
+  playfulHandcraftImages,
+  getShowcaseDesign,
+} from "./showcase";
+export type { ShowcaseDesign, ShowcaseDish, ShowcaseContent } from "./showcase";
