@@ -47,11 +47,16 @@ async function waitForServer(url, tries = 50) {
 
 async function settle(page) {
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForLoadState("networkidle");
-  // Let lazy images that are in view decode.
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  // Let visible images decode (lazy or hidden images may never load: cap the wait).
   await page.evaluate(async () => {
-    const imgs = [...document.images].filter((i) => i.getBoundingClientRect().top < innerHeight * 1.2);
-    await Promise.all(imgs.map((i) => (i.complete ? null : i.decode().catch(() => null))));
+    const inView = (i) => {
+      const r = i.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.top < innerHeight * 1.2 && r.bottom > 0;
+    };
+    const imgs = [...document.images].filter((i) => !i.complete && inView(i));
+    const timeout = new Promise((r) => setTimeout(r, 4000));
+    await Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => null))), timeout]);
   });
   await page.waitForTimeout(400);
 }
