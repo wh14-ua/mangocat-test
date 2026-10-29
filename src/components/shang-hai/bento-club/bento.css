@@ -41,6 +41,7 @@ html:has(.bc-root) body {
   --bc-tabbar-h: 62px;
   --bc-safe-b: env(safe-area-inset-bottom, 0px);
   --bc-topbar-h: 0px;
+  --bc-menubar-h: 128px;
   font-family: var(--bc-text);
   font-size: 16px;
   line-height: 1.4;
@@ -67,7 +68,11 @@ html:has(.bc-root) body {
   margin: 0;
 }
 .bc-root [id] {
-  scroll-margin-top: 8px;
+  scroll-margin-top: calc(var(--bc-topbar-h) + 8px);
+}
+.bc-root .bc-section,
+.bc-root .bc-cat {
+  scroll-margin-top: calc(var(--bc-topbar-h) + var(--bc-menubar-h) + 10px);
 }
 .bc-root :focus-visible {
   outline: 3px solid var(--bc-focus);
@@ -644,7 +649,6 @@ html:has(.bc-root) body {
 /* Category = one box of compartments, with a tag stuck on its lid */
 .bc-root .bc-cat {
   margin-top: 26px;
-  scroll-margin-top: 140px;
 }
 .bc-root .bc-tag {
   position: relative;
@@ -1972,6 +1976,23 @@ html:has(.bc-root) body {
 .bc-root .bc-st__numbox {
   container-type: inline-size;
 }
+.bc-root .bc-st__sticker {
+  display: none;
+}
+@media (min-width: 640px) {
+  .bc-root .bc-st__numbox {
+    display: flex;
+    flex-direction: column;
+  }
+  .bc-root .bc-st__sticker {
+    display: block;
+    width: 128px;
+    height: auto;
+    margin-top: auto;
+    align-self: flex-end;
+    transform: rotate(-10deg);
+  }
+}
 .bc-root .bc-st__number {
   font-family: var(--bc-display);
   font-size: clamp(1.4rem, 9.6cqi, 3.4rem);
@@ -2181,6 +2202,7 @@ html:has(.bc-root) body {
 @media (min-width: 1024px) {
   .bc-root {
     --bc-topbar-h: 76px;
+    --bc-menubar-h: 70px;
   }
   .bc-root .bc-topbar {
     position: sticky;
@@ -2296,9 +2318,7 @@ html:has(.bc-root) body {
   .bc-root .bc-menu {
     margin-top: 36px;
   }
-  .bc-root .bc-cat {
-    scroll-margin-top: calc(var(--bc-topbar-h) + 80px);
-  }
+
   .bc-root .bc-tray {
     grid-template-areas:
       "brand brand brand brand photo photo"

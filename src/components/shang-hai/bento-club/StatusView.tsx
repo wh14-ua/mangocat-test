@@ -11,6 +11,7 @@ import { shangHaiRestaurant } from "@/data/shang-hai/restaurant";
 import { CHECKOUT_KIND } from "@/lib/shang-hai/checkout";
 import { storefrontRoutes } from "@/lib/shang-hai/storefronts";
 import { SubHeader } from "./CheckoutView";
+import { PickupSticker } from "./Graphics";
 
 const routes = storefrontRoutes("bento-club");
 
@@ -127,6 +128,7 @@ function OrderTicket({
         <p style={{ fontWeight: 700, fontSize: 14.5 }}>
           A nombre de {order.customerName} · {TIME.format(new Date(order.createdAt))}
         </p>
+        <PickupSticker className="bc-st__sticker" />
       </section>
 
       <section
