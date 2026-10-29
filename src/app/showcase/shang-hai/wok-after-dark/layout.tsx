@@ -7,13 +7,13 @@ import "@/components/shang-hai/wok-after-dark/wok.css";
 // drawn for display). Interface text: Archivo with its width axis, used condensed for
 // ticket labels and at normal width for reading.
 const display = Big_Shoulders({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   axes: ["opsz"],
   variable: "--font-wok-display",
   display: "swap",
 });
 const text = Archivo({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   axes: ["wdth"],
   style: ["normal", "italic"],
   variable: "--font-wok-text",

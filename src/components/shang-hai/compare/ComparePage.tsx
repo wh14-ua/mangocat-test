@@ -116,7 +116,7 @@ export function ComparePage() {
       {/* The root layout paints ATELIER's dark body; match it to this page (also on overscroll). */}
       <style>{`html:has(.sh-compare) body{background:#f6f4ef;color-scheme:light}.sh-compare ::selection{background:#1d1b18;color:#f6f4ef}`}</style>
       <header className="mx-auto flex max-w-[1240px] flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-4 pt-5 text-[13px] sm:px-8">
-        <Link href="/showcase" className="font-bold text-[#1d1b18] hover:text-[#c4621a]">
+        <Link href="/showcase" prefetch={false} className="font-bold text-[#1d1b18] hover:text-[#9c4511]">
           MangoCat Studios
         </Link>
         <p className="text-[#56534c]">Propuesta para Restaurante Shang Hai, Orihuela. Octubre de 2026</p>
@@ -246,7 +246,7 @@ export function ComparePage() {
             <Link href={SHANG_HAI_CREDITS_PATH} className="underline-offset-4 hover:text-[#1d1b18] hover:underline">
               Créditos fotográficos
             </Link>
-            <Link href="/showcase" className="underline-offset-4 hover:text-[#1d1b18] hover:underline">
+            <Link href="/showcase" prefetch={false} className="underline-offset-4 hover:text-[#1d1b18] hover:underline">
               Catálogo de estilos
             </Link>
           </nav>

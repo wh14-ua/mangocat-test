@@ -9,7 +9,7 @@ import "@/components/shang-hai/ink-house/ink.css";
 
 /** Display face: high-contrast editorial serif for the brand, chapters and numerals. */
 const gloock = Gloock({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   weight: "400",
   variable: "--ink-font-display",
   display: "swap",
@@ -17,7 +17,7 @@ const gloock = Gloock({
 
 /** Text face: a calm, very legible sans for dishes, prices and every control. */
 const albert = Albert_Sans({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--ink-font-text",
   display: "swap",

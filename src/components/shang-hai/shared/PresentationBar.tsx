@@ -13,6 +13,8 @@ const readHidden = () =>
  * never floating over the design) to jump between the three proposals and the
  * comparison page. Deliberately styled outside the three identities.
  * Hidden with ?presentacion=0 (used for clean screenshots).
+ * Links do not prefetch: prefetching the other proposals would also download their
+ * fonts and styles on every page.
  */
 export function PresentationBar({ current }: { current: StorefrontId }) {
   const hidden = useSyncExternalStore(subscribe, readHidden, () => false);
@@ -24,6 +26,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
       style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" }}
     >
       <Link
+        prefetch={false}
         href={`${SHANG_HAI_BASE_PATH}/`}
         className="shrink-0 whitespace-nowrap rounded px-1.5 py-1 text-white/85 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#E8812B]"
       >
@@ -37,6 +40,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
           return (
             <li key={s.id}>
               <Link
+                prefetch={false}
                 href={storefrontRoutes(s.id).home}
                 aria-current={active ? "page" : undefined}
                 className={
@@ -52,6 +56,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
         })}
       </ul>
       <Link
+        prefetch={false}
         href={`${SHANG_HAI_BASE_PATH}/`}
         className="ml-auto hidden shrink-0 whitespace-nowrap rounded px-2 py-1.5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E8812B] md:block"
       >

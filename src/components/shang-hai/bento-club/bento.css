@@ -2056,14 +2056,15 @@ html:has(.bc-root) body {
 
 /* ------------------------------------------------------------- motion -- */
 
-/* One orchestrated moment: the tray's compartments drop into place on load. */
+/* One orchestrated moment: the tray's compartments drop into place on load.
+   Transform only (no opacity), so the content is painted, and counted for LCP,
+   from the very first frame. */
 .bc-root .bc-in {
   animation: bc-in 0.6s var(--bc-spring) backwards;
   animation-delay: calc(var(--i, 0) * 55ms + 60ms);
 }
 @keyframes bc-in {
   from {
-    opacity: 0;
     transform: translateY(18px) scale(0.94);
   }
 }
