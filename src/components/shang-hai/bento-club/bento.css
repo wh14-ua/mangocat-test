@@ -667,14 +667,22 @@ html:has(.bc-root) body {
   background: var(--bc-cream);
 }
 .bc-root .bc-tag__name {
+  min-width: 0;
   font-family: var(--bc-display);
   font-size: 19px;
   line-height: 1.05;
+  overflow-wrap: anywhere;
 }
 .bc-root .bc-tag__en {
   font-size: 12px;
   font-weight: 600;
   color: #e9e1cd;
+  white-space: nowrap;
+}
+@media (max-width: 479px) {
+  .bc-root .bc-tag__en {
+    display: none;
+  }
 }
 .bc-root .bc-tag__count {
   flex: none;
@@ -897,7 +905,8 @@ html:has(.bc-root) body {
   background: var(--bc-paper);
 }
 .bc-root .bc-tile--photo .bc-window {
-  min-height: 170px;
+  width: 100%;
+  min-height: 0;
   aspect-ratio: 16 / 9;
   flex: none;
 }
