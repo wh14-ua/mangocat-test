@@ -24,9 +24,10 @@ export function Monogram({ className = "" }: { className?: string }) {
 /** Desktop: a fixed left rail with the four sections as vertical labels. */
 export function SideRail() {
   const { activeCategory } = useWokUI();
-  const activeSection = activeCategory ? sectionOfCategory(activeCategory) : null;
+  const atInfo = activeCategory === "info";
+  const activeSection = activeCategory && !atInfo ? sectionOfCategory(activeCategory) : null;
   return (
-    <aside className="sticky top-0 z-40 hidden h-[100dvh] w-[76px] shrink-0 flex-col items-center border-r border-[var(--wok-line)] bg-[var(--wok-petrol)] py-5 lg:flex">
+    <aside className="sticky top-0 z-40 hidden h-[100dvh] w-[76px] shrink-0 flex-col items-center border-r border-[var(--wok-line)] bg-[var(--wok-petrol)] pb-12 pt-5 lg:flex">
       <a href="#inicio" aria-label="SHANG HAI, volver al inicio" className="block">
         <Monogram className="size-12 text-[1.6rem]" />
       </a>
@@ -51,8 +52,13 @@ export function SideRail() {
         <span aria-hidden className="my-2 h-px w-8 bg-[var(--wok-line)]" />
         <a
           href="#info"
-          className="flex w-[76px] justify-center py-3 text-[var(--wok-metal-light)] transition-colors hover:text-[var(--wok-white)]"
+          aria-current={atInfo ? "location" : undefined}
+          className={
+            "relative flex w-[76px] justify-center py-3 transition-colors " +
+            (atInfo ? "text-[var(--wok-orange)]" : "text-[var(--wok-metal-light)] hover:text-[var(--wok-white)]")
+          }
         >
+          {atInfo && <span aria-hidden className="absolute inset-y-2 left-0 w-1 bg-[var(--wok-orange)]" />}
           <span className="wok-rail-label">Recogida</span>
         </a>
       </nav>

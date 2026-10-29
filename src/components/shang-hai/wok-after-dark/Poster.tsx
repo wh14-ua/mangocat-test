@@ -111,7 +111,7 @@ export function Info() {
   const street = wokPhotos.street;
   return (
     <section id="info" aria-labelledby="wok-info-title" className="border-t-4 border-[var(--wok-orange)] px-4 pb-20 pt-14 sm:px-6 lg:px-12 lg:pt-20">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
+      <div data-cat="info" className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
         <div className="min-w-0">
           <p className="wok-cond text-[0.8125rem] text-[var(--wok-orange)]">Dónde recoger</p>
           <h2 id="wok-info-title" className="wok-display mt-3 text-[clamp(3.75rem,15vw,9.5rem)]">
