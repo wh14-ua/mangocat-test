@@ -48,7 +48,11 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
   function confirm() {
     const missing = options.find((o) => (selections[o.id]?.length ?? 0) < o.minChoices);
     if (missing) {
-      setError(`Elige una opción en «${missing.name}».`);
+      setError(
+        missing.name === "Elige"
+          ? "Elige una de las opciones antes de añadirlo."
+          : `Elige una opción en «${missing.name}».`,
+      );
       return;
     }
     if (ui.addItem(item, selections)) ui.closeOptions();

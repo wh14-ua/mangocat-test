@@ -72,39 +72,6 @@ export function InkCarta() {
 
   return (
     <section id="carta" className="ink-carta" aria-labelledby="ink-carta-title">
-      <div className="ink-carta__head">
-        <h2 id="ink-carta-title" className="ink-carta__title" tabIndex={-1} data-anchor-focus>
-          La carta
-        </h2>
-        <p className="ink-carta__intro">
-          {CHAPTERS.length} capítulos y {VISIBLE_DISH_COUNT} platos, en el orden de la casa. Los
-          pedidos online son para recoger en el local.
-        </p>
-        <div className="ink-search" role="search">
-          <label htmlFor="ink-search" className="ink-search__label">
-            Buscar en la carta
-          </label>
-          <div className="ink-search__field">
-            <input
-              id="ink-search"
-              type="search"
-              data-testid="menu-search"
-              className="ink-search__input"
-              placeholder="Pato, gyozas, maki de salmón…"
-              autoComplete="off"
-              enterKeyHint="search"
-              value={search.query}
-              onChange={(e) => search.setQuery(e.target.value)}
-            />
-            {search.active && (
-              <button type="button" className="ink-search__clear" onClick={() => search.setQuery("")}>
-                Borrar
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
       <div className="ink-carta__body">
         <nav className="ink-index" aria-label="Índice de la carta">
           <p className="ink-index__title">Índice</p>
@@ -134,6 +101,38 @@ export function InkCarta() {
         </nav>
 
         <div className="ink-chapters">
+          <div className="ink-carta__head">
+            <h2 id="ink-carta-title" className="ink-carta__title" tabIndex={-1} data-anchor-focus>
+              La carta
+            </h2>
+            <p className="ink-carta__intro">
+              {CHAPTERS.length} capítulos y {VISIBLE_DISH_COUNT} platos, en el orden de la casa. Los
+              pedidos online son para recoger en el local.
+            </p>
+            <div className="ink-search" role="search">
+              <label htmlFor="ink-search" className="ink-search__label">
+                Buscar en la carta
+              </label>
+              <div className="ink-search__field">
+                <input
+                  id="ink-search"
+                  type="search"
+                  data-testid="menu-search"
+                  className="ink-search__input"
+                  placeholder="Pato, gyozas, maki de salmón…"
+                  autoComplete="off"
+                  enterKeyHint="search"
+                  value={search.query}
+                  onChange={(e) => search.setQuery(e.target.value)}
+                />
+                {search.active && (
+                  <button type="button" className="ink-search__clear" onClick={() => search.setQuery("")}>
+                    Borrar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
           {search.active ? (
             <SearchResults
               query={search.query}

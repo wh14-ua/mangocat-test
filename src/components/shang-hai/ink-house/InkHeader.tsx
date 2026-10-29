@@ -31,10 +31,8 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
   const ui = useInkUI();
   const [indexOpen, setIndexOpen] = useState(false);
 
-  const cartLabel =
-    itemCount > 0
-      ? `Ver tu pedido: ${itemCount} ${itemCount === 1 ? "producto" : "productos"}`
-      : "Ver tu pedido (vacío)";
+  const cartDetail =
+    itemCount > 0 ? `, ${itemCount} ${itemCount === 1 ? "producto" : "productos"}` : ", vacío";
 
   return (
     <>
@@ -63,9 +61,7 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
             <nav className="ink-nav" aria-label="Secciones">
               <Link href={`${routes.home}#carta`} className="ink-nav__link ink-nav__link--always">
                 <span className="ink-nav__long">Volver a la carta</span>
-                <span className="ink-nav__short" aria-hidden="true">
-                  La carta
-                </span>
+                <span className="ink-nav__short">La carta</span>
               </Link>
             </nav>
           )}
@@ -77,10 +73,10 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
               data-testid="cart-open"
               aria-haspopup="dialog"
               aria-expanded={ui.cartOpen}
-              aria-label={cartLabel}
               onClick={ui.openCart}
             >
               <span className="ink-cart-trigger__label">Pedido</span>
+              <span className="ink-sr-only">{cartDetail}</span>
               <span
                 key={ui.stamp}
                 className="ink-count"

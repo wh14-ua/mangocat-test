@@ -89,6 +89,9 @@ html:has(.ink-root) body {
   .ink-root [id] {
     scroll-margin-top: calc(var(--ink-header-h) + 1.25rem);
   }
+  .ink-root :is(#carta, #informacion) {
+    scroll-margin-top: calc(var(--ink-header-h) - 1px);
+  }
 }
 
 @layer components {
@@ -730,9 +733,6 @@ html:has(.ink-root) body {
   }
 
   @media (min-width: 900px) {
-    .ink-carta__head {
-      margin-left: calc(var(--index-w) + var(--carta-gap));
-    }
     .ink-carta__body {
       display: grid;
       grid-template-columns: var(--index-w) minmax(0, 46rem);

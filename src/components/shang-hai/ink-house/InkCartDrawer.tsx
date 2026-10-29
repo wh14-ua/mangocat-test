@@ -148,7 +148,7 @@ function CartContents({ closeRef }: { closeRef: React.RefObject<HTMLButtonElemen
                     type="button"
                     className="ink-text-button"
                     data-testid="line-remove"
-                    aria-label={`Eliminar ${line.name} del pedido`}
+                    aria-label={`Quitar ${line.name} del pedido`}
                     onClick={() => cart.remove(line.key)}
                   >
                     Quitar
