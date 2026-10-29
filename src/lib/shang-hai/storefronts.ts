@@ -6,6 +6,9 @@
 
 export const SHANG_HAI_BASE_PATH = "/showcase/shang-hai";
 
+/** Photo credits page (attribution required by the CC BY / CC BY-SA images). */
+export const SHANG_HAI_CREDITS_PATH = `${SHANG_HAI_BASE_PATH}/creditos/`;
+
 export const STOREFRONTS = [
   {
     id: "ink-house",
