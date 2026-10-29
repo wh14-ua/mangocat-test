@@ -132,6 +132,9 @@ export function BentoHome() {
           />
           <InfoSection />
           <BentoFooter />
+          <p className="bc-sr" role="status" aria-live="polite">
+            {announcement(cart.lastEvent, cart.quantityOf)}
+          </p>
         </main>
         <aside className="bc-sidebar" aria-label="Tu pedido">
           {isDesktop && (
@@ -170,10 +173,6 @@ export function BentoHome() {
         onBrowse={() => scrollToId("carta")}
       />
       <OptionChooser item={chooser} onClose={() => setChooser(null)} onConfirm={confirmChoice} />
-
-      <p className="bc-sr" role="status" aria-live="polite">
-        {announcement(cart.lastEvent, cart.quantityOf)}
-      </p>
     </>
   );
 }

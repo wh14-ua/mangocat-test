@@ -255,6 +255,7 @@ html:has(.bc-root) body {
 
 .bc-root .bc-cta {
   grid-area: cta;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -267,7 +268,7 @@ html:has(.bc-root) body {
 }
 .bc-root .bc-cta__title {
   font-family: var(--bc-display);
-  font-size: clamp(1.45rem, 6.6vw, 2.4rem);
+  font-size: clamp(1.3rem, 17cqi, 2.4rem);
   line-height: 1.02;
 }
 .bc-root .bc-cta__meta {
@@ -291,6 +292,7 @@ html:has(.bc-root) body {
 }
 
 .bc-root .bc-fact {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -315,8 +317,9 @@ html:has(.bc-root) body {
 }
 .bc-root .bc-fact__price {
   font-family: var(--bc-display);
-  font-size: clamp(1.55rem, 7.4vw, 2.5rem);
+  font-size: clamp(1.35rem, 20cqi, 2.6rem);
   line-height: 1;
+  white-space: nowrap;
 }
 .bc-root .bc-cell--tomato .bc-fact__price {
   color: var(--bc-cream);
@@ -387,6 +390,9 @@ html:has(.bc-root) body {
   margin-top: var(--bc-gap);
   list-style: none;
   padding: 0;
+}
+.bc-root .bc-entries > li {
+  display: grid;
 }
 .bc-root .bc-entry {
   position: relative;
@@ -1645,11 +1651,10 @@ html:has(.bc-root) body {
   margin: 6px 0 14px;
 }
 .bc-root .bc-tape {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0 0 12px;
-  padding: 0 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  padding: 0 14px;
   list-style: none;
   border-block: var(--bc-wall) solid var(--bc-black);
   background:
@@ -1657,20 +1662,29 @@ html:has(.bc-root) body {
     var(--bc-butter);
   clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
 }
-.bc-root .bc-tape::-webkit-scrollbar {
-  display: none;
-}
 .bc-root .bc-tape__step {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  flex: 1 0 auto;
-  min-height: 44px;
-  padding: 0 8px;
+  gap: 3px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 6px 2px;
   font-weight: 800;
-  font-size: 13.5px;
-  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.1;
+  text-align: center;
+}
+@media (min-width: 480px) {
+  .bc-root .bc-tape__step {
+    flex-direction: row;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 8px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
 }
 .bc-root .bc-tape__step + .bc-tape__step {
   border-left: 1.5px dashed rgba(34, 34, 31, 0.45);
@@ -1747,6 +1761,7 @@ html:has(.bc-root) body {
 }
 .bc-root .bc-module {
   display: grid;
+  align-content: start;
   gap: 14px;
   padding: 18px 16px;
   border: var(--bc-wall) solid var(--bc-black);
@@ -1828,6 +1843,10 @@ html:has(.bc-root) body {
   font-size: 14px;
   font-weight: 700;
   color: var(--bc-tomato-ink);
+}
+/* On butter the darker red keeps 7:1 (tomato-ink would drop to 4.3:1). */
+.bc-root [data-tone="butter"] .bc-error {
+  color: #7a2212;
 }
 .bc-root .bc-help {
   font-size: 13px;
@@ -1950,9 +1969,12 @@ html:has(.bc-root) body {
   gap: var(--bc-gap);
   grid-template-columns: minmax(0, 1fr);
 }
+.bc-root .bc-st__numbox {
+  container-type: inline-size;
+}
 .bc-root .bc-st__number {
   font-family: var(--bc-display);
-  font-size: clamp(1.5rem, 7.6vw, 3.4rem);
+  font-size: clamp(1.4rem, 9.6cqi, 3.4rem);
   line-height: 1;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -2234,7 +2256,7 @@ html:has(.bc-root) body {
   }
   .bc-root .bc-frame {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: 20px;
     max-width: 1720px;
     margin: 0 auto;
@@ -2278,12 +2300,10 @@ html:has(.bc-root) body {
     scroll-margin-top: calc(var(--bc-topbar-h) + 80px);
   }
   .bc-root .bc-tray {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto auto auto;
     grid-template-areas:
-      "brand brand brand brand brand brand brand photo photo photo photo photo"
-      "brand brand brand brand brand brand brand photo photo photo photo photo"
-      "cta cta cta fact1 fact1 fact1 fact2 fact2 fact2 pickup pickup pickup";
+      "brand brand brand brand photo photo"
+      "brand brand brand brand photo photo"
+      "cta cta fact1 fact1 fact2 fact2";
   }
   .bc-root .bc-brand {
     min-height: 340px;
@@ -2298,7 +2318,6 @@ html:has(.bc-root) body {
   }
   .bc-root .bc-pickupcell {
     grid-area: pickup;
-    display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 8px;
@@ -2341,6 +2360,22 @@ html:has(.bc-root) body {
   }
   .bc-root .bc-paybar__sum {
     display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .bc-root .bc-frame {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+  .bc-root .bc-tray {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+      "brand brand brand brand brand brand brand photo photo photo photo photo"
+      "brand brand brand brand brand brand brand photo photo photo photo photo"
+      "cta cta cta fact1 fact1 fact1 fact2 fact2 fact2 pickup pickup pickup";
+  }
+  .bc-root .bc-pickupcell {
+    display: flex;
   }
 }
 

@@ -119,7 +119,7 @@ function OrderTicket({
 
   return (
     <div className="bc-st__grid">
-      <section className="bc-module" data-tone="butter" aria-labelledby="bc-st-number">
+      <section className="bc-module bc-st__numbox" data-tone="butter" aria-labelledby="bc-st-number">
         <span className="bc-label">Número de pedido</span>
         <p id="bc-st-number" className="bc-st__number" data-testid="order-number">
           {order.id}
