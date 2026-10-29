@@ -210,7 +210,9 @@ function cleanSpaces(text) {
 }
 
 function applyFixes(text, fixes) {
-  return fixes.reduce((acc, [re, to]) => acc.replace(re, to), text);
+  const fixed = fixes.reduce((acc, [re, to]) => acc.replace(re, to), text);
+  // Case-insensitive fixes must not lowercase the first letter of a sentence.
+  return /^\p{Lu}/u.test(text) ? fixed.charAt(0).toUpperCase() + fixed.slice(1) : fixed;
 }
 
 function toCents(value) {
