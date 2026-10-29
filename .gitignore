@@ -58,3 +58,10 @@ node_modules/
 
 # Local-only deliverable screenshots (not part of the deployed site)
 /screenshots/
+
+# Agent worktrees (never commit)
+/.claude/worktrees/
+
+# Playwright output
+/test-results/
+/playwright-report/
