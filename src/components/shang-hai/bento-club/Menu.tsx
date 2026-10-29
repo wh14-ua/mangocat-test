@@ -164,7 +164,7 @@ export function MenuBoard({
 }) {
   const { qty, keyOf } = useQuantities(lines);
   const domIds = useMemo(() => ALL_CATEGORIES.map((c) => c.domId), []);
-  const active = useActiveCategory(domIds, !searching, isDesktop ? 170 : 140);
+  const active = useActiveCategory(domIds, !searching, isDesktop ? 146 : 128);
 
   function pick(domId: string) {
     const go = () => {

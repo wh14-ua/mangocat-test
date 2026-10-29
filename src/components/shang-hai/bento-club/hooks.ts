@@ -42,10 +42,13 @@ export function useActiveCategory(domIds: string[], enabled: boolean, spyLine: n
     const measure = () => {
       frame = 0;
       let current: string | null = null;
+      // The spy line sits a quarter of the screen below the sticky bars, so a box
+      // becomes active as soon as it is clearly the one being read.
+      const line = spyLine + window.innerHeight * 0.25;
       for (const id of domIds) {
         const el = document.getElementById(id);
         if (!el) continue;
-        if (el.getBoundingClientRect().top - spyLine <= 1) current = id;
+        if (el.getBoundingClientRect().top - line <= 1) current = id;
         else break;
       }
       setActive((prev) => (prev === current ? prev : current));
