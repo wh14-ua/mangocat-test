@@ -161,7 +161,7 @@
     }
     .wok-hero-word--shang,
     .wok-hero-word--hai {
-      font-size: min(26.6cqi, 36vh);
+      font-size: min(26.6cqi, 38vh);
     }
   }
   @media (min-width: 1024px) {
