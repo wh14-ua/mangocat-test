@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "menu:import": "node scripts/import-shang-hai-menu.mjs",
     "menu:check": "node scripts/import-shang-hai-menu.mjs --check",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run menu:check"
+    "check": "npm run typecheck && npm run lint:shang-hai && npm run test && npm run menu:check",
+    "lint:shang-hai": "eslint src/lib src/hooks src/components/shang-hai src/app/showcase/shang-hai src/data scripts tests workers",
+    "previews:shang-hai": "node scripts/capture-shang-hai-previews.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -23,6 +25,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",

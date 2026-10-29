@@ -1,0 +1,11 @@
+# Local secrets for `wrangler dev` — copy to .dev.vars (git-ignored) and fill in.
+# Use Stripe TEST keys only (Dashboard > Developers > API keys, "Test mode").
+STRIPE_SECRET_KEY=sk_test_replace_me
+# Printed by `stripe listen --forward-to localhost:8787/api/stripe/webhook`
+# (or the signing secret of the test webhook endpoint in the Stripe Dashboard).
+STRIPE_WEBHOOK_SECRET=whsec_replace_me
+
+# Optional overrides for local development
+CORS_ALLOWED_ORIGIN=http://localhost:3000
+STRIPE_SUCCESS_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}
+STRIPE_CANCEL_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}
