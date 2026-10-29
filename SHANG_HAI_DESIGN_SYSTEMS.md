@@ -45,9 +45,15 @@ and the cart count. Stone is decoration only; secondary text uses a darker stone
 numbered index (the categories really are an ordered list) and chapters of fine rows.
 Illustrative photos appear as captioned plates between chapters.
 
-**Motion.** Contained: a single orchestrated reveal of the hero (clip-path wipe, ink-mask
-photo, seal last), the seal "stamping" when something is added or an order is paid, and a
-slow paper drawer. Nothing animates on its own after load.
+**Motion.** Contained: a single orchestrated reveal of the hero (the title wiped in with a
+clip-path, the photo blooming out of an ink blot, the seal pressed last; pure CSS, static
+under reduced motion), the seal "stamping" when something is added or an order is paid,
+and a slow paper drawer. Nothing animates on its own after load.
+
+**Details worth showing.** Photos are multiplied into the paper (`mix-blend-mode`), so the
+illustrative images sit in the page instead of on it. Each dish row's round "+" seal turns
+into an inline stepper. Checkout is three real steps with underline inputs and a stamped
+demo notice; the status page is a printed receipt with the seal and a vertical timeline.
 
 **Why it sells.** It turns a neighbourhood Chinese restaurant into a brand with presence:
 ideal if the owner wants to raise perceived value, attract dine-in customers and look
@@ -75,6 +81,12 @@ perforated edges in a dense grid.
 button morph on add, an odometer cart counter, a sliding ticker underline and a scroll
 progress bar. Everything collapses under reduced motion.
 
+**Details worth showing.** The flame photo lives inside the letters with an orange layer
+multiplied over it, so the brand stays legible at every width (two stacked words on
+phones, one line from 640 px). Dishes are dark perforated tickets with a huge orange price;
+the cart is a light thermal ticket with dashed separators that slides in from the right on
+desktop and up from the bottom on phones. Adding a dish re-renders only that card.
+
 **Why it sells.** Built for impulse and for evenings: it speaks to a younger, urban,
 takeaway audience and makes ordering feel immediate.
 
@@ -94,7 +106,14 @@ darker tomato for contrast.
 radii; sticker chips colour-coded by section; compact two-column product tiles on mobile.
 
 **Motion.** Quick and tactile: springs, press feedback, tile bounce and "+1" chips on add,
-badge pops, sheets that spring open, compartments that pop in once on first load.
+badge pops, sheets that spring open, compartments that drop into place once on first load
+(transform only, so the hero is painted from the first frame).
+
+**Details worth showing.** Each category is a box in its section's colour with
+compartments inside; a dish's compartment fills with butter once it is in the order. The
+entry tray shows real facts computed from the catalog ("Combos desde 19,45 €", "Menús desde
+27,45 €"). On phones: four-tab bottom bar, floating mini-cart and a draggable bottom sheet;
+on desktop: a large search bar and a cart that is always open on the right.
 
 **Why it sells.** The most direct path from "hungry" to "ordered" on a phone: prominent
 search, one-tap add, a cart that is always one thumb away. The best fit if the priority is
@@ -110,5 +129,22 @@ moving orders from the delivery app to the restaurant's own channel.
 - Accessibility: semantic landmarks, one `h1`, labelled controls, visible focus, modal
   dialogs with focus trap and Escape, `aria-live` cart announcements, 44 px targets,
   `prefers-reduced-motion` honoured, ≥ 4.5:1 text contrast.
-- Performance: static export, self-hosted fonts via `next/font`, pre-sized WebP with
-  `srcset`, lazy images below the fold, CSS-only effects on the 208 menu items.
+- Performance: static export, self-hosted fonts via `next/font` (latin subset only), no
+  cross-proposal prefetching, pre-sized WebP with `srcset`, lazy images below the fold,
+  CSS-only effects on the 208 menu items.
+
+## Measured (static build, 390 px, local server)
+
+| | INK HOUSE | WOK AFTER DARK | BENTO CLUB |
+|---|---|---|---|
+| JS (gzip) | 237 KB | 238 KB | 245 KB |
+| CSS (gzip) | 27 KB | 23 KB | 61 KB |
+| Fonts (woff2) | 191 KB | 354 KB | 157 KB |
+| Images on load | 45 KB | 43 KB | 49 KB |
+| LCP (no throttling) | ~240 ms | ~236 ms | ~196 ms |
+| CLS | 0 | 0 | 0 |
+
+109 KB of each font budget are ATELIER's root fonts, loaded because the demos live inside
+that site; they disappear when the chosen proposal gets its own app. Wok's Archivo
+variable font (width + weight axes, 188 KB) is the largest single asset: subset it to the
+glyphs and axis range actually used before launch.

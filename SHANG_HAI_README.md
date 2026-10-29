@@ -17,8 +17,9 @@ showcase.
 | `/showcase/shang-hai/pago-demo/` | Demo payment simulator (only used in demo mode) |
 | `/showcase/shang-hai/creditos/` | Photo credits (required by the CC BY / CC BY-SA images) |
 
-Live (GitHub Pages): `https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/` once the
-branch is deployed (see *Deploying*). Every Shang Hai page is `noindex, nofollow`.
+Live (GitHub Pages): `https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/` (demo
+mode). Every Shang Hai page is `noindex, nofollow`; ATELIER and the MERIDIA showcase keep
+their original indexing.
 
 Design rationale: [`SHANG_HAI_DESIGN_SYSTEMS.md`](./SHANG_HAI_DESIGN_SYSTEMS.md).
 Menu data audit: [`SHANG_HAI_MENU_AUDIT.md`](./SHANG_HAI_MENU_AUDIT.md).
@@ -135,18 +136,27 @@ them without the owner's explicit approval.
 ## 8. Tests
 
 ```bash
-npm run typecheck        # tsc
-npm run lint             # eslint
-npm test                 # vitest: engine, catalog integrity, SEO, Worker (D1 via node:sqlite, mocked Stripe)
-npm run menu:check       # menu.json matches the latest snapshot
-npm run build && npm run test:e2e   # Playwright (system Chrome) at 390 / 768 / 1440 px
+npm run check            # typecheck + lint:shang-hai + unit tests + menu:check
+npm test                 # vitest: 112 tests — engine, catalog integrity, SEO (70) + Worker (42:
+                         #   D1 via node:sqlite, mocked Stripe API, real webhook signatures/JWTs)
+npm run build && npm run test:e2e   # Playwright (system Chrome) at 390 / 768 / 1440 px: 54 tests
 node scripts/capture-shang-hai-previews.mjs [--qa]  # comparison previews (+ QA captures)
+node scripts/capture-shang-hai-journey.mjs          # journey screenshots for decks/QA
 ```
+
+`npm run lint` (whole repo) reports 5 errors that pre-date this work, in ATELIER/MERIDIA
+files that were deliberately left untouched; `npm run lint:shang-hai` covers all new code
+and is clean.
 
 The E2E suite runs the full purchase journey (menu → search → add → second dish → change
 quantity → remove → cart → checkout → validation → simulated payment → confirmation →
 status) on all three proposals, plus persistence, Escape-to-close, pending prices, cancelled
-payments, the comparison page and the original ATELIER/MERIDIA routes.
+payments, console errors, horizontal overflow, the comparison page and the original
+ATELIER/MERIDIA routes. `tests/shang-hai/e2e/a11y.spec.ts` audits every proposal and the
+shared pages with axe-core (WCAG 2.1 A/AA) and fails on serious or critical violations.
+
+Note: when `next build`/`next dev` run inside an AI coding agent, Next.js 16.4.0 stops once
+with a security notice (see *Known issues*); re-running continues. CI is not affected.
 
 ## 9. Deploying
 
@@ -161,6 +171,17 @@ payments, the comparison page and the original ATELIER/MERIDIA routes.
   proposal's routes to the root of a dedicated app or keep the folder and add a redirect,
   switch `seo.indexable`/`canonicalUrl` in `restaurant.ts`, add the JSON-LD from
   `src/lib/shang-hai/seo.ts`, a sitemap entry and Open Graph image.
+
+## Known issues
+
+- `next@16.4.0` is affected by published advisories (GHSA-2464-fhr4-w9xw,
+  GHSA-p3m5-59mp-jv5r, GHSA-673q-mjm6-r5xr), fixed in 16.4.3. They concern server features
+  (image optimisation API, Server Actions, `use cache`) that this static export does not
+  run, so the GitHub Pages site is not exposed, but upgrade before any server deployment.
+- The demos share ATELIER's root layout, so ATELIER's two fonts load on every proposal
+  (109 KB). A dedicated app for the chosen proposal removes them.
+- Order tokens travel in the status URL (needed for a static status page); they only give
+  read access to the order's status and lines, never to phone, email or notes.
 
 ## 10. What the restaurant must confirm
 
