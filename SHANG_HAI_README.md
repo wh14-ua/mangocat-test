@@ -27,7 +27,8 @@ Order backend: [`workers/shang-hai-orders/README.md`](./workers/shang-hai-orders
 
 ## 1. What was built
 
-- **Real menu** — 24 categories and 209 entries (208 shown; one exact duplicate hidden)
+- **Real menu** — 24 categories and 209 entries: 208 shown (one exact duplicate hidden) and
+  204 orderable (the 4 entries published with conflicting prices wait for the owner)
   imported from the restaurant's public Just Eat listing on 2026-10-29, with integer-cent
   prices, piece counts, the real "postre o café" option of the 6-person menus, spicy and
   alcohol flags, and data-quality findings for the owner. Nothing invented: no fake dishes,
@@ -137,7 +138,7 @@ them without the owner's explicit approval.
 
 ```bash
 npm run check            # typecheck + lint:shang-hai + unit tests + menu:check
-npm test                 # vitest: 112 tests — engine, catalog integrity, SEO (70) + Worker (42:
+npm test                 # vitest: 113 tests — engine, catalog integrity, SEO (71) + Worker (42:
                          #   D1 via node:sqlite, mocked Stripe API, real webhook signatures/JWTs)
 npm run build && npm run test:e2e   # Playwright (system Chrome) at 390 / 768 / 1440 px: 54 tests
 node scripts/capture-shang-hai-previews.mjs [--qa]  # comparison previews (+ QA captures)
@@ -155,9 +156,6 @@ payments, console errors, horizontal overflow, the comparison page and the origi
 ATELIER/MERIDIA routes. `tests/shang-hai/e2e/a11y.spec.ts` audits every proposal and the
 shared pages with axe-core (WCAG 2.1 A/AA) and fails on serious or critical violations.
 
-Note: when `next build`/`next dev` run inside an AI coding agent, Next.js 16.4.0 stops once
-with a security notice (see *Known issues*); re-running continues. CI is not affected.
-
 ## 9. Deploying
 
 - **Static site** — unchanged pipeline: `.github/workflows/deploy.yml` builds and publishes
@@ -174,10 +172,10 @@ with a security notice (see *Known issues*); re-running continues. CI is not aff
 
 ## Known issues
 
-- `next@16.4.0` is affected by published advisories (GHSA-2464-fhr4-w9xw,
-  GHSA-p3m5-59mp-jv5r, GHSA-673q-mjm6-r5xr), fixed in 16.4.3. They concern server features
-  (image optimisation API, Server Actions, `use cache`) that this static export does not
-  run, so the GitHub Pages site is not exposed, but upgrade before any server deployment.
+- Next.js and `eslint-config-next` are on 16.4.3, which fixes the advisories published for
+  16.4.0 (GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r, GHSA-673q-mjm6-r5xr);
+  `npm audit --omit=dev` reports 0 vulnerabilities.
+
 - The demos share ATELIER's root layout, so ATELIER's two fonts load on every proposal
   (109 KB). A dedicated app for the chosen proposal removes them.
 - Order tokens travel in the status URL (needed for a static status page); they only give
