@@ -20,7 +20,7 @@ const grotesk = Schibsted_Grotesk({
 /** How each proposal frames itself: its own atmosphere around MangoCat's typography. */
 const ATMOSPHERE: Record<
   StorefrontId,
-  { bg: string; fg: string; muted: string; rule: string; accent: string; onAccent: string; frame: string }
+  { bg: string; fg: string; muted: string; rule: string; accent: string; accentText: string; onAccent: string; frame: string }
 > = {
   "ink-house": {
     bg: "#F1EDE3",
@@ -28,6 +28,7 @@ const ATMOSPHERE: Record<
     muted: "#5d5a52",
     rule: "rgba(23,26,23,0.14)",
     accent: "#A7342F",
+    accentText: "#A7342F",
     onAccent: "#F7F3EA",
     frame: "rgba(23,26,23,0.16)",
   },
@@ -37,6 +38,7 @@ const ATMOSPHERE: Record<
     muted: "#9fb0b7",
     rule: "rgba(246,243,234,0.16)",
     accent: "#FF6B35",
+    accentText: "#FF6B35",
     onAccent: "#101E24",
     frame: "rgba(246,243,234,0.18)",
   },
@@ -45,7 +47,8 @@ const ATMOSPHERE: Record<
     fg: "#22221F",
     muted: "#5b5a52",
     rule: "rgba(34,34,31,0.14)",
-    accent: "#E84E36",
+    accent: "#B5391F",
+    accentText: "#B5391F",
     onAccent: "#FFF8EA",
     frame: "rgba(34,34,31,0.2)",
   },
@@ -116,7 +119,7 @@ export function ComparePage() {
         <Link href="/showcase" className="font-bold text-[#1d1b18] hover:text-[#c4621a]">
           MangoCat Studios
         </Link>
-        <p className="text-[#1d1b18]/60">Propuesta para Restaurante Shang Hai, Orihuela. Octubre de 2026</p>
+        <p className="text-[#56534c]">Propuesta para Restaurante Shang Hai, Orihuela. Octubre de 2026</p>
       </header>
 
       <section className="mx-auto max-w-[1240px] px-4 pb-14 pt-16 sm:px-8 md:pb-20 md:pt-24">
@@ -126,10 +129,10 @@ export function ComparePage() {
         >
           SHANG HAI — Tres visiones, una identidad.
         </h1>
-        <p className="mt-7 max-w-[46ch] text-[clamp(1.125rem,2vw,1.375rem)] leading-snug text-[#1d1b18]/75">
+        <p className="mt-7 max-w-[46ch] text-[clamp(1.125rem,2vw,1.375rem)] leading-snug text-[#3f3c36]">
           Tres propuestas digitales creadas por MangoCat Studios para Restaurante Shang Hai.
         </p>
-        <p className="mt-4 max-w-[60ch] text-[15px] text-[#1d1b18]/60">
+        <p className="mt-4 max-w-[60ch] text-[15px] text-[#56534c]">
           Las tres funcionan de verdad: carta real, carrito y pedido completo en modo de
           demostración. Ábrelas, pide algo y quédate con la que mejor cuente tu restaurante.
         </p>
@@ -150,7 +153,7 @@ export function ComparePage() {
           >
             <div className="mx-auto grid max-w-[1240px] gap-10 px-4 py-16 sm:px-8 md:grid-cols-12 md:gap-8 md:py-24">
               <div className="md:col-span-5 md:pr-6">
-                <p className="text-[15px] font-semibold tabular-nums" style={{ color: a.accent }}>
+                <p className="text-[15px] font-semibold tabular-nums" style={{ color: a.accentText }}>
                   {s.number}
                 </p>
                 <h2
@@ -204,7 +207,7 @@ export function ComparePage() {
           <ul className="space-y-6 text-[16px] md:col-span-7 md:col-start-6">
             <li>
               <strong className="block text-[17px]">La carta real del Shang Hai.</strong>
-              <span className="text-[#1d1b18]/70">
+              <span className="text-[#4d4a43]">
                 {categories} categorías y {dishes} platos tal y como aparecen en vuestra ficha de
                 Just Eat (consultada el 29 de octubre de 2026), con sus precios. Ningún plato
                 inventado; los precios dudosos aparecen como pendientes de confirmar.
@@ -212,21 +215,21 @@ export function ComparePage() {
             </li>
             <li>
               <strong className="block text-[17px]">Pedido para recoger con pago online.</strong>
-              <span className="text-[#1d1b18]/70">
+              <span className="text-[#4d4a43]">
                 En esta demostración el pago es simulado y no se cobra nada. La conexión con
                 Stripe está preparada en modo de pruebas y el servidor recalcula cada importe.
               </span>
             </li>
             <li>
               <strong className="block text-[17px]">Pedidos en un panel propio.</strong>
-              <span className="text-[#1d1b18]/70">
+              <span className="text-[#4d4a43]">
                 Los pedidos pagados llegan a un panel interno, protegido con acceso autenticado,
                 para marcarlos en preparación, listos y entregados.
               </span>
             </li>
             <li>
               <strong className="block text-[17px]">Lo que necesitamos confirmar contigo.</strong>
-              <span className="text-[#1d1b18]/70">
+              <span className="text-[#4d4a43]">
                 Teléfono de pedidos, horario del canal propio, tiempo de preparación,
                 información de alérgenos, si quieres vender vino online y vuestras propias fotos.
                 Las imágenes actuales son ilustrativas.
@@ -237,7 +240,7 @@ export function ComparePage() {
       </section>
 
       <footer className="border-t border-[#1d1b18]/10">
-        <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-4 py-8 text-[13px] text-[#1d1b18]/60 sm:px-8">
+        <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 px-4 py-8 text-[13px] text-[#56534c] sm:px-8">
           <p>Una propuesta de MangoCat Studios</p>
           <nav aria-label="Enlaces del pie" className="flex gap-5">
             <Link href={SHANG_HAI_CREDITS_PATH} className="underline-offset-4 hover:text-[#1d1b18] hover:underline">

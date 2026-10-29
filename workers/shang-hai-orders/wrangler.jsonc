@@ -1,0 +1,41 @@
+{
+  // Shang Hai order backend — Cloudflare Worker + D1 + Stripe Checkout (test mode).
+  // Secrets are NOT configured here: use `wrangler secret put STRIPE_SECRET_KEY` and
+  // `wrangler secret put STRIPE_WEBHOOK_SECRET` (see README.md and .dev.vars.example).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shang-hai-orders",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-20",
+  "observability": { "enabled": true },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shang-hai-orders",
+      // Replace with the id printed by `wrangler d1 create shang-hai-orders`.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Workers Rate Limiting binding (period must be 10 or 60 seconds).
+  "ratelimits": [
+    { "name": "CHECKOUT_LIMITER", "namespace_id": "4101", "simple": { "limit": 10, "period": 60 } },
+    { "name": "LOOKUP_LIMITER", "namespace_id": "4102", "simple": { "limit": 120, "period": 60 } }
+  ],
+
+  "vars": {
+    // Only Stripe TEST keys (sk_test_/rk_test_) are accepted while this is "true".
+    // Live payments additionally need PAYMENTS_LIVE_ENABLED="true" (owner approval).
+    "STRIPE_TEST_MODE": "true",
+    "PAYMENTS_LIVE_ENABLED": "false",
+    // Exact origins allowed to call the storefront API (no paths, comma separated).
+    "CORS_ALLOWED_ORIGIN": "https://wh14-ua.github.io,http://localhost:3000",
+    // Return URLs. Placeholders: {storefront} {orderId} {token}; Stripe fills {CHECKOUT_SESSION_ID}.
+    "STRIPE_SUCCESS_URL": "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}",
+    "STRIPE_CANCEL_URL": "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}",
+    // Cloudflare Access (staff panel). Empty = /admin and /api/admin/* answer 503.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  }
+}

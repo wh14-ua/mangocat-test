@@ -44,10 +44,10 @@ export function ProposalSelector() {
                   "flex items-baseline gap-2 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c4621a] " +
                   (isActive
                     ? "bg-[#1d1b18] text-[#f6f4ef]"
-                    : "text-[#1d1b18]/70 hover:bg-[#1d1b18]/6 hover:text-[#1d1b18]")
+                    : "text-[#3f3c36] hover:bg-[#1d1b18]/6 hover:text-[#1d1b18]")
                 }
               >
-                <span className={isActive ? "text-[#f0a35e]" : "text-[#c4621a]"}>{s.number}</span>
+                <span className={isActive ? "text-[#f0a35e]" : "text-[#9c4511]"}>{s.number}</span>
                 {s.name}
               </a>
             </li>
