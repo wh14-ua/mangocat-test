@@ -180,7 +180,7 @@ export function DemoPaymentScreen() {
           )}
         </section>
 
-        <p className="mt-5 text-center text-[12px] text-[#667085]">
+        <p className="mt-5 text-center text-[12px] text-[#475467]">
           Una propuesta de MangoCat Studios
         </p>
       </main>

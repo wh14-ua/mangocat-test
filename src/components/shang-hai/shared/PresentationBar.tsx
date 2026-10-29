@@ -44,7 +44,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
                   (active ? "bg-white/12 text-white" : "hover:bg-white/8 hover:text-white")
                 }
               >
-                <span className="tabular-nums text-white/45">{s.number}</span>{" "}
+                <span className="tabular-nums text-white/60">{s.number}</span>{" "}
                 <span>{s.name}</span>
               </Link>
             </li>
