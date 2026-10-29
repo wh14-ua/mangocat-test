@@ -60,6 +60,22 @@ describe("Shang Hai catalog integrity", () => {
     for (const item of conflicting) expect(getOrderability(item).orderable).toBe(false);
   });
 
+  it("leaves exactly 204 orderable products: 209 - 1 hidden duplicate - 4 price conflicts", () => {
+    const blocked = catalog.items
+      .map((i) => ({ id: i.id, o: getOrderability(i) }))
+      .filter((x) => !x.o.orderable)
+      .map((x) => `${x.id}:${x.o.orderable ? "" : x.o.reason}`)
+      .sort();
+    expect(blocked).toEqual([
+      "cerveza-china-2:price-conflict",
+      "cerveza-china:price-conflict",
+      "frito-gambas-con-atun-2:duplicate",
+      "sashimi-atun:price-conflict",
+      "sashimi-de-atun:price-conflict",
+    ]);
+    expect(catalog.items.filter((i) => getOrderability(i).orderable)).toHaveLength(204);
+  });
+
   it("hides exact duplicates from the menu", () => {
     const visibleIds = shangHaiCatalog.visibleItems.map((i) => i.id);
     expect(visibleIds).not.toContain("frito-gambas-con-atun-2");

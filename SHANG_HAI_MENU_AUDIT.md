@@ -28,6 +28,7 @@ circumvented; the capture comes from an ordinary browser session.
 | With a published price | 209 |
 | Without a price (`priceCents: null`) | 0 |
 | Price conflicts (shown, not orderable until confirmed) | 4 |
+| **Orderable now** (entries − hidden duplicates − price conflicts − missing prices) | **204** |
 | Exact duplicates (hidden) | 1 |
 | With a Spanish description | 31 |
 | With English text published by the restaurant | 98 |

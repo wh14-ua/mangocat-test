@@ -506,6 +506,10 @@ function buildAudit({ catalog, meta }, previous) {
   const items = catalog.items;
   const visible = items.filter((i) => !i.duplicateOf);
   const priced = items.filter((i) => i.priceCents !== null);
+  // Mirrors getOrderability() in src/lib/commerce/catalog.ts.
+  const orderable = items.filter(
+    (i) => !i.duplicateOf && i.available && i.priceCents !== null && i.verificationStatus === "verified",
+  );
   const missingPrice = items.filter((i) => i.priceCents === null);
   const conflicting = items.filter((i) => i.verificationStatus === "conflicting");
   const duplicates = items.filter((i) => i.duplicateOf);
@@ -579,6 +583,7 @@ circumvented; the capture comes from an ordinary browser session.
 | With a published price | ${priced.length} |
 | Without a price (\`priceCents: null\`) | ${missingPrice.length} |
 | Price conflicts (shown, not orderable until confirmed) | ${conflicting.length} |
+| **Orderable now** (entries − hidden duplicates − price conflicts − missing prices) | **${orderable.length}** |
 | Exact duplicates (hidden) | ${duplicates.length} |
 | With a Spanish description | ${withDescription.length} |
 | With English text published by the restaurant | ${withEnglish.length} |
