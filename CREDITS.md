@@ -131,3 +131,36 @@ photo page linked in each entry.
 - `playful-handcraft/dish-2.jpg` — Photo by Emerson Vieira on Unsplash (https://unsplash.com/photos/cpkPJ-U9eUM)
 - `playful-handcraft/dish-3.jpg` — Photo by Sebastian Coman Photography on Unsplash (https://unsplash.com/photos/Co-T6odt0es)
 - `playful-handcraft/dish-4.jpg` — Photo by amirali mirhashemian on Unsplash (https://unsplash.com/photos/z1W2v1JWbKU)
+
+## Shang Hai demos (provisional, illustrative photography)
+
+These photographs are **provisional and illustrative**. They are freely licensed images used
+only as art direction for the three Shang Hai proposals (INK HOUSE, WOK AFTER DARK, BENTO
+CLUB). **None of them shows a dish prepared by Restaurante Shang Hai**, and they must never be
+captioned or presented as such. Replace them with the restaurant's own photography before any
+public launch.
+
+- Source: Wikimedia Commons, retrieved 2026-10-29. Files marked *(Unsplash)* are CC0 photos
+  originally published on Unsplash and mirrored on Commons.
+- Registry (paths, alt text, focal points, credits): `src/data/shang-hai/photos.ts`.
+- Every file was resized and re-encoded as WebP (1600 px and 800 px long side); files marked
+  "cropped" were also cropped. Changes by MangoCat Studios. The CC BY and CC BY-SA files
+  require visible attribution on the site; adapted CC BY-SA files are shared under the same
+  license.
+
+| File (`public/images/shang-hai/…`) | What it shows | Author | License | Source | Changes |
+|---|---|---|---|---|---|
+| `ink-house/hero-*.webp` | Curry noodle bowl on pale linen | Noahs Knight *(Unsplash)* | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Lan_Jie_Famous_Curry_Noodles_(Unsplash).jpg) | resized |
+| `ink-house/tea-*.webp` | Dry tea leaves on a porcelain tea scoop | KirillK | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Gaiwan-yellow-tea-huang-ya.jpg) | resized |
+| `ink-house/dimsum-*.webp` | Xiaolongbao in a bamboo steamer | FASTILY | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Xiaolongbao_2_2017-10-27.jpg) | cropped, resized |
+| `ink-house/sushi-*.webp` | Two nigiri on a celadon plate | Douglas Perkins | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Nigiri.jpg) | cropped, resized |
+| `wok-after-dark/fire-*.webp` | Wok flame in a professional kitchen | Ricardo Liberato | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Wok_of_Dong.jpg) | cropped (cook removed from frame), resized |
+| `wok-after-dark/noodles-*.webp` | Noodles lifted with chopsticks | Artur Rutkowski *(Unsplash)* | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Eating_Asian_Noodles_(Unsplash).jpg) | resized |
+| `wok-after-dark/dumplings-*.webp` | Buns frying in a black pan | Valenzuela400 | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Xiaolongbao_%E5%B0%8F%E7%B1%A0%E5%8C%85_in_pot_Chinese_Lunar_New_Year_%E8%BE%B2%E6%9B%86%E6%96%B0%E5%B9%B4_2_February_2025_Manila_PhilippinesC.jpg) | resized |
+| `wok-after-dark/sushi-*.webp` | Prawn nigiri on black lacquer | Zheng Zhou | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Kurumaebi_(Japanese_tiger_prawn)_Nigiri.jpg) | cropped, resized |
+| `wok-after-dark/street-*.webp` | Aerial view of a city at night | JINDONG H *(Unsplash)* | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Neon_streets_(Unsplash).jpg) | resized |
+| `bento-club/sushi-*.webp` | Tray of uramaki, top-down | Benoît Prieur | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Cuisine_japonaise_%C3%A0_Saint-Maurice-de-Beynost_(restaurant_%C3%A0_emporter_La_Perle_Sushi)_-_3.jpg) | resized |
+| `bento-club/dumplings-*.webp` | Dumplings on a wooden plate, top-down | Charles Deluvio *(Unsplash)* | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Dumplings_(Unsplash).jpg) | resized |
+| `bento-club/poke-*.webp` | Salmon poke bowl, top-down | Andy Li | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:Salmon_Poke_Bowl_(S)_with_Spicy_mayo_sauce_-_Kitokito.jpg) | cropped, resized |
+| `bento-club/rice-*.webp` | Stir-fried noodles on a white plate, top-down | Andy Li | CC0 1.0 | [Commons](https://commons.wikimedia.org/wiki/File:King_prawns_chow_mein_with_spicy_sauce_-_Stir_Fry_by_CK_2025-08-26.jpg) | cropped, resized |
+| `bento-club/springrolls-*.webp` | Spring rolls with dipping sauces, top-down | Srujanabotcha | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [Commons](https://commons.wikimedia.org/wiki/File:Golden_Vegetable_Spring_Rolls_Served_with_Dipping_Sauce.jpg) | resized |

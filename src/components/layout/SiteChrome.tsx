@@ -22,6 +22,11 @@ import { ModeSwitch } from "./ModeSwitch";
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isShowcase = pathname === "/showcase" || pathname?.startsWith("/showcase/");
+  // The Shang Hai proposals bring their own presentation bar (in the page flow); the
+  // floating ATELIER/Showcase pill would sit on top of their mobile cart and tab bars.
+  const isShangHai = pathname === "/showcase/shang-hai" || pathname?.startsWith("/showcase/shang-hai/");
+
+  if (isShangHai) return <>{children}</>;
 
   if (isShowcase)
     return (

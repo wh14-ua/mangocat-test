@@ -1,0 +1,5456 @@
+{
+  "capturedAt": "2026-10-29T09:33:49Z",
+  "url": "https://www.just-eat.es/restaurants-restaurante-asiatico-shang-hai-orihuela/menu",
+  "method": "Normal page load in a desktop browser; data read from the page's own embedded __NEXT_DATA__ JSON.",
+  "platformRestaurantId": "81442",
+  "menuVersion": "BnxQoXzdNEDmZj.x_60i8qTkAAQvabsO",
+  "restaurantInfo": {
+    "name": "Restaurante Chino Shang Hai",
+    "seoName": "restaurante-asiatico-shang-hai-orihuela",
+    "location": {
+      "address": "Avenida Doctor Gómez Pardo Ródenas, 5",
+      "postCode": "03300",
+      "city": "Orihuela",
+      "latitude": 38.089268,
+      "longitude": -0.937705
+    },
+    "allergenPhoneNumber": "623300934",
+    "cuisineTypes": [
+      "China",
+      "Sushi"
+    ],
+    "openingTimes": [
+      {
+        "serviceType": "delivery",
+        "timesPerDay": [
+          {
+            "dayOfWeek": "Sunday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Monday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Tuesday",
+            "times": []
+          },
+          {
+            "dayOfWeek": "Wednesday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Thursday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Friday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Saturday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceType": "collection",
+        "timesPerDay": [
+          {
+            "dayOfWeek": "Sunday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Monday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Tuesday",
+            "times": []
+          },
+          {
+            "dayOfWeek": "Wednesday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Thursday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Friday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          },
+          {
+            "dayOfWeek": "Saturday",
+            "times": [
+              {
+                "fromLocalTime": "12:00",
+                "toLocalTime": "16:00"
+              },
+              {
+                "fromLocalTime": "19:30",
+                "toLocalTime": "23:30"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "menus": [
+    {
+      "menuGroupId": "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+      "serviceTypes": [
+        "delivery"
+      ],
+      "categories": [
+        {
+          "id": "9e908b07-c556-4316-8579-99288492b165",
+          "name": "Combos",
+          "description": "",
+          "itemIds": [
+            "2bc94d4b-1929-4d6e-bb02-daf52539b1a4",
+            "b315cb99-c7d5-48ef-9460-bc3738984c85",
+            "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa",
+            "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77"
+          ]
+        },
+        {
+          "id": "8b9768ef-dbef-4c67-b27f-c8005a71928b",
+          "name": "Menús",
+          "description": "",
+          "itemIds": [
+            "df8677b2-aee6-4363-881f-c4d001b05d26",
+            "3240abb0-6b91-41b9-98e2-459acab07dde",
+            "b368155e-a45b-4589-9742-89d5cdb7e159",
+            "550b1d6c-debd-43af-ac75-0568ed2c8637",
+            "814adeeb-30f7-4195-9705-631486785ba5",
+            "d49abad5-252a-40e0-ad4e-7c73264e4caf",
+            "a1c3e14c-f304-4db9-9291-d1357a68dc48",
+            "7c7075dd-1085-4ea1-8945-811e1475e2f3",
+            "275c11d7-1b1f-4c41-aa99-0b341a17c506",
+            "b88b74fb-bdb4-4a54-af25-ab817e5c12ed"
+          ]
+        },
+        {
+          "id": "09082d3e-4f0b-43c5-8f8a-bdf4f8c7615d",
+          "name": "Entrantes",
+          "description": "Starters",
+          "itemIds": [
+            "c7659e61-a39c-493e-b0e7-c0f5a7c577e2",
+            "9300d5d7-761d-4078-b4a9-a898818aff17",
+            "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5",
+            "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79",
+            "c05733f8-adb0-43a2-a628-7330674857cd",
+            "980b234a-ab4b-48b9-9bac-64f9ea35d3da",
+            "fbbcd206-c006-4793-adef-b39d64d16f05",
+            "7ee68991-ba3c-4e63-9628-1573fbe8c8e1",
+            "e3735375-27b1-41b2-aa8b-18164a5386c2",
+            "f45778fc-82ad-40ca-bdf4-2ffef6869f83",
+            "29d701a7-e48f-4b17-8e13-8eff56c4fd14",
+            "384354a1-7433-428e-ac25-30bdad856471",
+            "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc",
+            "d5f121ee-32a0-4d2d-a55e-b409702d1aee",
+            "c2508835-ac6e-453d-8d7d-b81beef9eb51",
+            "6a84a2b7-c099-48bd-a262-3103722c9ed0"
+          ]
+        },
+        {
+          "id": "950e7644-df78-4f40-ba56-04bb9506611e",
+          "name": "Sopas",
+          "description": "Soups",
+          "itemIds": [
+            "0c18074f-8e00-4ee5-a073-ccc76dde5319",
+            "124f09d6-9272-4ce1-bf53-13272a57e54e",
+            "1122941e-b97c-4795-9116-c87b62784e84",
+            "1841b7d0-89e1-4095-94a1-9c59eb0a3248",
+            "e46c409b-7462-47af-8ed9-c2e20e71fff7",
+            "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18"
+          ]
+        },
+        {
+          "id": "9289f5b5-e8bd-499b-a965-8428f67ebec7",
+          "name": "Pato",
+          "description": "Duck",
+          "itemIds": [
+            "eaf3cef6-18a0-4417-9d78-214590d2b69e",
+            "bfbac102-6db5-4076-8ad5-ad6723bcf2e6",
+            "d0eac5aa-b8ab-4166-ac23-45585f527d65",
+            "cbbf8ba7-f910-4a99-af20-8c137e8389fd",
+            "2e63afe7-1e71-4598-a866-04316a862081",
+            "0c5affdd-bd51-4bfa-a977-61db8bf1ec30"
+          ]
+        },
+        {
+          "id": "e13f1c62-80f2-4c70-bf2b-228e9bee6f81",
+          "name": "Pollo",
+          "description": "",
+          "itemIds": [
+            "36452bf4-0ade-474c-bde9-f97cd6cc3548",
+            "99270b88-12bb-4755-8af1-8252545126e4",
+            "30e68d8f-f22d-4e90-a463-f39bae9bbc96",
+            "83048b18-45b3-40ee-9618-1c651d9b94b2",
+            "915cc436-c09a-4d23-843b-0262e2d38347",
+            "595e81ef-f420-4fe1-83ef-a169e752696a",
+            "b8c0b2d3-3811-4613-b4b4-3807e176776a",
+            "116031bf-2b83-4139-8813-27dcd8e90328",
+            "ca061de2-4769-471c-a255-e6bdbda80a6c",
+            "722e9520-c520-462c-ac7e-59bf1a0d5909",
+            "75c9bb55-b770-4b1e-880d-8027e8ddf307",
+            "0bcb58aa-4b14-4f00-abae-a7f61f751a85",
+            "104ee614-4af7-4b90-901a-b7dc22ad3add",
+            "881b6bd2-25f9-447a-bc46-db141712de1e"
+          ]
+        },
+        {
+          "id": "0bdeefd3-7378-420f-bab9-b6001b51fe76",
+          "name": "Ternera",
+          "description": "Beef",
+          "itemIds": [
+            "d70dc67e-22d0-41d4-b29d-8655dc91473a",
+            "885d0ee4-a4e0-46da-aef8-d87e204b4aef",
+            "1523eaf4-d4df-4fb6-843e-12176ab75944",
+            "2cb01360-312b-41f2-b188-8c3d39dedacb",
+            "676c5531-d4af-4ca3-9265-f164a985a5a9",
+            "d9e1bbd9-21de-4029-b3a2-643f7e6232f0",
+            "0869bbec-bf95-48f1-bc14-5a15faee445c",
+            "4463e1fa-ef02-4560-91ad-6d750d8ae859"
+          ]
+        },
+        {
+          "id": "17e999e3-6fb3-42e1-9803-cacf62d6b310",
+          "name": "Carne",
+          "description": "Meat",
+          "itemIds": [
+            "39be5c23-ef4f-4bc2-aa28-29ef901e2007",
+            "51c667f5-1bad-491e-9b90-0120e7744e05",
+            "372e6d9f-2fa1-46bc-9689-2e753414c436",
+            "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe",
+            "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c",
+            "c19c0449-d189-49f0-96ef-88d389207e72"
+          ]
+        },
+        {
+          "id": "f5e13ba6-d360-43f2-81ed-6d330d5fc983",
+          "name": "Marisco y Gambas",
+          "description": "Seafood dish",
+          "itemIds": [
+            "49dbca00-f273-44e1-b485-1e0922d0da6d",
+            "11ea9332-42e7-4ccf-96d5-ddd13ce67000",
+            "d7cc6f6c-8d02-4313-9140-0b26717992e7",
+            "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3",
+            "a9be63b9-2a88-4465-b507-d734d426ea0b",
+            "7d8aed01-d83d-4a21-9075-0d74233e8857",
+            "9322553d-07ad-459d-9c71-e964cbafd155",
+            "b5783fbf-cfd9-4116-b351-29016ada212b",
+            "6e329783-652f-4389-988a-146ac2737da9",
+            "d3ecc581-7488-4aa1-b387-e5d5697c65e8"
+          ]
+        },
+        {
+          "id": "622f508c-70ec-4d8f-a079-ecf025893cb7",
+          "name": "Pescados y Mariscos",
+          "description": "Fish & seafood",
+          "itemIds": [
+            "e28511aa-2aaf-4f67-bff4-efe7a074caf0",
+            "6f2a91e0-e0e1-453a-9b08-4f850d2d4750",
+            "b23b50e5-32fe-4f95-ad84-89f5ecc2031b",
+            "4e3ec944-506d-4f3f-abec-6a832a4f2e53",
+            "9798152a-3983-474b-ab4d-10b26e0d52d0"
+          ]
+        },
+        {
+          "id": "2d554b78-9d57-4e22-9339-c2cd6fc8b936",
+          "name": "Acompañamientos",
+          "description": "Companion",
+          "itemIds": [
+            "31eb1cd5-fcc8-4887-a4cc-30a69569f949",
+            "16b0b31e-4088-4e85-8883-e1d419c9d20f",
+            "edb9fd5c-b35f-4711-b630-bffdb6b86e21",
+            "4e3d38c6-09d0-45b8-860f-87cb459b5c73",
+            "71b6f716-34fd-41bf-8271-cb13bb8b25d0",
+            "4fdd980c-e039-45e1-96c2-802368db20c5",
+            "14bd1a12-dbf1-488f-8688-3e8f554de668",
+            "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d",
+            "aa8c4759-c898-4add-8638-c74fcb48880e",
+            "41c7f490-fa90-479e-b544-e1a12dcdc902",
+            "a5ebea5f-eb97-4e02-868a-2ce71b340992",
+            "26a7efa5-4b35-4fac-b861-e7c040d61ae7",
+            "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e",
+            "22ad899a-9bb1-4b7c-9192-c0fb1622ec66",
+            "1a714806-c965-4586-890d-86504e36720c",
+            "335bf71a-7da3-480a-b986-5d43780daea6",
+            "efb88c63-4fb4-459b-8f80-7b577c436ebd",
+            "f2314479-6966-4a7e-9c8e-e4542e1ce8ee",
+            "682add62-dbde-4a82-9e0d-39c95d74fc00"
+          ]
+        },
+        {
+          "id": "a83f9567-1dbc-44dd-bc06-91ef3c6d2856",
+          "name": "Platos Combinados",
+          "description": "",
+          "itemIds": [
+            "0fa8c068-2918-4aff-9822-03a52567e4b5",
+            "8e3af345-b128-4e5b-ba3b-ba021d04120c",
+            "fe2993fd-4d6a-4263-b7de-afe527ae323b"
+          ]
+        },
+        {
+          "id": "f9f8183f-b21e-42b9-a1cb-df039dfde2b4",
+          "name": "Dím Sum",
+          "description": "",
+          "itemIds": [
+            "57c37901-63f3-41b9-80f2-130c0a07e468",
+            "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88",
+            "16e09af6-efc4-4ab3-8a07-e443a0aacbc3",
+            "9d19370b-815d-4397-be5d-07f05917a459",
+            "58edf436-1890-44f2-a470-b569bca78dce",
+            "f4c89923-3f73-44c9-8424-d1906f011cb1",
+            "7005018a-5015-4996-83eb-93e9d411df54",
+            "08c624f3-05bb-44f2-9704-42ce3bfb9f11",
+            "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846",
+            "8839206d-02c4-4b0b-ad99-7800012dfa26",
+            "0014f171-349c-4716-8515-a36d0688f510",
+            "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b",
+            "66309b5d-f564-4ee0-8e1e-5eff546e4273",
+            "71a9b478-e981-45f9-99f2-70fd81d0b445",
+            "512091b0-bf00-46bd-8f75-d6620e3bde3a"
+          ]
+        },
+        {
+          "id": "f473f25a-d382-4b2b-b52e-88f12d24d9ff",
+          "name": "Nigiris",
+          "description": "",
+          "itemIds": [
+            "32d063c0-7b07-4d49-8b26-b49d99997d26",
+            "ef13e30b-b06a-46f4-8f73-aef506714af3",
+            "bc8723b1-7e93-4a29-86df-b6ec76525438",
+            "dd4b8620-b60d-4819-af70-c48ca6672b20",
+            "2c3b8569-52bb-4966-ab45-4dcb84d99134",
+            "bd1cce55-e028-4f5b-9377-64e1304ee679",
+            "32e18080-e06c-4226-8416-6d8cf43e7aa1",
+            "8d2967fd-44ae-4483-bb32-eec3c13bf7a6",
+            "138bab96-4337-4ffc-b9a5-313230991ce6",
+            "a9fd181b-d4d3-483f-a88b-aa3a6357943c",
+            "8499eaba-4a8a-4169-95c0-e091c156bff4",
+            "979b51dd-6a70-43de-9d28-7e82f068e698"
+          ]
+        },
+        {
+          "id": "d948dfeb-c1cd-4951-95f0-1c1eeb3037e6",
+          "name": "Bowls",
+          "description": "",
+          "itemIds": [
+            "ec995443-a3b2-49f6-a2b9-947767fe5493",
+            "812a1502-fe5c-41d0-ad6f-10e60c1a3767",
+            "2b32980a-b1d4-4430-a185-9aa82b390d6c"
+          ]
+        },
+        {
+          "id": "f0ba49f6-279d-4be4-9a59-d0d175b965c6",
+          "name": "Makis",
+          "description": "",
+          "itemIds": [
+            "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181",
+            "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33",
+            "b32d5bc1-8b25-4732-be62-4d792db57d2f",
+            "452a6bd7-c07f-4eed-b410-c8f326a1f311",
+            "139d247b-cb0b-4fd5-850b-4885a58c8f41",
+            "3cb65a29-4ce3-4d77-be21-6472903d3f47",
+            "b1a614cf-6d61-461f-ba61-e80dd00d5ac0",
+            "1201beea-3232-4185-9de4-0a5c07f5a182",
+            "5f7590cc-bf14-40fb-aabc-9aacafe15622",
+            "c97652f3-4217-4245-8057-15d259fbf757",
+            "341829e1-dc93-4eb2-8c84-7040d49b5043",
+            "56e41ce2-d7e4-426c-a9af-575ed3e9b731",
+            "204505d3-410d-4400-bd22-3630d5f1c5d3"
+          ]
+        },
+        {
+          "id": "f734ff47-3902-449c-92fd-70dce31fb89b",
+          "name": "Uramakis",
+          "description": "",
+          "itemIds": [
+            "d41c8f08-9112-49c1-8cd7-c4c47f30d14b",
+            "1834bdc0-5b11-4df8-9342-b56eacdbd903",
+            "7f9a7bd1-883a-42c8-b4be-0081b6823f33",
+            "80b33557-1c33-4456-b9f8-275569e35ea2",
+            "4b70ce85-7557-474d-98ac-2412b28325d9",
+            "050c5b63-95a8-41da-993f-59e339672ad8",
+            "61209581-b67f-41b9-972c-9a66a4dae26e",
+            "44ebe13c-eac7-4b5d-b51e-a084e9b85d15",
+            "af091a5f-0afd-4794-bcd0-cf867d560661",
+            "007547e7-12a3-4d6d-9a0a-657e18afc52f",
+            "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f",
+            "9530e9be-fcbd-451e-ab08-511e6447e707",
+            "b7f61302-4526-441a-a07c-12e73ed00ddc",
+            "80fe950d-ccb2-4831-91aa-181c09aaf302",
+            "d2c41ef4-2380-47ef-a1aa-aae4336bba05",
+            "72fa00be-f834-4874-8176-0d0d6709b084"
+          ]
+        },
+        {
+          "id": "0fce4176-b5e5-41ae-9144-906af279fce0",
+          "name": "Sushi",
+          "description": "Sashimi",
+          "itemIds": [
+            "4950bee8-f6fd-4dc4-abea-79a37896f09a",
+            "d09aafcd-1052-445b-b4e5-ee698ab7d081",
+            "01f07df8-29e3-4fe6-a424-3f92b057acf1",
+            "c2091a81-b7f6-43eb-be38-717b7e0dcd2a",
+            "9c79f57b-e976-43d3-8267-d6cf07f25dd0",
+            "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f",
+            "d87ad619-ae24-4220-bfed-0a07376ea3c5",
+            "b62cabf3-936a-4fcc-9953-b9db1147f9bd"
+          ]
+        },
+        {
+          "id": "1d1998a7-b835-46a9-af3f-6e5f9a67366b",
+          "name": "Temakis",
+          "description": "",
+          "itemIds": [
+            "0168831f-3fb0-4189-a5d2-ae07b3ae183e",
+            "f24d6746-8a12-481b-a742-fc13a60e25b5",
+            "b28895a1-46b2-4f83-beee-92c557fad539"
+          ]
+        },
+        {
+          "id": "81a3b1ab-daae-40a1-ae88-64d81d46d76f",
+          "name": "Gunkan Maki",
+          "description": "",
+          "itemIds": [
+            "ed942a58-0a7a-46eb-8fbc-a32aaef491fb",
+            "6627c88b-dcff-44e1-bfc3-651ba03b232d",
+            "59092c2a-3321-4f68-a6ff-4ff5e74eb925",
+            "e84d3c96-bc65-48e7-bc3b-498ad21162fa"
+          ]
+        },
+        {
+          "id": "685cfa22-6ac1-4bd9-a5ae-cda61088d3ab",
+          "name": "Otros",
+          "description": "",
+          "itemIds": [
+            "08730261-a44a-48ba-982e-b31a5e7e2d36",
+            "befebca2-bf3f-46f9-81c4-a1f2b954f4e1",
+            "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e",
+            "70706bdb-e20b-412d-9cd1-efe176cd13e2",
+            "bd3fd4a6-2806-4ee5-8371-452b6b136d26",
+            "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34",
+            "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8",
+            "1c9d1365-4558-442a-a03c-e1bed972d8de"
+          ]
+        },
+        {
+          "id": "8e0691b0-8e57-4a59-a698-cbf78a45f461",
+          "name": "Vino Tinto",
+          "description": "",
+          "itemIds": [
+            "cc986568-56cd-425b-a16a-9e8074320147",
+            "bd93a2c2-e533-449d-ae8b-758234a59a8b",
+            "64730e37-6e4f-4e4c-ad78-174ac845db9b",
+            "fdac0dc2-8142-4e63-b615-814cd80c3c6b",
+            "1e543431-92d9-435e-8325-7fd49506ebf9",
+            "e34d9725-4245-485d-8850-23be318fa435",
+            "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7",
+            "062c9895-2fab-4623-9e13-859c7c51d212"
+          ]
+        },
+        {
+          "id": "17100d04-6b7d-460b-bfa4-b01241c0b8e3",
+          "name": "Vino Blanco",
+          "description": "",
+          "itemIds": [
+            "a0ad99c8-015e-4018-8602-e06c7b609b5b",
+            "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547",
+            "db5a6f65-69f2-4546-8bff-78bf14f8691d",
+            "32f8314c-f969-44c5-abb0-6a69edcb3c0a",
+            "da23070c-f57f-48a1-ab0b-0753438f5f4c",
+            "db813ef9-3feb-4963-8fc2-8425d2ec6ad1",
+            "e5f3f935-7410-4300-919f-bae55fd0bcc2"
+          ]
+        },
+        {
+          "id": "10ee4e93-008c-4544-8d1d-fc7592f72172",
+          "name": "Vino Rosado",
+          "description": "",
+          "itemIds": [
+            "42ef2525-4702-4cb4-836b-15b6d017f4a6",
+            "238d978e-50f5-448f-90bb-faf57f2d96f9",
+            "eea15d84-21f9-4d20-9524-1b08bd5364ee",
+            "dfa08efb-5ad7-493f-8d8e-37b506097c3d",
+            "268c3a75-bc79-4a04-9a04-86b54b0b12e7"
+          ]
+        }
+      ]
+    },
+    {
+      "menuGroupId": "06F23EA2E81491AEC5E540EC58B55A3E",
+      "serviceTypes": [
+        "collection"
+      ],
+      "categories": [
+        {
+          "id": "9e908b07-c556-4316-8579-99288492b165",
+          "name": "Combos",
+          "description": "",
+          "itemIds": [
+            "2bc94d4b-1929-4d6e-bb02-daf52539b1a4",
+            "b315cb99-c7d5-48ef-9460-bc3738984c85",
+            "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa",
+            "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77"
+          ]
+        },
+        {
+          "id": "8b9768ef-dbef-4c67-b27f-c8005a71928b",
+          "name": "Menús",
+          "description": "",
+          "itemIds": [
+            "df8677b2-aee6-4363-881f-c4d001b05d26",
+            "3240abb0-6b91-41b9-98e2-459acab07dde",
+            "b368155e-a45b-4589-9742-89d5cdb7e159",
+            "550b1d6c-debd-43af-ac75-0568ed2c8637",
+            "814adeeb-30f7-4195-9705-631486785ba5",
+            "d49abad5-252a-40e0-ad4e-7c73264e4caf",
+            "a1c3e14c-f304-4db9-9291-d1357a68dc48",
+            "7c7075dd-1085-4ea1-8945-811e1475e2f3",
+            "275c11d7-1b1f-4c41-aa99-0b341a17c506",
+            "b88b74fb-bdb4-4a54-af25-ab817e5c12ed"
+          ]
+        },
+        {
+          "id": "09082d3e-4f0b-43c5-8f8a-bdf4f8c7615d",
+          "name": "Entrantes",
+          "description": "Starters",
+          "itemIds": [
+            "c7659e61-a39c-493e-b0e7-c0f5a7c577e2",
+            "9300d5d7-761d-4078-b4a9-a898818aff17",
+            "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5",
+            "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79",
+            "c05733f8-adb0-43a2-a628-7330674857cd",
+            "980b234a-ab4b-48b9-9bac-64f9ea35d3da",
+            "fbbcd206-c006-4793-adef-b39d64d16f05",
+            "7ee68991-ba3c-4e63-9628-1573fbe8c8e1",
+            "e3735375-27b1-41b2-aa8b-18164a5386c2",
+            "f45778fc-82ad-40ca-bdf4-2ffef6869f83",
+            "29d701a7-e48f-4b17-8e13-8eff56c4fd14",
+            "384354a1-7433-428e-ac25-30bdad856471",
+            "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc",
+            "d5f121ee-32a0-4d2d-a55e-b409702d1aee",
+            "c2508835-ac6e-453d-8d7d-b81beef9eb51",
+            "6a84a2b7-c099-48bd-a262-3103722c9ed0"
+          ]
+        },
+        {
+          "id": "950e7644-df78-4f40-ba56-04bb9506611e",
+          "name": "Sopas",
+          "description": "Soups",
+          "itemIds": [
+            "0c18074f-8e00-4ee5-a073-ccc76dde5319",
+            "124f09d6-9272-4ce1-bf53-13272a57e54e",
+            "1122941e-b97c-4795-9116-c87b62784e84",
+            "1841b7d0-89e1-4095-94a1-9c59eb0a3248",
+            "e46c409b-7462-47af-8ed9-c2e20e71fff7",
+            "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18"
+          ]
+        },
+        {
+          "id": "9289f5b5-e8bd-499b-a965-8428f67ebec7",
+          "name": "Pato",
+          "description": "Duck",
+          "itemIds": [
+            "eaf3cef6-18a0-4417-9d78-214590d2b69e",
+            "bfbac102-6db5-4076-8ad5-ad6723bcf2e6",
+            "d0eac5aa-b8ab-4166-ac23-45585f527d65",
+            "cbbf8ba7-f910-4a99-af20-8c137e8389fd",
+            "2e63afe7-1e71-4598-a866-04316a862081",
+            "0c5affdd-bd51-4bfa-a977-61db8bf1ec30"
+          ]
+        },
+        {
+          "id": "e13f1c62-80f2-4c70-bf2b-228e9bee6f81",
+          "name": "Pollo",
+          "description": "",
+          "itemIds": [
+            "36452bf4-0ade-474c-bde9-f97cd6cc3548",
+            "99270b88-12bb-4755-8af1-8252545126e4",
+            "30e68d8f-f22d-4e90-a463-f39bae9bbc96",
+            "83048b18-45b3-40ee-9618-1c651d9b94b2",
+            "915cc436-c09a-4d23-843b-0262e2d38347",
+            "595e81ef-f420-4fe1-83ef-a169e752696a",
+            "b8c0b2d3-3811-4613-b4b4-3807e176776a",
+            "116031bf-2b83-4139-8813-27dcd8e90328",
+            "ca061de2-4769-471c-a255-e6bdbda80a6c",
+            "722e9520-c520-462c-ac7e-59bf1a0d5909",
+            "75c9bb55-b770-4b1e-880d-8027e8ddf307",
+            "0bcb58aa-4b14-4f00-abae-a7f61f751a85",
+            "104ee614-4af7-4b90-901a-b7dc22ad3add",
+            "881b6bd2-25f9-447a-bc46-db141712de1e"
+          ]
+        },
+        {
+          "id": "0bdeefd3-7378-420f-bab9-b6001b51fe76",
+          "name": "Ternera",
+          "description": "Beef",
+          "itemIds": [
+            "d70dc67e-22d0-41d4-b29d-8655dc91473a",
+            "885d0ee4-a4e0-46da-aef8-d87e204b4aef",
+            "1523eaf4-d4df-4fb6-843e-12176ab75944",
+            "2cb01360-312b-41f2-b188-8c3d39dedacb",
+            "676c5531-d4af-4ca3-9265-f164a985a5a9",
+            "d9e1bbd9-21de-4029-b3a2-643f7e6232f0",
+            "0869bbec-bf95-48f1-bc14-5a15faee445c",
+            "4463e1fa-ef02-4560-91ad-6d750d8ae859"
+          ]
+        },
+        {
+          "id": "17e999e3-6fb3-42e1-9803-cacf62d6b310",
+          "name": "Carne",
+          "description": "Meat",
+          "itemIds": [
+            "39be5c23-ef4f-4bc2-aa28-29ef901e2007",
+            "51c667f5-1bad-491e-9b90-0120e7744e05",
+            "372e6d9f-2fa1-46bc-9689-2e753414c436",
+            "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe",
+            "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c",
+            "c19c0449-d189-49f0-96ef-88d389207e72"
+          ]
+        },
+        {
+          "id": "f5e13ba6-d360-43f2-81ed-6d330d5fc983",
+          "name": "Marisco y Gambas",
+          "description": "Seafood dish",
+          "itemIds": [
+            "49dbca00-f273-44e1-b485-1e0922d0da6d",
+            "11ea9332-42e7-4ccf-96d5-ddd13ce67000",
+            "d7cc6f6c-8d02-4313-9140-0b26717992e7",
+            "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3",
+            "a9be63b9-2a88-4465-b507-d734d426ea0b",
+            "7d8aed01-d83d-4a21-9075-0d74233e8857",
+            "9322553d-07ad-459d-9c71-e964cbafd155",
+            "b5783fbf-cfd9-4116-b351-29016ada212b",
+            "6e329783-652f-4389-988a-146ac2737da9",
+            "d3ecc581-7488-4aa1-b387-e5d5697c65e8"
+          ]
+        },
+        {
+          "id": "622f508c-70ec-4d8f-a079-ecf025893cb7",
+          "name": "Pescados y Mariscos",
+          "description": "Fish & seafood",
+          "itemIds": [
+            "e28511aa-2aaf-4f67-bff4-efe7a074caf0",
+            "6f2a91e0-e0e1-453a-9b08-4f850d2d4750",
+            "b23b50e5-32fe-4f95-ad84-89f5ecc2031b",
+            "4e3ec944-506d-4f3f-abec-6a832a4f2e53",
+            "9798152a-3983-474b-ab4d-10b26e0d52d0"
+          ]
+        },
+        {
+          "id": "2d554b78-9d57-4e22-9339-c2cd6fc8b936",
+          "name": "Acompañamientos",
+          "description": "Companion",
+          "itemIds": [
+            "31eb1cd5-fcc8-4887-a4cc-30a69569f949",
+            "16b0b31e-4088-4e85-8883-e1d419c9d20f",
+            "edb9fd5c-b35f-4711-b630-bffdb6b86e21",
+            "4e3d38c6-09d0-45b8-860f-87cb459b5c73",
+            "71b6f716-34fd-41bf-8271-cb13bb8b25d0",
+            "4fdd980c-e039-45e1-96c2-802368db20c5",
+            "14bd1a12-dbf1-488f-8688-3e8f554de668",
+            "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d",
+            "aa8c4759-c898-4add-8638-c74fcb48880e",
+            "41c7f490-fa90-479e-b544-e1a12dcdc902",
+            "a5ebea5f-eb97-4e02-868a-2ce71b340992",
+            "26a7efa5-4b35-4fac-b861-e7c040d61ae7",
+            "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e",
+            "22ad899a-9bb1-4b7c-9192-c0fb1622ec66",
+            "1a714806-c965-4586-890d-86504e36720c",
+            "335bf71a-7da3-480a-b986-5d43780daea6",
+            "efb88c63-4fb4-459b-8f80-7b577c436ebd",
+            "f2314479-6966-4a7e-9c8e-e4542e1ce8ee",
+            "682add62-dbde-4a82-9e0d-39c95d74fc00"
+          ]
+        },
+        {
+          "id": "a83f9567-1dbc-44dd-bc06-91ef3c6d2856",
+          "name": "Platos Combinados",
+          "description": "",
+          "itemIds": [
+            "0fa8c068-2918-4aff-9822-03a52567e4b5",
+            "8e3af345-b128-4e5b-ba3b-ba021d04120c",
+            "fe2993fd-4d6a-4263-b7de-afe527ae323b"
+          ]
+        },
+        {
+          "id": "f9f8183f-b21e-42b9-a1cb-df039dfde2b4",
+          "name": "Dím Sum",
+          "description": "",
+          "itemIds": [
+            "57c37901-63f3-41b9-80f2-130c0a07e468",
+            "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88",
+            "16e09af6-efc4-4ab3-8a07-e443a0aacbc3",
+            "9d19370b-815d-4397-be5d-07f05917a459",
+            "58edf436-1890-44f2-a470-b569bca78dce",
+            "f4c89923-3f73-44c9-8424-d1906f011cb1",
+            "7005018a-5015-4996-83eb-93e9d411df54",
+            "08c624f3-05bb-44f2-9704-42ce3bfb9f11",
+            "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846",
+            "8839206d-02c4-4b0b-ad99-7800012dfa26",
+            "0014f171-349c-4716-8515-a36d0688f510",
+            "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b",
+            "66309b5d-f564-4ee0-8e1e-5eff546e4273",
+            "71a9b478-e981-45f9-99f2-70fd81d0b445",
+            "512091b0-bf00-46bd-8f75-d6620e3bde3a"
+          ]
+        },
+        {
+          "id": "f473f25a-d382-4b2b-b52e-88f12d24d9ff",
+          "name": "Nigiris",
+          "description": "",
+          "itemIds": [
+            "32d063c0-7b07-4d49-8b26-b49d99997d26",
+            "ef13e30b-b06a-46f4-8f73-aef506714af3",
+            "bc8723b1-7e93-4a29-86df-b6ec76525438",
+            "dd4b8620-b60d-4819-af70-c48ca6672b20",
+            "2c3b8569-52bb-4966-ab45-4dcb84d99134",
+            "bd1cce55-e028-4f5b-9377-64e1304ee679",
+            "32e18080-e06c-4226-8416-6d8cf43e7aa1",
+            "8d2967fd-44ae-4483-bb32-eec3c13bf7a6",
+            "138bab96-4337-4ffc-b9a5-313230991ce6",
+            "a9fd181b-d4d3-483f-a88b-aa3a6357943c",
+            "8499eaba-4a8a-4169-95c0-e091c156bff4",
+            "979b51dd-6a70-43de-9d28-7e82f068e698"
+          ]
+        },
+        {
+          "id": "d948dfeb-c1cd-4951-95f0-1c1eeb3037e6",
+          "name": "Bowls",
+          "description": "",
+          "itemIds": [
+            "ec995443-a3b2-49f6-a2b9-947767fe5493",
+            "812a1502-fe5c-41d0-ad6f-10e60c1a3767",
+            "2b32980a-b1d4-4430-a185-9aa82b390d6c"
+          ]
+        },
+        {
+          "id": "f0ba49f6-279d-4be4-9a59-d0d175b965c6",
+          "name": "Makis",
+          "description": "",
+          "itemIds": [
+            "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181",
+            "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33",
+            "b32d5bc1-8b25-4732-be62-4d792db57d2f",
+            "452a6bd7-c07f-4eed-b410-c8f326a1f311",
+            "139d247b-cb0b-4fd5-850b-4885a58c8f41",
+            "3cb65a29-4ce3-4d77-be21-6472903d3f47",
+            "b1a614cf-6d61-461f-ba61-e80dd00d5ac0",
+            "1201beea-3232-4185-9de4-0a5c07f5a182",
+            "5f7590cc-bf14-40fb-aabc-9aacafe15622",
+            "c97652f3-4217-4245-8057-15d259fbf757",
+            "341829e1-dc93-4eb2-8c84-7040d49b5043",
+            "56e41ce2-d7e4-426c-a9af-575ed3e9b731",
+            "204505d3-410d-4400-bd22-3630d5f1c5d3"
+          ]
+        },
+        {
+          "id": "f734ff47-3902-449c-92fd-70dce31fb89b",
+          "name": "Uramakis",
+          "description": "",
+          "itemIds": [
+            "d41c8f08-9112-49c1-8cd7-c4c47f30d14b",
+            "1834bdc0-5b11-4df8-9342-b56eacdbd903",
+            "7f9a7bd1-883a-42c8-b4be-0081b6823f33",
+            "80b33557-1c33-4456-b9f8-275569e35ea2",
+            "4b70ce85-7557-474d-98ac-2412b28325d9",
+            "050c5b63-95a8-41da-993f-59e339672ad8",
+            "61209581-b67f-41b9-972c-9a66a4dae26e",
+            "44ebe13c-eac7-4b5d-b51e-a084e9b85d15",
+            "af091a5f-0afd-4794-bcd0-cf867d560661",
+            "007547e7-12a3-4d6d-9a0a-657e18afc52f",
+            "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f",
+            "9530e9be-fcbd-451e-ab08-511e6447e707",
+            "b7f61302-4526-441a-a07c-12e73ed00ddc",
+            "80fe950d-ccb2-4831-91aa-181c09aaf302",
+            "d2c41ef4-2380-47ef-a1aa-aae4336bba05",
+            "72fa00be-f834-4874-8176-0d0d6709b084"
+          ]
+        },
+        {
+          "id": "0fce4176-b5e5-41ae-9144-906af279fce0",
+          "name": "Sushi",
+          "description": "Sashimi",
+          "itemIds": [
+            "4950bee8-f6fd-4dc4-abea-79a37896f09a",
+            "d09aafcd-1052-445b-b4e5-ee698ab7d081",
+            "01f07df8-29e3-4fe6-a424-3f92b057acf1",
+            "c2091a81-b7f6-43eb-be38-717b7e0dcd2a",
+            "9c79f57b-e976-43d3-8267-d6cf07f25dd0",
+            "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f",
+            "d87ad619-ae24-4220-bfed-0a07376ea3c5",
+            "b62cabf3-936a-4fcc-9953-b9db1147f9bd"
+          ]
+        },
+        {
+          "id": "1d1998a7-b835-46a9-af3f-6e5f9a67366b",
+          "name": "Temakis",
+          "description": "",
+          "itemIds": [
+            "0168831f-3fb0-4189-a5d2-ae07b3ae183e",
+            "f24d6746-8a12-481b-a742-fc13a60e25b5",
+            "b28895a1-46b2-4f83-beee-92c557fad539"
+          ]
+        },
+        {
+          "id": "81a3b1ab-daae-40a1-ae88-64d81d46d76f",
+          "name": "Gunkan Maki",
+          "description": "",
+          "itemIds": [
+            "ed942a58-0a7a-46eb-8fbc-a32aaef491fb",
+            "6627c88b-dcff-44e1-bfc3-651ba03b232d",
+            "59092c2a-3321-4f68-a6ff-4ff5e74eb925",
+            "e84d3c96-bc65-48e7-bc3b-498ad21162fa"
+          ]
+        },
+        {
+          "id": "685cfa22-6ac1-4bd9-a5ae-cda61088d3ab",
+          "name": "Otros",
+          "description": "",
+          "itemIds": [
+            "08730261-a44a-48ba-982e-b31a5e7e2d36",
+            "befebca2-bf3f-46f9-81c4-a1f2b954f4e1",
+            "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e",
+            "70706bdb-e20b-412d-9cd1-efe176cd13e2",
+            "bd3fd4a6-2806-4ee5-8371-452b6b136d26",
+            "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34",
+            "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8",
+            "1c9d1365-4558-442a-a03c-e1bed972d8de"
+          ]
+        },
+        {
+          "id": "8e0691b0-8e57-4a59-a698-cbf78a45f461",
+          "name": "Vino Tinto",
+          "description": "",
+          "itemIds": [
+            "cc986568-56cd-425b-a16a-9e8074320147",
+            "bd93a2c2-e533-449d-ae8b-758234a59a8b",
+            "64730e37-6e4f-4e4c-ad78-174ac845db9b",
+            "fdac0dc2-8142-4e63-b615-814cd80c3c6b",
+            "1e543431-92d9-435e-8325-7fd49506ebf9",
+            "e34d9725-4245-485d-8850-23be318fa435",
+            "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7",
+            "062c9895-2fab-4623-9e13-859c7c51d212"
+          ]
+        },
+        {
+          "id": "17100d04-6b7d-460b-bfa4-b01241c0b8e3",
+          "name": "Vino Blanco",
+          "description": "",
+          "itemIds": [
+            "a0ad99c8-015e-4018-8602-e06c7b609b5b",
+            "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547",
+            "db5a6f65-69f2-4546-8bff-78bf14f8691d",
+            "32f8314c-f969-44c5-abb0-6a69edcb3c0a",
+            "da23070c-f57f-48a1-ab0b-0753438f5f4c",
+            "db813ef9-3feb-4963-8fc2-8425d2ec6ad1",
+            "e5f3f935-7410-4300-919f-bae55fd0bcc2"
+          ]
+        },
+        {
+          "id": "10ee4e93-008c-4544-8d1d-fc7592f72172",
+          "name": "Vino Rosado",
+          "description": "",
+          "itemIds": [
+            "42ef2525-4702-4cb4-836b-15b6d017f4a6",
+            "238d978e-50f5-448f-90bb-faf57f2d96f9",
+            "eea15d84-21f9-4d20-9524-1b08bd5364ee",
+            "dfa08efb-5ad7-493f-8d8e-37b506097c3d",
+            "268c3a75-bc79-4a04-9a04-86b54b0b12e7"
+          ]
+        }
+      ]
+    }
+  ],
+  "items": {
+    "595e81ef-f420-4fe1-83ef-a169e752696a": {
+      "id": "595e81ef-f420-4fe1-83ef-a169e752696a",
+      "name": "Pollo con Bambú y Setas",
+      "description": "Chicken with bambu mushrooms",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "595e81ef-f420-4fe1-83ef-a169e752696a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b1a614cf-6d61-461f-ba61-e80dd00d5ac0": {
+      "id": "b1a614cf-6d61-461f-ba61-e80dd00d5ac0",
+      "name": "Maki California, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "b1a614cf-6d61-461f-ba61-e80dd00d5ac0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "01f07df8-29e3-4fe6-a424-3f92b057acf1": {
+      "id": "01f07df8-29e3-4fe6-a424-3f92b057acf1",
+      "name": "Futomaki, 8 Piezas",
+      "description": "Atún, salmón y verduras",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "01f07df8-29e3-4fe6-a424-3f92b057acf1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "ca061de2-4769-471c-a255-e6bdbda80a6c": {
+      "id": "ca061de2-4769-471c-a255-e6bdbda80a6c",
+      "name": "Pollo con Salsa de Judías Neg",
+      "description": "Chicken with black bean sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "ca061de2-4769-471c-a255-e6bdbda80a6c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0c18074f-8e00-4ee5-a073-ccc76dde5319": {
+      "id": "0c18074f-8e00-4ee5-a073-ccc76dde5319",
+      "name": "Sopa de Aleta de Tiburón",
+      "description": "Shark's fin soup",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0c18074f-8e00-4ee5-a073-ccc76dde5319",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f": {
+      "id": "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f",
+      "name": "Sushi y Sashimi Variado, 20 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 25.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "51c667f5-1bad-491e-9b90-0120e7744e05": {
+      "id": "51c667f5-1bad-491e-9b90-0120e7744e05",
+      "name": "Costillas con Sal y Pimienta",
+      "description": "Salt and pepper ribs",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "51c667f5-1bad-491e-9b90-0120e7744e05",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9322553d-07ad-459d-9c71-e964cbafd155": {
+      "id": "9322553d-07ad-459d-9c71-e964cbafd155",
+      "name": "Gambas con Salsa Picante",
+      "description": "Prawns with hot sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "9322553d-07ad-459d-9c71-e964cbafd155",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c2091a81-b7f6-43eb-be38-717b7e0dcd2a": {
+      "id": "c2091a81-b7f6-43eb-be38-717b7e0dcd2a",
+      "name": "Sushi Variado, 14 Piezas",
+      "description": "6 Piezas sashimi salmón, 6 Piezas sashimi atún",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "c2091a81-b7f6-43eb-be38-717b7e0dcd2a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 17.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1122941e-b97c-4795-9116-c87b62784e84": {
+      "id": "1122941e-b97c-4795-9116-c87b62784e84",
+      "name": "Sopa de Pollo con Champiñones",
+      "description": "Chicken and mushroom soup",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "1122941e-b97c-4795-9116-c87b62784e84",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "31eb1cd5-fcc8-4887-a4cc-30a69569f949": {
+      "id": "31eb1cd5-fcc8-4887-a4cc-30a69569f949",
+      "name": "Ku Bak con Tres Delicias",
+      "description": "Crispy rice with three delicacies",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "31eb1cd5-fcc8-4887-a4cc-30a69569f949",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "22ad899a-9bb1-4b7c-9192-c0fb1622ec66": {
+      "id": "22ad899a-9bb1-4b7c-9192-c0fb1622ec66",
+      "name": "Fideos de Arroz con Gambas",
+      "description": "Rice noodles with prawns",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "22ad899a-9bb1-4b7c-9192-c0fb1622ec66",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7f9a7bd1-883a-42c8-b4be-0081b6823f33": {
+      "id": "7f9a7bd1-883a-42c8-b4be-0081b6823f33",
+      "name": "Uramaki Anguila, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "7f9a7bd1-883a-42c8-b4be-0081b6823f33",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1841b7d0-89e1-4095-94a1-9c59eb0a3248": {
+      "id": "1841b7d0-89e1-4095-94a1-9c59eb0a3248",
+      "name": "Sopa de Pollo con Maíz",
+      "description": "Chicken sweet corn soup",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "1841b7d0-89e1-4095-94a1-9c59eb0a3248",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "bfbac102-6db5-4076-8ad5-ad6723bcf2e6": {
+      "id": "bfbac102-6db5-4076-8ad5-ad6723bcf2e6",
+      "name": "Pato Estilo Thai",
+      "description": "Thai style duck",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "bfbac102-6db5-4076-8ad5-ad6723bcf2e6",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77": {
+      "id": "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77",
+      "name": "Combo D",
+      "description": "Ensalada wakame, gyozas de pollo a la plancha, 4 rollo vietnamita, 1 pato a la pekinesa, 8 nigiris mixto, 4 maki de pollo, 4 maki vegetal, 4 uromaki salmón, 4 california, 4 gunkan maki (2 de atún y 2 salmón) en total 33 piezas",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 63.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "39be5c23-ef4f-4bc2-aa28-29ef901e2007": {
+      "id": "39be5c23-ef4f-4bc2-aa28-29ef901e2007",
+      "name": "Costillas con Salsa BBQ",
+      "description": "BBQ spare ribs",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "39be5c23-ef4f-4bc2-aa28-29ef901e2007",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "36452bf4-0ade-474c-bde9-f97cd6cc3548": {
+      "id": "36452bf4-0ade-474c-bde9-f97cd6cc3548",
+      "name": "Pollo con Salsa Roja Thai",
+      "description": "Chicken with thai red curry sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "36452bf4-0ade-474c-bde9-f97cd6cc3548",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "16b0b31e-4088-4e85-8883-e1d419c9d20f": {
+      "id": "16b0b31e-4088-4e85-8883-e1d419c9d20f",
+      "name": "Arroz Frito de la Casa",
+      "description": "Special fried rice",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "16b0b31e-4088-4e85-8883-e1d419c9d20f",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9300d5d7-761d-4078-b4a9-a898818aff17": {
+      "id": "9300d5d7-761d-4078-b4a9-a898818aff17",
+      "name": "Ensalada China",
+      "description": "Chinese salad",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "9300d5d7-761d-4078-b4a9-a898818aff17",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.05,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2e63afe7-1e71-4598-a866-04316a862081": {
+      "id": "2e63afe7-1e71-4598-a866-04316a862081",
+      "name": "Pato con Piña",
+      "description": "Duck with pineapple",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "2e63afe7-1e71-4598-a866-04316a862081",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "fbbcd206-c006-4793-adef-b39d64d16f05": {
+      "id": "fbbcd206-c006-4793-adef-b39d64d16f05",
+      "name": "Langostinos Fritos Thai",
+      "description": "Fried prawns thai",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "fbbcd206-c006-4793-adef-b39d64d16f05",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.05,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b62cabf3-936a-4fcc-9953-b9db1147f9bd": {
+      "id": "b62cabf3-936a-4fcc-9953-b9db1147f9bd",
+      "name": "Sushi Tempura con Queso, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "b62cabf3-936a-4fcc-9953-b9db1147f9bd",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "befebca2-bf3f-46f9-81c4-a1f2b954f4e1": {
+      "id": "befebca2-bf3f-46f9-81c4-a1f2b954f4e1",
+      "name": "Refrescos",
+      "description": "Coca cola, zero, fanta naranja, fanta limón, seven up, aquarius naranja o nestea",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "befebca2-bf3f-46f9-81c4-a1f2b954f4e1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.25,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9530e9be-fcbd-451e-ab08-511e6447e707": {
+      "id": "9530e9be-fcbd-451e-ab08-511e6447e707",
+      "name": "Arroz Negro de Almendras con Salmón y Aguacate, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "9530e9be-fcbd-451e-ab08-511e6447e707",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "30e68d8f-f22d-4e90-a463-f39bae9bbc96": {
+      "id": "30e68d8f-f22d-4e90-a463-f39bae9bbc96",
+      "name": "Pollo con Salsa Agridulce",
+      "description": "Sweet sour chicken balls",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "30e68d8f-f22d-4e90-a463-f39bae9bbc96",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d5f121ee-32a0-4d2d-a55e-b409702d1aee": {
+      "id": "d5f121ee-32a0-4d2d-a55e-b409702d1aee",
+      "name": "Triángulo de Curry Thai",
+      "description": "Curry triangle thai",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "d5f121ee-32a0-4d2d-a55e-b409702d1aee",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "08730261-a44a-48ba-982e-b31a5e7e2d36": {
+      "id": "08730261-a44a-48ba-982e-b31a5e7e2d36",
+      "name": "Cerveza China",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "08730261-a44a-48ba-982e-b31a5e7e2d36",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b32d5bc1-8b25-4732-be62-4d792db57d2f": {
+      "id": "b32d5bc1-8b25-4732-be62-4d792db57d2f",
+      "name": "Maki Pollo Crujiente, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b32d5bc1-8b25-4732-be62-4d792db57d2f",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "ed942a58-0a7a-46eb-8fbc-a32aaef491fb": {
+      "id": "ed942a58-0a7a-46eb-8fbc-a32aaef491fb",
+      "name": "Gunkan Maki Wakame, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "ed942a58-0a7a-46eb-8fbc-a32aaef491fb",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "341829e1-dc93-4eb2-8c84-7040d49b5043": {
+      "id": "341829e1-dc93-4eb2-8c84-7040d49b5043",
+      "name": "Maki Rollo Variado, 8 Piezas",
+      "description": "Atún, salmón y vegetal",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "341829e1-dc93-4eb2-8c84-7040d49b5043",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "08c624f3-05bb-44f2-9704-42ce3bfb9f11": {
+      "id": "08c624f3-05bb-44f2-9704-42ce3bfb9f11",
+      "name": "Gyozas de Pollo a la Plancha, 6 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "08c624f3-05bb-44f2-9704-42ce3bfb9f11",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "915cc436-c09a-4d23-843b-0262e2d38347": {
+      "id": "915cc436-c09a-4d23-843b-0262e2d38347",
+      "name": "Pollo con Almendras",
+      "description": "Chicken with almonds",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "915cc436-c09a-4d23-843b-0262e2d38347",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "80b33557-1c33-4456-b9f8-275569e35ea2": {
+      "id": "80b33557-1c33-4456-b9f8-275569e35ea2",
+      "name": "Uramaki Rainbow Roll, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "80b33557-1c33-4456-b9f8-275569e35ea2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "104ee614-4af7-4b90-901a-b7dc22ad3add": {
+      "id": "104ee614-4af7-4b90-901a-b7dc22ad3add",
+      "name": "Pollo con Champiñones",
+      "description": "Chicken mushrooms",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "104ee614-4af7-4b90-901a-b7dc22ad3add",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0fa8c068-2918-4aff-9822-03a52567e4b5": {
+      "id": "0fa8c068-2918-4aff-9822-03a52567e4b5",
+      "name": "Tortilla con Pollo y Patatas Fritas",
+      "description": "Omelette with chicken and chips",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "0fa8c068-2918-4aff-9822-03a52567e4b5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4fdd980c-e039-45e1-96c2-802368db20c5": {
+      "id": "4fdd980c-e039-45e1-96c2-802368db20c5",
+      "name": "Arroz Blanco",
+      "description": "Plan rice",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "4fdd980c-e039-45e1-96c2-802368db20c5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1a714806-c965-4586-890d-86504e36720c": {
+      "id": "1a714806-c965-4586-890d-86504e36720c",
+      "name": "Pan de Gambas",
+      "description": "Prawn cracker",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "1a714806-c965-4586-890d-86504e36720c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "5f7590cc-bf14-40fb-aabc-9aacafe15622": {
+      "id": "5f7590cc-bf14-40fb-aabc-9aacafe15622",
+      "name": "Maki Gambas, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "5f7590cc-bf14-40fb-aabc-9aacafe15622",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "df8677b2-aee6-4363-881f-c4d001b05d26": {
+      "id": "df8677b2-aee6-4363-881f-c4d001b05d26",
+      "name": "Menús para 2 Personas A",
+      "description": "Ensalada china, rollo de primavera, arroz frito con tres delicias, cerdo con salsa agridulce, ternera con bambú, setas, bebida y postres\n\nChinese salad, spring roll, fried rice with three delicions, sweet sour pork, beef with bambu mushrooms, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "df8677b2-aee6-4363-881f-c4d001b05d26",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 27.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "af091a5f-0afd-4794-bcd0-cf867d560661": {
+      "id": "af091a5f-0afd-4794-bcd0-cf867d560661",
+      "name": "Sashimi de Atún, 6 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "af091a5f-0afd-4794-bcd0-cf867d560661",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "a0ad99c8-015e-4018-8602-e06c7b609b5b": {
+      "id": "a0ad99c8-015e-4018-8602-e06c7b609b5b",
+      "name": "Vino Blanco Coto",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "a0ad99c8-015e-4018-8602-e06c7b609b5b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6f2a91e0-e0e1-453a-9b08-4f850d2d4750": {
+      "id": "6f2a91e0-e0e1-453a-9b08-4f850d2d4750",
+      "name": "Sepia con Bambú y Setas",
+      "description": "Squid with bambú and mushrooms",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "6f2a91e0-e0e1-453a-9b08-4f850d2d4750",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "83048b18-45b3-40ee-9618-1c651d9b94b2": {
+      "id": "83048b18-45b3-40ee-9618-1c651d9b94b2",
+      "name": "Pollo con Piña Natural",
+      "description": "Chicken with almonds",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "83048b18-45b3-40ee-9618-1c651d9b94b2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "32e18080-e06c-4226-8416-6d8cf43e7aa1": {
+      "id": "32e18080-e06c-4226-8416-6d8cf43e7aa1",
+      "name": "Flambeado Salmón, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "32e18080-e06c-4226-8416-6d8cf43e7aa1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9d19370b-815d-4397-be5d-07f05917a459": {
+      "id": "9d19370b-815d-4397-be5d-07f05917a459",
+      "name": "Sau Mai, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "9d19370b-815d-4397-be5d-07f05917a459",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "682add62-dbde-4a82-9e0d-39c95d74fc00": {
+      "id": "682add62-dbde-4a82-9e0d-39c95d74fc00",
+      "name": "Bambú y Setas Salteadas",
+      "description": "Sauted bambú and mushrooms",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "682add62-dbde-4a82-9e0d-39c95d74fc00",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "238d978e-50f5-448f-90bb-faf57f2d96f9": {
+      "id": "238d978e-50f5-448f-90bb-faf57f2d96f9",
+      "name": "Vino Rosado Marques de Cáceres",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "238d978e-50f5-448f-90bb-faf57f2d96f9",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e46c409b-7462-47af-8ed9-c2e20e71fff7": {
+      "id": "e46c409b-7462-47af-8ed9-c2e20e71fff7",
+      "name": "Sopa de Mariscos",
+      "description": "Sea ​food soup",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "e46c409b-7462-47af-8ed9-c2e20e71fff7",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34": {
+      "id": "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34",
+      "name": "Cerveza China",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.25,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c97652f3-4217-4245-8057-15d259fbf757": {
+      "id": "c97652f3-4217-4245-8057-15d259fbf757",
+      "name": "Maki Dragón, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "c97652f3-4217-4245-8057-15d259fbf757",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "a9fd181b-d4d3-483f-a88b-aa3a6357943c": {
+      "id": "a9fd181b-d4d3-483f-a88b-aa3a6357943c",
+      "name": "Pulpo, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "a9fd181b-d4d3-483f-a88b-aa3a6357943c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "66309b5d-f564-4ee0-8e1e-5eff546e4273": {
+      "id": "66309b5d-f564-4ee0-8e1e-5eff546e4273",
+      "name": "Combinado 1, 4 Piezas",
+      "description": "Sau mai",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "66309b5d-f564-4ee0-8e1e-5eff546e4273",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b88b74fb-bdb4-4a54-af25-ab817e5c12ed": {
+      "id": "b88b74fb-bdb4-4a54-af25-ab817e5c12ed",
+      "name": "Menú Para 6 Personas B",
+      "description": "Ensalada de la Casa (2), rollito chino (12), arroz frito de la casa (3), pato a la pekinesa, costillas asadas, ternera con salsa gon bao, pollo con bambú y setas chinas, langostinos fritos, gambas con puerros y jengibre a la plancha, bebida y postre o café\n\nSpecial salad (2), chinese roll (12), special fried rice (3), peking duck, roasted spare ribs, beef with gon bao sauce, chicken with bamboo and chinese mushrooms, fried king prawns, sizzling prawns with leeks and ginger, drink and dessert or coffee",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b88b74fb-bdb4-4a54-af25-ab817e5c12ed",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 96.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": [
+            "944bc9f1-4e73-4328-ba08-90b250b4f99e"
+          ]
+        }
+      ]
+    },
+    "41c7f490-fa90-479e-b544-e1a12dcdc902": {
+      "id": "41c7f490-fa90-479e-b544-e1a12dcdc902",
+      "name": "Tallarines con Gambas",
+      "description": "Noodles with prawns",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "41c7f490-fa90-479e-b544-e1a12dcdc902",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "881b6bd2-25f9-447a-bc46-db141712de1e": {
+      "id": "881b6bd2-25f9-447a-bc46-db141712de1e",
+      "name": "Ternera con Cebolla",
+      "description": "Beef with onion",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "881b6bd2-25f9-447a-bc46-db141712de1e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "75c9bb55-b770-4b1e-880d-8027e8ddf307": {
+      "id": "75c9bb55-b770-4b1e-880d-8027e8ddf307",
+      "name": "Alas de Pollo Fritas",
+      "description": "Fried chicken wings",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "75c9bb55-b770-4b1e-880d-8027e8ddf307",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "bc8723b1-7e93-4a29-86df-b6ec76525438": {
+      "id": "bc8723b1-7e93-4a29-86df-b6ec76525438",
+      "name": "Nigiri Aguacate, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "bc8723b1-7e93-4a29-86df-b6ec76525438",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "676c5531-d4af-4ca3-9265-f164a985a5a9": {
+      "id": "676c5531-d4af-4ca3-9265-f164a985a5a9",
+      "name": "Ternera con Pimientos Verdes",
+      "description": "Beef with green peppers",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "676c5531-d4af-4ca3-9265-f164a985a5a9",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c19c0449-d189-49f0-96ef-88d389207e72": {
+      "id": "c19c0449-d189-49f0-96ef-88d389207e72",
+      "name": "Cerdo Asado",
+      "description": "Roasted pork with sweet chill sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "c19c0449-d189-49f0-96ef-88d389207e72",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d2c41ef4-2380-47ef-a1aa-aae4336bba05": {
+      "id": "d2c41ef4-2380-47ef-a1aa-aae4336bba05",
+      "name": "Hoso Putu Maki, 8 Piezas",
+      "description": "Aguacate, salmón con surimi con queso",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "d2c41ef4-2380-47ef-a1aa-aae4336bba05",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "f45778fc-82ad-40ca-bdf4-2ffef6869f83": {
+      "id": "f45778fc-82ad-40ca-bdf4-2ffef6869f83",
+      "name": "Algas Fritas",
+      "description": "Fried seaweeds",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "f45778fc-82ad-40ca-bdf4-2ffef6869f83",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1c9d1365-4558-442a-a03c-e1bed972d8de": {
+      "id": "1c9d1365-4558-442a-a03c-e1bed972d8de",
+      "name": "Agua Mineral, Grande",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "1c9d1365-4558-442a-a03c-e1bed972d8de",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b315cb99-c7d5-48ef-9460-bc3738984c85": {
+      "id": "b315cb99-c7d5-48ef-9460-bc3738984c85",
+      "name": "Combo B",
+      "description": "6 nigiris mixtos + ensalada wakame, 4 maki de pollo, 4 maki vegetal, 4 uromaki salmón, 4 california y 4 gunkan maki (26 piezas",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b315cb99-c7d5-48ef-9460-bc3738984c85",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 33.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "3cb65a29-4ce3-4d77-be21-6472903d3f47": {
+      "id": "3cb65a29-4ce3-4d77-be21-6472903d3f47",
+      "name": "Maki Aguacate, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "3cb65a29-4ce3-4d77-be21-6472903d3f47",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "f24d6746-8a12-481b-a742-fc13a60e25b5": {
+      "id": "f24d6746-8a12-481b-a742-fc13a60e25b5",
+      "name": "Temaki Atún",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "f24d6746-8a12-481b-a742-fc13a60e25b5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "550b1d6c-debd-43af-ac75-0568ed2c8637": {
+      "id": "550b1d6c-debd-43af-ac75-0568ed2c8637",
+      "name": "Menú para 3 Personas B",
+      "description": "Ensalada especial, rollito chino, arroz frito especial, pato a la pekinesa, pollo bambú y setas, gambas con ajo a la plancha bebida y postre\n\nSpecial salad, chinese rollo, special fried rice, peking duck, chicken with bambu mushrooms, sizzling prawns with garlic drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "550b1d6c-debd-43af-ac75-0568ed2c8637",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 50.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c7659e61-a39c-493e-b0e7-c0f5a7c577e2": {
+      "id": "c7659e61-a39c-493e-b0e7-c0f5a7c577e2",
+      "name": "Ensalada de la Casa",
+      "description": "Special salad",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "c7659e61-a39c-493e-b0e7-c0f5a7c577e2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.05,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4463e1fa-ef02-4560-91ad-6d750d8ae859": {
+      "id": "4463e1fa-ef02-4560-91ad-6d750d8ae859",
+      "name": "Ternera con Judías Negras",
+      "description": "Beef with black beans sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "4463e1fa-ef02-4560-91ad-6d750d8ae859",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2c3b8569-52bb-4966-ab45-4dcb84d99134": {
+      "id": "2c3b8569-52bb-4966-ab45-4dcb84d99134",
+      "name": "Nigiri Mixto, 8 Piezas",
+      "description": "2 Atún, 2 salmón, 2 gambas y 2 anguila",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "2c3b8569-52bb-4966-ab45-4dcb84d99134",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "cc986568-56cd-425b-a16a-9e8074320147": {
+      "id": "cc986568-56cd-425b-a16a-9e8074320147",
+      "name": "Vino Tinto Marques de Cáceres",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "cc986568-56cd-425b-a16a-9e8074320147",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 17.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6a84a2b7-c099-48bd-a262-3103722c9ed0": {
+      "id": "6a84a2b7-c099-48bd-a262-3103722c9ed0",
+      "name": "Gambas en Tempura",
+      "description": "Prawns in tempura",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "6a84a2b7-c099-48bd-a262-3103722c9ed0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2bc94d4b-1929-4d6e-bb02-daf52539b1a4": {
+      "id": "2bc94d4b-1929-4d6e-bb02-daf52539b1a4",
+      "name": "Combo A",
+      "description": "4 nigiris, 4 maki de pollo, 4 maki vegetal y 2 gunkan maki wakame ( 14 piezas)",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "2bc94d4b-1929-4d6e-bb02-daf52539b1a4",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 19.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4b70ce85-7557-474d-98ac-2412b28325d9": {
+      "id": "4b70ce85-7557-474d-98ac-2412b28325d9",
+      "name": "Mango con Salmón, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "4b70ce85-7557-474d-98ac-2412b28325d9",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "812a1502-fe5c-41d0-ad6f-10e60c1a3767": {
+      "id": "812a1502-fe5c-41d0-ad6f-10e60c1a3767",
+      "name": "Poke Bowl de Atún",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "812a1502-fe5c-41d0-ad6f-10e60c1a3767",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "42ef2525-4702-4cb4-836b-15b6d017f4a6": {
+      "id": "42ef2525-4702-4cb4-836b-15b6d017f4a6",
+      "name": "Vino Rosado Mateus",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "42ef2525-4702-4cb4-836b-15b6d017f4a6",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d3ecc581-7488-4aa1-b387-e5d5697c65e8": {
+      "id": "d3ecc581-7488-4aa1-b387-e5d5697c65e8",
+      "name": "Langostinos Fritos",
+      "description": "Fried king prawns",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d3ecc581-7488-4aa1-b387-e5d5697c65e8",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e": {
+      "id": "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e",
+      "name": "Fideos de Arroz con Tres Delicias",
+      "description": "Rice noodles with three delights",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "dd4b8620-b60d-4819-af70-c48ca6672b20": {
+      "id": "dd4b8620-b60d-4819-af70-c48ca6672b20",
+      "name": "Nigiri Surimi, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "dd4b8620-b60d-4819-af70-c48ca6672b20",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d87ad619-ae24-4220-bfed-0a07376ea3c5": {
+      "id": "d87ad619-ae24-4220-bfed-0a07376ea3c5",
+      "name": "Sushi Tempura, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d87ad619-ae24-4220-bfed-0a07376ea3c5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2cb01360-312b-41f2-b188-8c3d39dedacb": {
+      "id": "2cb01360-312b-41f2-b188-8c3d39dedacb",
+      "name": "Ternera con Bambú y Setas",
+      "description": "Beef with bambú mushrooms",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "2cb01360-312b-41f2-b188-8c3d39dedacb",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc": {
+      "id": "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc",
+      "name": "Pincho de Cerdo Mongolia",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "cbbf8ba7-f910-4a99-af20-8c137e8389fd": {
+      "id": "cbbf8ba7-f910-4a99-af20-8c137e8389fd",
+      "name": "Pato con Naranja",
+      "description": "Duck with orange sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "cbbf8ba7-f910-4a99-af20-8c137e8389fd",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0c5affdd-bd51-4bfa-a977-61db8bf1ec30": {
+      "id": "0c5affdd-bd51-4bfa-a977-61db8bf1ec30",
+      "name": "Pato con Bambú y Setas a la Plancha",
+      "description": "Sizzling duck with bambú mushrooms",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0c5affdd-bd51-4bfa-a977-61db8bf1ec30",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "efb88c63-4fb4-459b-8f80-7b577c436ebd": {
+      "id": "efb88c63-4fb4-459b-8f80-7b577c436ebd",
+      "name": "Patatas Fritas",
+      "description": "Fried chips",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "efb88c63-4fb4-459b-8f80-7b577c436ebd",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0bcb58aa-4b14-4f00-abae-a7f61f751a85": {
+      "id": "0bcb58aa-4b14-4f00-abae-a7f61f751a85",
+      "name": "Pollo con Salsa Curry",
+      "description": "Chicken with curry sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0bcb58aa-4b14-4f00-abae-a7f61f751a85",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5": {
+      "id": "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5",
+      "name": "Ensalada de Aguacate con Gambas",
+      "description": "Avocado salad with prawns",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b7f61302-4526-441a-a07c-12e73ed00ddc": {
+      "id": "b7f61302-4526-441a-a07c-12e73ed00ddc",
+      "name": "Pollo Crujiente Rollo, 8 Piezas",
+      "description": "Pollo con pepino",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b7f61302-4526-441a-a07c-12e73ed00ddc",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6627c88b-dcff-44e1-bfc3-651ba03b232d": {
+      "id": "6627c88b-dcff-44e1-bfc3-651ba03b232d",
+      "name": "Gunkan Maki Salmón, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "6627c88b-dcff-44e1-bfc3-651ba03b232d",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d09aafcd-1052-445b-b4e5-ee698ab7d081": {
+      "id": "d09aafcd-1052-445b-b4e5-ee698ab7d081",
+      "name": "Sashimi atún, 6 piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d09aafcd-1052-445b-b4e5-ee698ab7d081",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "979b51dd-6a70-43de-9d28-7e82f068e698": {
+      "id": "979b51dd-6a70-43de-9d28-7e82f068e698",
+      "name": "Lubina, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "979b51dd-6a70-43de-9d28-7e82f068e698",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "da23070c-f57f-48a1-ab0b-0753438f5f4c": {
+      "id": "da23070c-f57f-48a1-ab0b-0753438f5f4c",
+      "name": "Vino Blanco Emparrado",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "da23070c-f57f-48a1-ab0b-0753438f5f4c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "edb9fd5c-b35f-4711-b630-bffdb6b86e21": {
+      "id": "edb9fd5c-b35f-4711-b630-bffdb6b86e21",
+      "name": "Arroz Frito con Pollo y Curry",
+      "description": "Fried rice with chicken and curry",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "edb9fd5c-b35f-4711-b630-bffdb6b86e21",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "aa8c4759-c898-4add-8638-c74fcb48880e": {
+      "id": "aa8c4759-c898-4add-8638-c74fcb48880e",
+      "name": "Tallarines Fritos con Tres Delicias",
+      "description": "Noodles with three delights",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "aa8c4759-c898-4add-8638-c74fcb48880e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b": {
+      "id": "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b",
+      "name": "Saumai de Marisco, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "335bf71a-7da3-480a-b986-5d43780daea6": {
+      "id": "335bf71a-7da3-480a-b986-5d43780daea6",
+      "name": "Pan Chino",
+      "description": "Chinese bread",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "335bf71a-7da3-480a-b986-5d43780daea6",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d70dc67e-22d0-41d4-b29d-8655dc91473a": {
+      "id": "d70dc67e-22d0-41d4-b29d-8655dc91473a",
+      "name": "Ternera con Salsa Roja Thai",
+      "description": "Beef with thai red curry sauce thai",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "d70dc67e-22d0-41d4-b29d-8655dc91473a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c": {
+      "id": "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c",
+      "name": "Costillas Asadas",
+      "description": "Roasted spare ribs",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1201beea-3232-4185-9de4-0a5c07f5a182": {
+      "id": "1201beea-3232-4185-9de4-0a5c07f5a182",
+      "name": "Maki Surimi, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "1201beea-3232-4185-9de4-0a5c07f5a182",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846": {
+      "id": "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846",
+      "name": "Empanadillas Vegetables Shuijing, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.05,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7005018a-5015-4996-83eb-93e9d411df54": {
+      "id": "7005018a-5015-4996-83eb-93e9d411df54",
+      "name": "Sau Maide 4 Estaciones, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7005018a-5015-4996-83eb-93e9d411df54",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "204505d3-410d-4400-bd22-3630d5f1c5d3": {
+      "id": "204505d3-410d-4400-bd22-3630d5f1c5d3",
+      "name": "Hoso Maki Frito, 4 Piezas",
+      "description": "Fresas con queso",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "204505d3-410d-4400-bd22-3630d5f1c5d3",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8e3af345-b128-4e5b-ba3b-ba021d04120c": {
+      "id": "8e3af345-b128-4e5b-ba3b-ba021d04120c",
+      "name": "Ternera con Patatas Fritas",
+      "description": "Beef with chips",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "8e3af345-b128-4e5b-ba3b-ba021d04120c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b8c0b2d3-3811-4613-b4b4-3807e176776a": {
+      "id": "b8c0b2d3-3811-4613-b4b4-3807e176776a",
+      "name": "Pollo Estilo Hong Kong",
+      "description": "Hong kong style chicken",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "b8c0b2d3-3811-4613-b4b4-3807e176776a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "062c9895-2fab-4623-9e13-859c7c51d212": {
+      "id": "062c9895-2fab-4623-9e13-859c7c51d212",
+      "name": "Vino Tinto de la Casa",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "062c9895-2fab-4623-9e13-859c7c51d212",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "71a9b478-e981-45f9-99f2-70fd81d0b445": {
+      "id": "71a9b478-e981-45f9-99f2-70fd81d0b445",
+      "name": "Combinado 2, 8 Piezas",
+      "description": "Vapor",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "71a9b478-e981-45f9-99f2-70fd81d0b445",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "a5ebea5f-eb97-4e02-868a-2ce71b340992": {
+      "id": "a5ebea5f-eb97-4e02-868a-2ce71b340992",
+      "name": "Tallarines con Pollo",
+      "description": "Noodles with chicken",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "a5ebea5f-eb97-4e02-868a-2ce71b340992",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "116031bf-2b83-4139-8813-27dcd8e90328": {
+      "id": "116031bf-2b83-4139-8813-27dcd8e90328",
+      "name": "Pollo con Salsa Gon Bao",
+      "description": "Chicken with gon bao suace",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "116031bf-2b83-4139-8813-27dcd8e90328",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "fdac0dc2-8142-4e63-b615-814cd80c3c6b": {
+      "id": "fdac0dc2-8142-4e63-b615-814cd80c3c6b",
+      "name": "Vino Tinto Faustino V",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "fdac0dc2-8142-4e63-b615-814cd80c3c6b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 18.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "49dbca00-f273-44e1-b485-1e0922d0da6d": {
+      "id": "49dbca00-f273-44e1-b485-1e0922d0da6d",
+      "name": "Gambas con Salsa Roja Thai",
+      "description": "Prawns with thai red curry sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "49dbca00-f273-44e1-b485-1e0922d0da6d",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4950bee8-f6fd-4dc4-abea-79a37896f09a": {
+      "id": "4950bee8-f6fd-4dc4-abea-79a37896f09a",
+      "name": "Sashimi salmón, 6 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "4950bee8-f6fd-4dc4-abea-79a37896f09a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b23b50e5-32fe-4f95-ad84-89f5ecc2031b": {
+      "id": "b23b50e5-32fe-4f95-ad84-89f5ecc2031b",
+      "name": "Cangrejo con Puero y Jengibres",
+      "description": "Sizzling crab with leek and ginger",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b23b50e5-32fe-4f95-ad84-89f5ecc2031b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "59092c2a-3321-4f68-a6ff-4ff5e74eb925": {
+      "id": "59092c2a-3321-4f68-a6ff-4ff5e74eb925",
+      "name": "Gunkan Maki Atún, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "59092c2a-3321-4f68-a6ff-4ff5e74eb925",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "a9be63b9-2a88-4465-b507-d734d426ea0b": {
+      "id": "a9be63b9-2a88-4465-b507-d734d426ea0b",
+      "name": "Gambas con Verduras",
+      "description": "Prawns with mixed vegetables",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "a9be63b9-2a88-4465-b507-d734d426ea0b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "32f8314c-f969-44c5-abb0-6a69edcb3c0a": {
+      "id": "32f8314c-f969-44c5-abb0-6a69edcb3c0a",
+      "name": "Vino Blanco Diamante",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "32f8314c-f969-44c5-abb0-6a69edcb3c0a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9798152a-3983-474b-ab4d-10b26e0d52d0": {
+      "id": "9798152a-3983-474b-ab4d-10b26e0d52d0",
+      "name": "Kubak de Marisco",
+      "description": "Cuba seafood",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "9798152a-3983-474b-ab4d-10b26e0d52d0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7ee68991-ba3c-4e63-9628-1573fbe8c8e1": {
+      "id": "7ee68991-ba3c-4e63-9628-1573fbe8c8e1",
+      "name": "Wan Tun Frito",
+      "description": "Fried wan tun",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "7ee68991-ba3c-4e63-9628-1573fbe8c8e1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.05,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "61209581-b67f-41b9-972c-9a66a4dae26e": {
+      "id": "61209581-b67f-41b9-972c-9a66a4dae26e",
+      "name": "Frito Salmón, 8 Piezas",
+      "description": "Salmón, aguacate con queso",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "61209581-b67f-41b9-972c-9a66a4dae26e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "80fe950d-ccb2-4831-91aa-181c09aaf302": {
+      "id": "80fe950d-ccb2-4831-91aa-181c09aaf302",
+      "name": "Arroz Negro de Salmón con Katafi, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "80fe950d-ccb2-4831-91aa-181c09aaf302",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "29d701a7-e48f-4b17-8e13-8eff56c4fd14": {
+      "id": "29d701a7-e48f-4b17-8e13-8eff56c4fd14",
+      "name": "Tostada de Gambas",
+      "description": "Prawn toast",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "29d701a7-e48f-4b17-8e13-8eff56c4fd14",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "70706bdb-e20b-412d-9cd1-efe176cd13e2": {
+      "id": "70706bdb-e20b-412d-9cd1-efe176cd13e2",
+      "name": "Freixenet.Cava Brut",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "70706bdb-e20b-412d-9cd1-efe176cd13e2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 14.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0168831f-3fb0-4189-a5d2-ae07b3ae183e": {
+      "id": "0168831f-3fb0-4189-a5d2-ae07b3ae183e",
+      "name": "Temaki Salmón",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0168831f-3fb0-4189-a5d2-ae07b3ae183e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "26a7efa5-4b35-4fac-b861-e7c040d61ae7": {
+      "id": "26a7efa5-4b35-4fac-b861-e7c040d61ae7",
+      "name": "Fideos de Arroz Singapur Al Curry",
+      "description": "Singapore style noodles with prawns",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "26a7efa5-4b35-4fac-b861-e7c040d61ae7",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "14bd1a12-dbf1-488f-8688-3e8f554de668": {
+      "id": "14bd1a12-dbf1-488f-8688-3e8f554de668",
+      "name": "Udon Tallarines con Marisco",
+      "description": "Udon noodles with seafood",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "14bd1a12-dbf1-488f-8688-3e8f554de668",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d": {
+      "id": "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d",
+      "name": "Tallarines Estilo Chino",
+      "description": "Chinese noodles",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "275c11d7-1b1f-4c41-aa99-0b341a17c506": {
+      "id": "275c11d7-1b1f-4c41-aa99-0b341a17c506",
+      "name": "Menú Para 6 Personas A",
+      "description": "Ensalada china (3), rollo de primavera (6), arroz frito con tres delicias (3), pollo con almendras, ternera con bambú y setas, cerdo asado, langostinos fritos, cerdo con salsa agridulce, gambas con salsa de ostras, bebida y postre o café\n\nChinese salad (3), springroll (6), fried rice with three delicious (3), chicken with almonds, beef with bambú and chinese mushrooms, roasted pork, fried king prawns, sweet and sour pork, prawns with oyster sauce, drink and dessert or coffee",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "275c11d7-1b1f-4c41-aa99-0b341a17c506",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 83.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": [
+            "944bc9f1-4e73-4328-ba08-90b250b4f99e"
+          ]
+        }
+      ]
+    },
+    "f4c89923-3f73-44c9-8424-d1906f011cb1": {
+      "id": "f4c89923-3f73-44c9-8424-d1906f011cb1",
+      "name": "Siau Long Pao, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "f4c89923-3f73-44c9-8424-d1906f011cb1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c05733f8-adb0-43a2-a628-7330674857cd": {
+      "id": "c05733f8-adb0-43a2-a628-7330674857cd",
+      "name": "Rollito Vietnamita, 2 Unidades",
+      "description": "Vietnamita roll, 2 unit",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "c05733f8-adb0-43a2-a628-7330674857cd",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 3,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1834bdc0-5b11-4df8-9342-b56eacdbd903": {
+      "id": "1834bdc0-5b11-4df8-9342-b56eacdbd903",
+      "name": "Uramaki Atún, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "1834bdc0-5b11-4df8-9342-b56eacdbd903",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "bd1cce55-e028-4f5b-9377-64e1304ee679": {
+      "id": "bd1cce55-e028-4f5b-9377-64e1304ee679",
+      "name": "Zamburiña, 2 Piezas",
+      "description": "Viera",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "bd1cce55-e028-4f5b-9377-64e1304ee679",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "512091b0-bf00-46bd-8f75-d6620e3bde3a": {
+      "id": "512091b0-bf00-46bd-8f75-d6620e3bde3a",
+      "name": "Combinado 3, 8 Piezas",
+      "description": "Fritos",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "512091b0-bf00-46bd-8f75-d6620e3bde3a",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6e329783-652f-4389-988a-146ac2737da9": {
+      "id": "6e329783-652f-4389-988a-146ac2737da9",
+      "name": "Gambas con Salsa Agridulce",
+      "description": "Sweet sour sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "6e329783-652f-4389-988a-146ac2737da9",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "db5a6f65-69f2-4546-8bff-78bf14f8691d": {
+      "id": "db5a6f65-69f2-4546-8bff-78bf14f8691d",
+      "name": "Vino Blanco Marina Alta",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "db5a6f65-69f2-4546-8bff-78bf14f8691d",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33": {
+      "id": "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33",
+      "name": "Maki Atún, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "050c5b63-95a8-41da-993f-59e339672ad8": {
+      "id": "050c5b63-95a8-41da-993f-59e339672ad8",
+      "name": "Picante Atún, 8 Piezas",
+      "description": "Aguacate, atún y chili",
+      "labels": [
+        "hot"
+      ],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "050c5b63-95a8-41da-993f-59e339672ad8",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547": {
+      "id": "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547",
+      "name": "Vino Blanco Viñasol",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "99270b88-12bb-4755-8af1-8252545126e4": {
+      "id": "99270b88-12bb-4755-8af1-8252545126e4",
+      "name": "Pollo con Salsa de Limón",
+      "description": "Lemon chicken",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "99270b88-12bb-4755-8af1-8252545126e4",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "71b6f716-34fd-41bf-8271-cb13bb8b25d0": {
+      "id": "71b6f716-34fd-41bf-8271-cb13bb8b25d0",
+      "name": "Arroz Frito con Tres Delicias",
+      "description": "Fried rice with three delights",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "71b6f716-34fd-41bf-8271-cb13bb8b25d0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "bd93a2c2-e533-449d-ae8b-758234a59a8b": {
+      "id": "bd93a2c2-e533-449d-ae8b-758234a59a8b",
+      "name": "Vino Tinto Marques de Riscal",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "bd93a2c2-e533-449d-ae8b-758234a59a8b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 24,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8499eaba-4a8a-4169-95c0-e091c156bff4": {
+      "id": "8499eaba-4a8a-4169-95c0-e091c156bff4",
+      "name": "Atún, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "8499eaba-4a8a-4169-95c0-e091c156bff4",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8d2967fd-44ae-4483-bb32-eec3c13bf7a6": {
+      "id": "8d2967fd-44ae-4483-bb32-eec3c13bf7a6",
+      "name": "Flambeado Atún, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "8d2967fd-44ae-4483-bb32-eec3c13bf7a6",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e5f3f935-7410-4300-919f-bae55fd0bcc2": {
+      "id": "e5f3f935-7410-4300-919f-bae55fd0bcc2",
+      "name": "Vino Blanco de la Casa",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "e5f3f935-7410-4300-919f-bae55fd0bcc2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e34d9725-4245-485d-8850-23be318fa435": {
+      "id": "e34d9725-4245-485d-8850-23be318fa435",
+      "name": "Vino Tinto Coto",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "e34d9725-4245-485d-8850-23be318fa435",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 14.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b368155e-a45b-4589-9742-89d5cdb7e159": {
+      "id": "b368155e-a45b-4589-9742-89d5cdb7e159",
+      "name": "Menú para 3 Personas A",
+      "description": "Ensalada china, rollo de primavera, arroz frito con tres delicias, cerdo con salsa agridulce, ternera con bambú y setas, pollo con almendras, bebida y postres\n\nChinese salad, spring roll, fried rice with three delicious, sweet sour pork, beef with bambu mushrooms, chicken with almonds, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b368155e-a45b-4589-9742-89d5cdb7e159",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 43.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "980b234a-ab4b-48b9-9bac-64f9ea35d3da": {
+      "id": "980b234a-ab4b-48b9-9bac-64f9ea35d3da",
+      "name": "Cocktail de Gambas",
+      "description": "Shrimps cocktail",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "980b234a-ab4b-48b9-9bac-64f9ea35d3da",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7": {
+      "id": "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7",
+      "name": "Vino Tinto Faustino VII",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0869bbec-bf95-48f1-bc14-5a15faee445c": {
+      "id": "0869bbec-bf95-48f1-bc14-5a15faee445c",
+      "name": "Ternera con Salsa de Ostras",
+      "description": "Beef with oyster sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0869bbec-bf95-48f1-bc14-5a15faee445c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "452a6bd7-c07f-4eed-b410-c8f326a1f311": {
+      "id": "452a6bd7-c07f-4eed-b410-c8f326a1f311",
+      "name": "Maki Vegetal, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "452a6bd7-c07f-4eed-b410-c8f326a1f311",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9c79f57b-e976-43d3-8267-d6cf07f25dd0": {
+      "id": "9c79f57b-e976-43d3-8267-d6cf07f25dd0",
+      "name": "Sashimi Variado, 12 Piezas",
+      "description": "6 Piezas sashimi salmón, 6 Piezas sashimi atún",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "9c79f57b-e976-43d3-8267-d6cf07f25dd0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 15.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "eea15d84-21f9-4d20-9524-1b08bd5364ee": {
+      "id": "eea15d84-21f9-4d20-9524-1b08bd5364ee",
+      "name": "Vino Rosado Peñascal",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "eea15d84-21f9-4d20-9524-1b08bd5364ee",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0014f171-349c-4716-8515-a36d0688f510": {
+      "id": "0014f171-349c-4716-8515-a36d0688f510",
+      "name": "Samosa, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "0014f171-349c-4716-8515-a36d0688f510",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d7cc6f6c-8d02-4313-9140-0b26717992e7": {
+      "id": "d7cc6f6c-8d02-4313-9140-0b26717992e7",
+      "name": "Gambas Bambú y Setas",
+      "description": "Prawns with bambú and mushrooms",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "d7cc6f6c-8d02-4313-9140-0b26717992e7",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b28895a1-46b2-4f83-beee-92c557fad539": {
+      "id": "b28895a1-46b2-4f83-beee-92c557fad539",
+      "name": "Temaki Gamba",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "b28895a1-46b2-4f83-beee-92c557fad539",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d49abad5-252a-40e0-ad4e-7c73264e4caf": {
+      "id": "d49abad5-252a-40e0-ad4e-7c73264e4caf",
+      "name": "Menú para 4 Personas B",
+      "description": "Ensalada especial, rollito chino (8), triángulo de curry, pato a la pekinesa, costillas salsa BBQ, pollo bambú y setas, gambas con ajo a la plancha, arroz frito de la casa, tallarines fritos tres delicias, bebida y postres\n\nSpecial salad, chinese roll (8), curry triangle, pekin duck, BBQ spare ribs, chicken with bambu mushrooms, sizzling prawns with garlic, special fried rice, fried noodles with three delicious, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "d49abad5-252a-40e0-ad4e-7c73264e4caf",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 66.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "57c37901-63f3-41b9-80f2-130c0a07e468": {
+      "id": "57c37901-63f3-41b9-80f2-130c0a07e468",
+      "name": "Ensalada de Algas Wakame",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "57c37901-63f3-41b9-80f2-130c0a07e468",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "124f09d6-9272-4ce1-bf53-13272a57e54e": {
+      "id": "124f09d6-9272-4ce1-bf53-13272a57e54e",
+      "name": "Sopa Agripicante",
+      "description": "Hot & sour soup",
+      "labels": [
+        "hot"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "124f09d6-9272-4ce1-bf53-13272a57e54e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "007547e7-12a3-4d6d-9a0a-657e18afc52f": {
+      "id": "007547e7-12a3-4d6d-9a0a-657e18afc52f",
+      "name": "Sashimi de Salmón, 6 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "007547e7-12a3-4d6d-9a0a-657e18afc52f",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 10.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "3240abb0-6b91-41b9-98e2-459acab07dde": {
+      "id": "3240abb0-6b91-41b9-98e2-459acab07dde",
+      "name": "Menú para 2 Personas B",
+      "description": "Ensalada especial, rollito chino, arroz frito de la casa, pato a la pekinesa, gambas con ajos a la plancha, bebida y postre\n\nSpecial salada, chinese roll, special fried rice, peking duck, sizzling prawns with garlic, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "3240abb0-6b91-41b9-98e2-459acab07dde",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 34.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "64730e37-6e4f-4e4c-ad78-174ac845db9b": {
+      "id": "64730e37-6e4f-4e4c-ad78-174ac845db9b",
+      "name": "Vino Tinto Campo Viejo",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "64730e37-6e4f-4e4c-ad78-174ac845db9b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "dfa08efb-5ad7-493f-8d8e-37b506097c3d": {
+      "id": "dfa08efb-5ad7-493f-8d8e-37b506097c3d",
+      "name": "VinosRosado Lambrusco",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "dfa08efb-5ad7-493f-8d8e-37b506097c3d",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "fe2993fd-4d6a-4263-b7de-afe527ae323b": {
+      "id": "fe2993fd-4d6a-4263-b7de-afe527ae323b",
+      "name": "Pechuga de Pollo con Patatas",
+      "description": "Chicken with chips",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "fe2993fd-4d6a-4263-b7de-afe527ae323b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e84d3c96-bc65-48e7-bc3b-498ad21162fa": {
+      "id": "e84d3c96-bc65-48e7-bc3b-498ad21162fa",
+      "name": "Arroz Negro con Queso con Mango, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "e84d3c96-bc65-48e7-bc3b-498ad21162fa",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2b32980a-b1d4-4430-a185-9aa82b390d6c": {
+      "id": "2b32980a-b1d4-4430-a185-9aa82b390d6c",
+      "name": "Poke Bowl de Pollo",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "2b32980a-b1d4-4430-a185-9aa82b390d6c",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "44ebe13c-eac7-4b5d-b51e-a084e9b85d15": {
+      "id": "44ebe13c-eac7-4b5d-b51e-a084e9b85d15",
+      "name": "Frito Gambas con Atún, 8 Piezas",
+      "description": "Gambas con aguate",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "44ebe13c-eac7-4b5d-b51e-a084e9b85d15",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "db813ef9-3feb-4963-8fc2-8425d2ec6ad1": {
+      "id": "db813ef9-3feb-4963-8fc2-8425d2ec6ad1",
+      "name": "Vino Blanco Barbadillo",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "db813ef9-3feb-4963-8fc2-8425d2ec6ad1",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4e3d38c6-09d0-45b8-860f-87cb459b5c73": {
+      "id": "4e3d38c6-09d0-45b8-860f-87cb459b5c73",
+      "name": "Arroz Frito con Huevo",
+      "description": "Egg fried rice",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "4e3d38c6-09d0-45b8-860f-87cb459b5c73",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.4,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d0eac5aa-b8ab-4166-ac23-45585f527d65": {
+      "id": "d0eac5aa-b8ab-4166-ac23-45585f527d65",
+      "name": "Pato a la Pekinesa",
+      "description": "Pekin duck with pancake",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d0eac5aa-b8ab-4166-ac23-45585f527d65",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 14,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181": {
+      "id": "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181",
+      "name": "Maki Salmón, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe": {
+      "id": "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe",
+      "name": "Costillas con Salsa Agridulce",
+      "description": "Sweet sour spare ribs",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e28511aa-2aaf-4f67-bff4-efe7a074caf0": {
+      "id": "e28511aa-2aaf-4f67-bff4-efe7a074caf0",
+      "name": "Sepia con Salsa Gon Bao",
+      "description": "Squid with gon bao sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "e28511aa-2aaf-4f67-bff4-efe7a074caf0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1e543431-92d9-435e-8325-7fd49506ebf9": {
+      "id": "1e543431-92d9-435e-8325-7fd49506ebf9",
+      "name": "Vino Tinto Sangre de Toro",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "1e543431-92d9-435e-8325-7fd49506ebf9",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "722e9520-c520-462c-ac7e-59bf1a0d5909": {
+      "id": "722e9520-c520-462c-ac7e-59bf1a0d5909",
+      "name": "Pollo a la Plancha",
+      "description": "Sizzling chicken with leek and ginger",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "722e9520-c520-462c-ac7e-59bf1a0d5909",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "c2508835-ac6e-453d-8d7d-b81beef9eb51": {
+      "id": "c2508835-ac6e-453d-8d7d-b81beef9eb51",
+      "name": "Verduras en Tempura",
+      "description": "Vegetables in tempura",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "c2508835-ac6e-453d-8d7d-b81beef9eb51",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "b5783fbf-cfd9-4116-b351-29016ada212b": {
+      "id": "b5783fbf-cfd9-4116-b351-29016ada212b",
+      "name": "Gambas con Salsa Curry",
+      "description": "Prawns with curry sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "b5783fbf-cfd9-4116-b351-29016ada212b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "384354a1-7433-428e-ac25-30bdad856471": {
+      "id": "384354a1-7433-428e-ac25-30bdad856471",
+      "name": "Pinchos Chinos",
+      "description": "Chicken saté",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "384354a1-7433-428e-ac25-30bdad856471",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7d8aed01-d83d-4a21-9075-0d74233e8857": {
+      "id": "7d8aed01-d83d-4a21-9075-0d74233e8857",
+      "name": "Gambas con Salsa de Ostras",
+      "description": "Prawns with oyster sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7d8aed01-d83d-4a21-9075-0d74233e8857",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "1523eaf4-d4df-4fb6-843e-12176ab75944": {
+      "id": "1523eaf4-d4df-4fb6-843e-12176ab75944",
+      "name": "Ternera con Salsa de Pimienta Negra a la Plancha",
+      "description": "Sizzling beef with black pepper sauce",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "1523eaf4-d4df-4fb6-843e-12176ab75944",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d41c8f08-9112-49c1-8cd7-c4c47f30d14b": {
+      "id": "d41c8f08-9112-49c1-8cd7-c4c47f30d14b",
+      "name": "Uramaki Salmón, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d41c8f08-9112-49c1-8cd7-c4c47f30d14b",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 12.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79": {
+      "id": "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79",
+      "name": "Rollo de Primavera",
+      "description": "Spring roll",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.15,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "16e09af6-efc4-4ab3-8a07-e443a0aacbc3": {
+      "id": "16e09af6-efc4-4ab3-8a07-e443a0aacbc3",
+      "name": "Shia Chiao, 4 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "16e09af6-efc4-4ab3-8a07-e443a0aacbc3",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "58edf436-1890-44f2-a470-b569bca78dce": {
+      "id": "58edf436-1890-44f2-a470-b569bca78dce",
+      "name": "Kuotie, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "58edf436-1890-44f2-a470-b569bca78dce",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "11ea9332-42e7-4ccf-96d5-ddd13ce67000": {
+      "id": "11ea9332-42e7-4ccf-96d5-ddd13ce67000",
+      "name": "Gambas con Sal y Pimienta",
+      "description": "Salt and pepper framn",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "11ea9332-42e7-4ccf-96d5-ddd13ce67000",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "bd3fd4a6-2806-4ee5-8371-452b6b136d26": {
+      "id": "bd3fd4a6-2806-4ee5-8371-452b6b136d26",
+      "name": "Zumos",
+      "description": "Naranja, piña o melocotón",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "bd3fd4a6-2806-4ee5-8371-452b6b136d26",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.25,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "eaf3cef6-18a0-4417-9d78-214590d2b69e": {
+      "id": "eaf3cef6-18a0-4417-9d78-214590d2b69e",
+      "name": "Pato Estilo Cantonés",
+      "description": "Cantonese style ok",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "eaf3cef6-18a0-4417-9d78-214590d2b69e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.95,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "72fa00be-f834-4874-8176-0d0d6709b084": {
+      "id": "72fa00be-f834-4874-8176-0d0d6709b084",
+      "name": "Frito Gambas con Atún, 8 Piezas",
+      "description": "Gambas con aguacate",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "72fa00be-f834-4874-8176-0d0d6709b084",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "4e3ec944-506d-4f3f-abec-6a832a4f2e53": {
+      "id": "4e3ec944-506d-4f3f-abec-6a832a4f2e53",
+      "name": "la Familia Feliz",
+      "description": "Happy family",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "4e3ec944-506d-4f3f-abec-6a832a4f2e53",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "f2314479-6966-4a7e-9c8e-e4542e1ce8ee": {
+      "id": "f2314479-6966-4a7e-9c8e-e4542e1ce8ee",
+      "name": "Verduras Salteadas",
+      "description": "Chop suey mixed vegetables",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "f2314479-6966-4a7e-9c8e-e4542e1ce8ee",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "a1c3e14c-f304-4db9-9291-d1357a68dc48": {
+      "id": "a1c3e14c-f304-4db9-9291-d1357a68dc48",
+      "name": "Menú Para 5 Personas A",
+      "description": "Ensalada china, rollo de primavera (5), arroz frito con tres delicias, tallarines fritos con tres delicias, pollo con almendras, ternera con bambú y setas, cerdo con salsa agridulce, gambas con salsa de ostras, langostinos fritos, bebida y postre\n\nChinese salad, spring roll (5), fried rice with three delicious, chicken with almonds, beef with bambu mushrooms, sweet sour pork, prawns with curry sauce fried, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "a1c3e14c-f304-4db9-9291-d1357a68dc48",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 70.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "ec995443-a3b2-49f6-a2b9-947767fe5493": {
+      "id": "ec995443-a3b2-49f6-a2b9-947767fe5493",
+      "name": "Poke Bowl de Salmón",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "ec995443-a3b2-49f6-a2b9-947767fe5493",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 11.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f": {
+      "id": "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f",
+      "name": "Arroz Negro de Gambas con Fresa, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 13.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "32d063c0-7b07-4d49-8b26-b49d99997d26": {
+      "id": "32d063c0-7b07-4d49-8b26-b49d99997d26",
+      "name": "Nigiri Gamba, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "32d063c0-7b07-4d49-8b26-b49d99997d26",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa": {
+      "id": "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa",
+      "name": "Combo C",
+      "description": "Ensalada wakame, gyozas de pollo a la plancha, 8 nigiris mixto, 4 maki de pollo, 4 maki vegetal, 4 uromaki salmón, 4 california, 4 gunkan maki (2 de atún y 2 de salmón) en total 28 piezas",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 46.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "139d247b-cb0b-4fd5-850b-4885a58c8f41": {
+      "id": "139d247b-cb0b-4fd5-850b-4885a58c8f41",
+      "name": "Maki Pepino, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "139d247b-cb0b-4fd5-850b-4885a58c8f41",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "d9e1bbd9-21de-4029-b3a2-643f7e6232f0": {
+      "id": "d9e1bbd9-21de-4029-b3a2-643f7e6232f0",
+      "name": "Ternera con Salsa Gong Bao",
+      "description": "Beef with gong bao sauce",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "d9e1bbd9-21de-4029-b3a2-643f7e6232f0",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.75,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "814adeeb-30f7-4195-9705-631486785ba5": {
+      "id": "814adeeb-30f7-4195-9705-631486785ba5",
+      "name": "Menú para 4 Personas A",
+      "description": "Ensalada china, rollo de primavera (4), arroz frito con tres delicias, tallarines fritos con tres delicias, pollo con almendras, ternera con bambú y setas, cerdo con salsa agridulce, gambas con salsa curry, bebida y postre\n\nChinese salad, springroll (4), fried rice with three delicious, fried noodles with three delicious, chicken with almonds, beef with bambu mushrooms, sweet sour pork, prawns with curry sauce, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "814adeeb-30f7-4195-9705-631486785ba5",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 60.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18": {
+      "id": "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18",
+      "name": "Sopa de Wantu",
+      "description": "Wantu soup",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "7c7075dd-1085-4ea1-8945-811e1475e2f3": {
+      "id": "7c7075dd-1085-4ea1-8945-811e1475e2f3",
+      "name": "Menú Para 5 Personas B",
+      "description": "Ensalada especial, rollito chino (10), pato a la pekinesa, costillas con salsa BBQ, pollo bambú y setas, gambas con ajo a la plancha, langostinos fritos, arroz frito de la casa, tallarines fritos tres delicias, bebida y postre\n\nSpecial salad, chinese roll (10), peking duck, BBQ spare ribs, chicken with bambu mushrooms, sizzling prawns with garlic, fried king prawns, special fried rice, fried noodles with three delicious, drink and dessert",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "7c7075dd-1085-4ea1-8945-811e1475e2f3",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 80,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e": {
+      "id": "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e",
+      "name": "Agua Mineral, Pequeña",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.25,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "56e41ce2-d7e4-426c-a9af-575ed3e9b731": {
+      "id": "56e41ce2-d7e4-426c-a9af-575ed3e9b731",
+      "name": "Salmón con Aguacate y Mango, 8 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "56e41ce2-d7e4-426c-a9af-575ed3e9b731",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8": {
+      "id": "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8",
+      "name": "Agua con Gas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 2.25,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3": {
+      "id": "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3",
+      "name": "Gambas con Ajo a la Plancha",
+      "description": "Sizzling prawns with garlic",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 9.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "372e6d9f-2fa1-46bc-9689-2e753414c436": {
+      "id": "372e6d9f-2fa1-46bc-9689-2e753414c436",
+      "name": "Cerdo con Salsa Agridulce",
+      "description": "Sweet sour pork",
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "372e6d9f-2fa1-46bc-9689-2e753414c436",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "8839206d-02c4-4b0b-ad99-7800012dfa26": {
+      "id": "8839206d-02c4-4b0b-ad99-7800012dfa26",
+      "name": "Albóndigas de Sepia y Gambas, 6 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "8839206d-02c4-4b0b-ad99-7800012dfa26",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 5.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "ef13e30b-b06a-46f4-8f73-aef506714af3": {
+      "id": "ef13e30b-b06a-46f4-8f73-aef506714af3",
+      "name": "Nigiri Anguila, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "ef13e30b-b06a-46f4-8f73-aef506714af3",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "885d0ee4-a4e0-46da-aef8-d87e204b4aef": {
+      "id": "885d0ee4-a4e0-46da-aef8-d87e204b4aef",
+      "name": "Tiras de Buey Crujiente con Salsa de Piel de Naranja",
+      "description": "Crispy beef with sauce of orange peel",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "885d0ee4-a4e0-46da-aef8-d87e204b4aef",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.65,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "268c3a75-bc79-4a04-9a04-86b54b0b12e7": {
+      "id": "268c3a75-bc79-4a04-9a04-86b54b0b12e7",
+      "name": "Vino Rosado de la Casa",
+      "description": null,
+      "labels": [
+        "alcohol"
+      ],
+      "hasPlatformImage": true,
+      "variations": [
+        {
+          "id": "268c3a75-bc79-4a04-9a04-86b54b0b12e7",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 7.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88": {
+      "id": "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88",
+      "name": "Shien Ló Pao, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 4.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "138bab96-4337-4ffc-b9a5-313230991ce6": {
+      "id": "138bab96-4337-4ffc-b9a5-313230991ce6",
+      "name": "Nigiri Flambeado Ternera, 2 Piezas",
+      "description": null,
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "138bab96-4337-4ffc-b9a5-313230991ce6",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 6.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    },
+    "e3735375-27b1-41b2-aa8b-18164a5386c2": {
+      "id": "e3735375-27b1-41b2-aa8b-18164a5386c2",
+      "name": "Entremeses Variados Estilo Chino",
+      "description": "Chinese style appetizers",
+      "labels": [],
+      "hasPlatformImage": false,
+      "variations": [
+        {
+          "id": "e3735375-27b1-41b2-aa8b-18164a5386c2",
+          "name": "",
+          "type": "NoVariation",
+          "basePrice": 8.45,
+          "dealOnly": false,
+          "menuGroupIds": [
+            "C6E6ADE4C46FA3E5191DE38A1EAC944C",
+            "06F23EA2E81491AEC5E540EC58B55A3E"
+          ],
+          "modifierGroupsIds": []
+        }
+      ]
+    }
+  },
+  "modifierGroups": [
+    {
+      "id": "944bc9f1-4e73-4328-ba08-90b250b4f99e",
+      "name": "Elige",
+      "minChoices": 1,
+      "maxChoices": 1,
+      "modifiers": [
+        "1",
+        "2"
+      ]
+    }
+  ],
+  "modifierSets": [
+    {
+      "id": "1",
+      "modifier": {
+        "id": "fbb1b72a-6d0a-4a48-9a74-0be0e8dfb57c",
+        "name": "Con Postre / Dessert",
+        "additionPrice": 0,
+        "removePrice": 0,
+        "defaultChoices": 0,
+        "minChoices": 0,
+        "maxChoices": 1,
+        "nutritionalInfo": null,
+        "numberOfServings": {
+          "servingsDisplay": ""
+        }
+      }
+    },
+    {
+      "id": "2",
+      "modifier": {
+        "id": "6f393111-b8d5-4d39-8410-758758f745b2",
+        "name": "Con Café / Cofee",
+        "additionPrice": 0,
+        "removePrice": 0,
+        "defaultChoices": 0,
+        "minChoices": 0,
+        "maxChoices": 1,
+        "nutritionalInfo": null,
+        "numberOfServings": {
+          "servingsDisplay": ""
+        }
+      }
+    }
+  ]
+}

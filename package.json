@@ -6,23 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "menu:import": "node scripts/import-shang-hai-menu.mjs",
+    "menu:check": "node scripts/import-shang-hai-menu.mjs --check",
+    "check": "npm run typecheck && npm run lint:shang-hai && npm run test && npm run menu:check",
+    "lint:shang-hai": "eslint src/lib src/hooks src/components/shang-hai src/app/showcase/shang-hai src/data scripts tests workers",
+    "previews:shang-hai": "node scripts/capture-shang-hai-previews.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "motion": "^14.1.0",
-    "next": "16.4.0",
+    "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.5"
   }
 }

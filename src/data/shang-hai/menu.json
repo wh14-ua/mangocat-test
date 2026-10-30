@@ -1,0 +1,3418 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "shang-hai-orihuela",
+  "currency": "EUR",
+  "version": "2026-10-29.BnxQoXzd",
+  "generatedAt": "2026-10-29",
+  "sources": [
+    {
+      "id": "just-eat",
+      "name": "Carta pública de Just Eat",
+      "url": "https://www.just-eat.es/restaurants-restaurante-asiatico-shang-hai-orihuela/menu",
+      "retrievedAt": "2026-10-29T09:33:49Z",
+      "platformRestaurantId": "81442",
+      "platformMenuVersion": "BnxQoXzdNEDmZj.x_60i8qTkAAQvabsO"
+    }
+  ],
+  "categories": [
+    {
+      "id": "combos",
+      "name": "Combos",
+      "sourceId": "9e908b07-c556-4316-8579-99288492b165",
+      "itemIds": [
+        "combo-a",
+        "combo-b",
+        "combo-c",
+        "combo-d"
+      ]
+    },
+    {
+      "id": "menus",
+      "name": "Menús",
+      "sourceId": "8b9768ef-dbef-4c67-b27f-c8005a71928b",
+      "itemIds": [
+        "menu-para-2-personas-a",
+        "menu-para-2-personas-b",
+        "menu-para-3-personas-a",
+        "menu-para-3-personas-b",
+        "menu-para-4-personas-a",
+        "menu-para-4-personas-b",
+        "menu-para-5-personas-a",
+        "menu-para-5-personas-b",
+        "menu-para-6-personas-a",
+        "menu-para-6-personas-b"
+      ]
+    },
+    {
+      "id": "entrantes",
+      "name": "Entrantes",
+      "nameEn": "Starters",
+      "sourceId": "09082d3e-4f0b-43c5-8f8a-bdf4f8c7615d",
+      "itemIds": [
+        "ensalada-de-la-casa",
+        "ensalada-china",
+        "ensalada-de-aguacate-con-gambas",
+        "rollo-de-primavera",
+        "rollito-vietnamita",
+        "cocktail-de-gambas",
+        "langostinos-fritos-thai",
+        "wan-tun-frito",
+        "entremeses-variados-estilo-chino",
+        "algas-fritas",
+        "tostada-de-gambas",
+        "pinchos-chinos",
+        "pincho-de-cerdo-mongolia",
+        "triangulo-de-curry-thai",
+        "verduras-en-tempura",
+        "gambas-en-tempura"
+      ]
+    },
+    {
+      "id": "sopas",
+      "name": "Sopas",
+      "nameEn": "Soups",
+      "sourceId": "950e7644-df78-4f40-ba56-04bb9506611e",
+      "itemIds": [
+        "sopa-de-aleta-de-tiburon",
+        "sopa-agripicante",
+        "sopa-de-pollo-con-champinones",
+        "sopa-de-pollo-con-maiz",
+        "sopa-de-mariscos",
+        "sopa-de-wantu"
+      ]
+    },
+    {
+      "id": "pato",
+      "name": "Pato",
+      "nameEn": "Duck",
+      "sourceId": "9289f5b5-e8bd-499b-a965-8428f67ebec7",
+      "itemIds": [
+        "pato-estilo-cantones",
+        "pato-estilo-thai",
+        "pato-a-la-pekinesa",
+        "pato-con-naranja",
+        "pato-con-pina",
+        "pato-con-bambu-y-setas-a-la-plancha"
+      ]
+    },
+    {
+      "id": "pollo",
+      "name": "Pollo",
+      "sourceId": "e13f1c62-80f2-4c70-bf2b-228e9bee6f81",
+      "itemIds": [
+        "pollo-con-salsa-roja-thai",
+        "pollo-con-salsa-de-limon",
+        "pollo-con-salsa-agridulce",
+        "pollo-con-pina-natural",
+        "pollo-con-almendras",
+        "pollo-con-bambu-y-setas",
+        "pollo-estilo-hong-kong",
+        "pollo-con-salsa-gon-bao",
+        "pollo-con-salsa-de-judias-negras",
+        "pollo-a-la-plancha",
+        "alas-de-pollo-fritas",
+        "pollo-con-salsa-curry",
+        "pollo-con-champinones",
+        "ternera-con-cebolla"
+      ]
+    },
+    {
+      "id": "ternera",
+      "name": "Ternera",
+      "nameEn": "Beef",
+      "sourceId": "0bdeefd3-7378-420f-bab9-b6001b51fe76",
+      "itemIds": [
+        "ternera-con-salsa-roja-thai",
+        "tiras-de-buey-crujiente-con-salsa-de-piel-de-naranja",
+        "ternera-con-salsa-de-pimienta-negra-a-la-plancha",
+        "ternera-con-bambu-y-setas",
+        "ternera-con-pimientos-verdes",
+        "ternera-con-salsa-gong-bao",
+        "ternera-con-salsa-de-ostras",
+        "ternera-con-judias-negras"
+      ]
+    },
+    {
+      "id": "carne",
+      "name": "Carne",
+      "nameEn": "Meat",
+      "sourceId": "17e999e3-6fb3-42e1-9803-cacf62d6b310",
+      "itemIds": [
+        "costillas-con-salsa-bbq",
+        "costillas-con-sal-y-pimienta",
+        "cerdo-con-salsa-agridulce",
+        "costillas-con-salsa-agridulce",
+        "costillas-asadas",
+        "cerdo-asado"
+      ]
+    },
+    {
+      "id": "marisco-y-gambas",
+      "name": "Marisco y Gambas",
+      "nameEn": "Seafood",
+      "sourceId": "f5e13ba6-d360-43f2-81ed-6d330d5fc983",
+      "itemIds": [
+        "gambas-con-salsa-roja-thai",
+        "gambas-con-sal-y-pimienta",
+        "gambas-bambu-y-setas",
+        "gambas-con-ajo-a-la-plancha",
+        "gambas-con-verduras",
+        "gambas-con-salsa-de-ostras",
+        "gambas-con-salsa-picante",
+        "gambas-con-salsa-curry",
+        "gambas-con-salsa-agridulce",
+        "langostinos-fritos"
+      ]
+    },
+    {
+      "id": "pescados-y-mariscos",
+      "name": "Pescados y Mariscos",
+      "nameEn": "Fish & seafood",
+      "sourceId": "622f508c-70ec-4d8f-a079-ecf025893cb7",
+      "itemIds": [
+        "sepia-con-salsa-gon-bao",
+        "sepia-con-bambu-y-setas",
+        "cangrejo-con-puerro-y-jengibre",
+        "la-familia-feliz",
+        "kubak-de-marisco"
+      ]
+    },
+    {
+      "id": "acompanamientos",
+      "name": "Acompañamientos",
+      "nameEn": "Sides",
+      "sourceId": "2d554b78-9d57-4e22-9339-c2cd6fc8b936",
+      "itemIds": [
+        "ku-bak-con-tres-delicias",
+        "arroz-frito-de-la-casa",
+        "arroz-frito-con-pollo-y-curry",
+        "arroz-frito-con-huevo",
+        "arroz-frito-con-tres-delicias",
+        "arroz-blanco",
+        "udon-tallarines-con-marisco",
+        "tallarines-estilo-chino",
+        "tallarines-fritos-con-tres-delicias",
+        "tallarines-con-gambas",
+        "tallarines-con-pollo",
+        "fideos-de-arroz-singapur-al-curry",
+        "fideos-de-arroz-con-tres-delicias",
+        "fideos-de-arroz-con-gambas",
+        "pan-de-gambas",
+        "pan-chino",
+        "patatas-fritas",
+        "verduras-salteadas",
+        "bambu-y-setas-salteadas"
+      ]
+    },
+    {
+      "id": "platos-combinados",
+      "name": "Platos Combinados",
+      "sourceId": "a83f9567-1dbc-44dd-bc06-91ef3c6d2856",
+      "itemIds": [
+        "tortilla-con-pollo-y-patatas-fritas",
+        "ternera-con-patatas-fritas",
+        "pechuga-de-pollo-con-patatas"
+      ]
+    },
+    {
+      "id": "dim-sum",
+      "name": "Dím Sum",
+      "sourceId": "f9f8183f-b21e-42b9-a1cb-df039dfde2b4",
+      "itemIds": [
+        "ensalada-de-algas-wakame",
+        "shien-lo-pao",
+        "shia-chiao",
+        "sau-mai",
+        "kuotie",
+        "siau-long-pao",
+        "sau-mai-de-4-estaciones",
+        "gyozas-de-pollo-a-la-plancha",
+        "empanadillas-vegetables-shuijing",
+        "albondigas-de-sepia-y-gambas",
+        "samosa",
+        "saumai-de-marisco",
+        "combinado-1",
+        "combinado-2",
+        "combinado-3"
+      ]
+    },
+    {
+      "id": "nigiris",
+      "name": "Nigiris",
+      "sourceId": "f473f25a-d382-4b2b-b52e-88f12d24d9ff",
+      "itemIds": [
+        "nigiri-gamba",
+        "nigiri-anguila",
+        "nigiri-aguacate",
+        "nigiri-surimi",
+        "nigiri-mixto",
+        "zamburina",
+        "flambeado-salmon",
+        "flambeado-atun",
+        "nigiri-flambeado-ternera",
+        "pulpo",
+        "atun",
+        "lubina"
+      ]
+    },
+    {
+      "id": "bowls",
+      "name": "Bowls",
+      "sourceId": "d948dfeb-c1cd-4951-95f0-1c1eeb3037e6",
+      "itemIds": [
+        "poke-bowl-de-salmon",
+        "poke-bowl-de-atun",
+        "poke-bowl-de-pollo"
+      ]
+    },
+    {
+      "id": "makis",
+      "name": "Makis",
+      "sourceId": "f0ba49f6-279d-4be4-9a59-d0d175b965c6",
+      "itemIds": [
+        "maki-salmon",
+        "maki-atun",
+        "maki-pollo-crujiente",
+        "maki-vegetal",
+        "maki-pepino",
+        "maki-aguacate",
+        "maki-california",
+        "maki-surimi",
+        "maki-gambas",
+        "maki-dragon",
+        "maki-rollo-variado",
+        "salmon-con-aguacate-y-mango",
+        "hoso-maki-frito"
+      ]
+    },
+    {
+      "id": "uramakis",
+      "name": "Uramakis",
+      "sourceId": "f734ff47-3902-449c-92fd-70dce31fb89b",
+      "itemIds": [
+        "uramaki-salmon",
+        "uramaki-atun",
+        "uramaki-anguila",
+        "uramaki-rainbow-roll",
+        "mango-con-salmon",
+        "picante-atun",
+        "frito-salmon",
+        "frito-gambas-con-atun",
+        "sashimi-de-atun",
+        "sashimi-de-salmon",
+        "arroz-negro-de-gambas-con-fresa",
+        "arroz-negro-de-almendras-con-salmon-y-aguacate",
+        "pollo-crujiente-rollo",
+        "arroz-negro-de-salmon-con-katafi",
+        "hoso-putu-maki",
+        "frito-gambas-con-atun-2"
+      ]
+    },
+    {
+      "id": "sushi",
+      "name": "Sushi",
+      "sourceId": "0fce4176-b5e5-41ae-9144-906af279fce0",
+      "itemIds": [
+        "sashimi-salmon",
+        "sashimi-atun",
+        "futomaki",
+        "sushi-variado",
+        "sashimi-variado",
+        "sushi-y-sashimi-variado",
+        "sushi-tempura",
+        "sushi-tempura-con-queso"
+      ]
+    },
+    {
+      "id": "temakis",
+      "name": "Temakis",
+      "sourceId": "1d1998a7-b835-46a9-af3f-6e5f9a67366b",
+      "itemIds": [
+        "temaki-salmon",
+        "temaki-atun",
+        "temaki-gamba"
+      ]
+    },
+    {
+      "id": "gunkan-maki",
+      "name": "Gunkan Maki",
+      "sourceId": "81a3b1ab-daae-40a1-ae88-64d81d46d76f",
+      "itemIds": [
+        "gunkan-maki-wakame",
+        "gunkan-maki-salmon",
+        "gunkan-maki-atun",
+        "arroz-negro-con-queso-con-mango"
+      ]
+    },
+    {
+      "id": "otros",
+      "name": "Otros",
+      "sourceId": "685cfa22-6ac1-4bd9-a5ae-cda61088d3ab",
+      "itemIds": [
+        "cerveza-china",
+        "refrescos",
+        "agua-mineral-pequena",
+        "freixenet-cava-brut",
+        "zumos",
+        "cerveza-china-2",
+        "agua-con-gas",
+        "agua-mineral-grande"
+      ]
+    },
+    {
+      "id": "vino-tinto",
+      "name": "Vino Tinto",
+      "sourceId": "8e0691b0-8e57-4a59-a698-cbf78a45f461",
+      "itemIds": [
+        "vino-tinto-marques-de-caceres",
+        "vino-tinto-marques-de-riscal",
+        "vino-tinto-campo-viejo",
+        "vino-tinto-faustino-v",
+        "vino-tinto-sangre-de-toro",
+        "vino-tinto-coto",
+        "vino-tinto-faustino-vii",
+        "vino-tinto-de-la-casa"
+      ]
+    },
+    {
+      "id": "vino-blanco",
+      "name": "Vino Blanco",
+      "sourceId": "17100d04-6b7d-460b-bfa4-b01241c0b8e3",
+      "itemIds": [
+        "vino-blanco-coto",
+        "vino-blanco-vinasol",
+        "vino-blanco-marina-alta",
+        "vino-blanco-diamante",
+        "vino-blanco-emparrado",
+        "vino-blanco-barbadillo",
+        "vino-blanco-de-la-casa"
+      ]
+    },
+    {
+      "id": "vino-rosado",
+      "name": "Vino Rosado",
+      "sourceId": "10ee4e93-008c-4544-8d1d-fc7592f72172",
+      "itemIds": [
+        "vino-rosado-mateus",
+        "vino-rosado-marques-de-caceres",
+        "vino-rosado-penascal",
+        "vino-rosado-lambrusco",
+        "vino-rosado-de-la-casa"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "combo-a",
+      "name": "Combo A",
+      "description": "4 nigiris, 4 maki de pollo, 4 maki vegetal y 2 gunkan maki wakame (14 piezas)",
+      "categoryId": "combos",
+      "priceCents": 1945,
+      "pieces": {
+        "count": 14,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2bc94d4b-1929-4d6e-bb02-daf52539b1a4",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combo-b",
+      "name": "Combo B",
+      "description": "6 nigiris mixtos + ensalada wakame, 4 maki de pollo, 4 maki vegetal, 4 uramaki salmón, 4 california y 4 gunkan maki (26 piezas)",
+      "categoryId": "combos",
+      "priceCents": 3345,
+      "pieces": {
+        "count": 26,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b315cb99-c7d5-48ef-9460-bc3738984c85",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combo-c",
+      "name": "Combo C",
+      "description": "Ensalada wakame, gyozas de pollo a la plancha, 8 nigiris mixto, 4 maki de pollo, 4 maki vegetal, 4 uramaki salmón, 4 california, 4 gunkan maki (2 de atún y 2 de salmón) en total 28 piezas",
+      "categoryId": "combos",
+      "priceCents": 4645,
+      "pieces": {
+        "count": 28,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7e85d7b2-228b-4b3a-98d5-53c8b8fa42fa",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combo-d",
+      "name": "Combo D",
+      "description": "Ensalada wakame, gyozas de pollo a la plancha, 4 rollo vietnamita, 1 pato a la pekinesa, 8 nigiris mixto, 4 maki de pollo, 4 maki vegetal, 4 uramaki salmón, 4 california, 4 gunkan maki (2 de atún y 2 salmón) en total 33 piezas",
+      "categoryId": "combos",
+      "priceCents": 6345,
+      "pieces": {
+        "count": 33,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "54e8a45a-6f1d-4205-87bc-1c6b5ffa7f77",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-2-personas-a",
+      "name": "Menú para 2 Personas A",
+      "description": "Ensalada china, rollo de primavera, arroz frito con tres delicias, cerdo con salsa agridulce, ternera con bambú, setas, bebida y postres",
+      "descriptionEn": "Chinese salad, spring roll, fried rice with three delights, sweet sour pork, beef with bamboo mushrooms, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 2745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "df8677b2-aee6-4363-881f-c4d001b05d26",
+      "sourceName": "Menús para 2 Personas A",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-2-personas-b",
+      "name": "Menú para 2 Personas B",
+      "description": "Ensalada especial, rollito chino, arroz frito de la casa, pato a la pekinesa, gambas con ajos a la plancha, bebida y postre",
+      "descriptionEn": "Special salad, chinese roll, special fried rice, peking duck, sizzling prawns with garlic, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 3445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "3240abb0-6b91-41b9-98e2-459acab07dde",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-3-personas-a",
+      "name": "Menú para 3 Personas A",
+      "description": "Ensalada china, rollo de primavera, arroz frito con tres delicias, cerdo con salsa agridulce, ternera con bambú y setas, pollo con almendras, bebida y postres",
+      "descriptionEn": "Chinese salad, spring roll, fried rice with three delights, sweet sour pork, beef with bamboo mushrooms, chicken with almonds, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 4345,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b368155e-a45b-4589-9742-89d5cdb7e159",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-3-personas-b",
+      "name": "Menú para 3 Personas B",
+      "description": "Ensalada especial, rollito chino, arroz frito especial, pato a la pekinesa, pollo bambú y setas, gambas con ajo a la plancha bebida y postre",
+      "descriptionEn": "Special salad, chinese roll, special fried rice, peking duck, chicken with bamboo mushrooms, sizzling prawns with garlic drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 5045,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "550b1d6c-debd-43af-ac75-0568ed2c8637",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-4-personas-a",
+      "name": "Menú para 4 Personas A",
+      "description": "Ensalada china, rollo de primavera (4), arroz frito con tres delicias, tallarines fritos con tres delicias, pollo con almendras, ternera con bambú y setas, cerdo con salsa agridulce, gambas con salsa curry, bebida y postre",
+      "descriptionEn": "Chinese salad, spring roll (4), fried rice with three delights, fried noodles with three delights, chicken with almonds, beef with bamboo mushrooms, sweet sour pork, prawns with curry sauce, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 6045,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "814adeeb-30f7-4195-9705-631486785ba5",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-4-personas-b",
+      "name": "Menú para 4 Personas B",
+      "description": "Ensalada especial, rollito chino (8), triángulo de curry, pato a la pekinesa, costillas salsa BBQ, pollo bambú y setas, gambas con ajo a la plancha, arroz frito de la casa, tallarines fritos tres delicias, bebida y postres",
+      "descriptionEn": "Special salad, chinese roll (8), curry triangle, peking duck, BBQ spare ribs, chicken with bamboo mushrooms, sizzling prawns with garlic, special fried rice, fried noodles with three delights, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 6645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d49abad5-252a-40e0-ad4e-7c73264e4caf",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-5-personas-a",
+      "name": "Menú para 5 Personas A",
+      "description": "Ensalada china, rollo de primavera (5), arroz frito con tres delicias, tallarines fritos con tres delicias, pollo con almendras, ternera con bambú y setas, cerdo con salsa agridulce, gambas con salsa de ostras, langostinos fritos, bebida y postre",
+      "descriptionEn": "Chinese salad, spring roll (5), fried rice with three delights, chicken with almonds, beef with bamboo mushrooms, sweet sour pork, prawns with curry sauce fried, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 7045,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "a1c3e14c-f304-4db9-9291-d1357a68dc48",
+      "sourceName": "Menú Para 5 Personas A",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-5-personas-b",
+      "name": "Menú para 5 Personas B",
+      "description": "Ensalada especial, rollito chino (10), pato a la pekinesa, costillas con salsa BBQ, pollo bambú y setas, gambas con ajo a la plancha, langostinos fritos, arroz frito de la casa, tallarines fritos tres delicias, bebida y postre",
+      "descriptionEn": "Special salad, chinese roll (10), peking duck, BBQ spare ribs, chicken with bamboo mushrooms, sizzling prawns with garlic, fried king prawns, special fried rice, fried noodles with three delights, drink and dessert",
+      "categoryId": "menus",
+      "priceCents": 8000,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7c7075dd-1085-4ea1-8945-811e1475e2f3",
+      "sourceName": "Menú Para 5 Personas B",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-6-personas-a",
+      "name": "Menú para 6 Personas A",
+      "description": "Ensalada china (3), rollo de primavera (6), arroz frito con tres delicias (3), pollo con almendras, ternera con bambú y setas, cerdo asado, langostinos fritos, cerdo con salsa agridulce, gambas con salsa de ostras, bebida y postre o café",
+      "descriptionEn": "Chinese salad (3), spring roll (6), fried rice with three delights (3), chicken with almonds, beef with bamboo and chinese mushrooms, roasted pork, fried king prawns, sweet and sour pork, prawns with oyster sauce, drink and dessert or coffee",
+      "categoryId": "menus",
+      "priceCents": 8345,
+      "options": [
+        {
+          "id": "elige",
+          "name": "Elige",
+          "minChoices": 1,
+          "maxChoices": 1,
+          "choices": [
+            {
+              "id": "con-postre",
+              "name": "Con postre",
+              "nameEn": "Dessert",
+              "priceDeltaCents": 0
+            },
+            {
+              "id": "con-cafe",
+              "name": "Con café",
+              "nameEn": "Coffee",
+              "priceDeltaCents": 0
+            }
+          ]
+        }
+      ],
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "275c11d7-1b1f-4c41-aa99-0b341a17c506",
+      "sourceName": "Menú Para 6 Personas A",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "menu-para-6-personas-b",
+      "name": "Menú para 6 Personas B",
+      "description": "Ensalada de la Casa (2), rollito chino (12), arroz frito de la casa (3), pato a la pekinesa, costillas asadas, ternera con salsa gon bao, pollo con bambú y setas chinas, langostinos fritos, gambas con puerros y jengibre a la plancha, bebida y postre o café",
+      "descriptionEn": "Special salad (2), chinese roll (12), special fried rice (3), peking duck, roasted spare ribs, beef with gon bao sauce, chicken with bamboo and chinese mushrooms, fried king prawns, sizzling prawns with leeks and ginger, drink and dessert or coffee",
+      "categoryId": "menus",
+      "priceCents": 9645,
+      "options": [
+        {
+          "id": "elige",
+          "name": "Elige",
+          "minChoices": 1,
+          "maxChoices": 1,
+          "choices": [
+            {
+              "id": "con-postre",
+              "name": "Con postre",
+              "nameEn": "Dessert",
+              "priceDeltaCents": 0
+            },
+            {
+              "id": "con-cafe",
+              "name": "Con café",
+              "nameEn": "Coffee",
+              "priceDeltaCents": 0
+            }
+          ]
+        }
+      ],
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b88b74fb-bdb4-4a54-af25-ab817e5c12ed",
+      "sourceName": "Menú Para 6 Personas B",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ensalada-de-la-casa",
+      "name": "Ensalada de la Casa",
+      "nameEn": "Special salad",
+      "categoryId": "entrantes",
+      "priceCents": 605,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c7659e61-a39c-493e-b0e7-c0f5a7c577e2",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ensalada-china",
+      "name": "Ensalada China",
+      "nameEn": "Chinese salad",
+      "categoryId": "entrantes",
+      "priceCents": 505,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9300d5d7-761d-4078-b4a9-a898818aff17",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ensalada-de-aguacate-con-gambas",
+      "name": "Ensalada de Aguacate con Gambas",
+      "nameEn": "Avocado salad with prawns",
+      "categoryId": "entrantes",
+      "priceCents": 600,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7fdea17e-d6f5-42b0-8d39-7c5a84b4fbc5",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "rollo-de-primavera",
+      "name": "Rollo de Primavera",
+      "nameEn": "Spring roll",
+      "categoryId": "entrantes",
+      "priceCents": 215,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9c4d2232-c6d3-4b52-b1f8-ca0bb70ecb79",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "rollito-vietnamita",
+      "name": "Rollito Vietnamita",
+      "nameEn": "Vietnamese rolls",
+      "categoryId": "entrantes",
+      "priceCents": 300,
+      "pieces": {
+        "count": 2,
+        "unit": "unidades"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c05733f8-adb0-43a2-a628-7330674857cd",
+      "sourceName": "Rollito Vietnamita, 2 Unidades",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "cocktail-de-gambas",
+      "name": "Cocktail de Gambas",
+      "nameEn": "Shrimps cocktail",
+      "categoryId": "entrantes",
+      "priceCents": 600,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "980b234a-ab4b-48b9-9bac-64f9ea35d3da",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "langostinos-fritos-thai",
+      "name": "Langostinos Fritos Thai",
+      "nameEn": "Fried prawns",
+      "categoryId": "entrantes",
+      "priceCents": 605,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "fbbcd206-c006-4793-adef-b39d64d16f05",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "wan-tun-frito",
+      "name": "Wan Tun Frito",
+      "nameEn": "Fried wan tun",
+      "categoryId": "entrantes",
+      "priceCents": 505,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7ee68991-ba3c-4e63-9628-1573fbe8c8e1",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "entremeses-variados-estilo-chino",
+      "name": "Entremeses Variados Estilo Chino",
+      "nameEn": "Chinese style appetizers",
+      "categoryId": "entrantes",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e3735375-27b1-41b2-aa8b-18164a5386c2",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "algas-fritas",
+      "name": "Algas Fritas",
+      "nameEn": "Fried seaweeds",
+      "categoryId": "entrantes",
+      "priceCents": 445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "f45778fc-82ad-40ca-bdf4-2ffef6869f83",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "tostada-de-gambas",
+      "name": "Tostada de Gambas",
+      "nameEn": "Prawn toast",
+      "categoryId": "entrantes",
+      "priceCents": 445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "29d701a7-e48f-4b17-8e13-8eff56c4fd14",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pinchos-chinos",
+      "name": "Pinchos Chinos",
+      "nameEn": "Chicken saté",
+      "categoryId": "entrantes",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "384354a1-7433-428e-ac25-30bdad856471",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pincho-de-cerdo-mongolia",
+      "name": "Pincho de Cerdo Mongolia",
+      "categoryId": "entrantes",
+      "priceCents": 375,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "f1d22bc2-f634-4bbe-80d7-8dc43cc4b9dc",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "triangulo-de-curry-thai",
+      "name": "Triángulo de Curry Thai",
+      "nameEn": "Curry triangle",
+      "categoryId": "entrantes",
+      "priceCents": 445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d5f121ee-32a0-4d2d-a55e-b409702d1aee",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "verduras-en-tempura",
+      "name": "Verduras en Tempura",
+      "nameEn": "Vegetables in tempura",
+      "categoryId": "entrantes",
+      "priceCents": 600,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c2508835-ac6e-453d-8d7d-b81beef9eb51",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-en-tempura",
+      "name": "Gambas en Tempura",
+      "nameEn": "Prawns in tempura",
+      "categoryId": "entrantes",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6a84a2b7-c099-48bd-a262-3103722c9ed0",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sopa-de-aleta-de-tiburon",
+      "name": "Sopa de Aleta de Tiburón",
+      "nameEn": "Shark's fin soup",
+      "categoryId": "sopas",
+      "priceCents": 445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0c18074f-8e00-4ee5-a073-ccc76dde5319",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sopa-agripicante",
+      "name": "Sopa Agripicante",
+      "nameEn": "Hot & sour soup",
+      "categoryId": "sopas",
+      "priceCents": 400,
+      "dietaryTags": [
+        "spicy"
+      ],
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "124f09d6-9272-4ce1-bf53-13272a57e54e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sopa-de-pollo-con-champinones",
+      "name": "Sopa de Pollo con Champiñones",
+      "nameEn": "Chicken and mushroom soup",
+      "categoryId": "sopas",
+      "priceCents": 400,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1122941e-b97c-4795-9116-c87b62784e84",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sopa-de-pollo-con-maiz",
+      "name": "Sopa de Pollo con Maíz",
+      "nameEn": "Chicken sweet corn soup",
+      "categoryId": "sopas",
+      "priceCents": 400,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1841b7d0-89e1-4095-94a1-9c59eb0a3248",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sopa-de-mariscos",
+      "name": "Sopa de Mariscos",
+      "nameEn": "Seafood soup",
+      "categoryId": "sopas",
+      "priceCents": 500,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e46c409b-7462-47af-8ed9-c2e20e71fff7",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sopa-de-wantu",
+      "name": "Sopa de Wantu",
+      "nameEn": "Wantu soup",
+      "categoryId": "sopas",
+      "priceCents": 500,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2f5c8eaf-f2b2-4b00-9fdc-9d772b0adf18",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pato-estilo-cantones",
+      "name": "Pato Estilo Cantonés",
+      "categoryId": "pato",
+      "priceCents": 1195,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "eaf3cef6-18a0-4417-9d78-214590d2b69e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Texto en inglés publicado incompleto («Cantonese style ok»)."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pato-estilo-thai",
+      "name": "Pato Estilo Thai",
+      "nameEn": "Thai style duck",
+      "categoryId": "pato",
+      "priceCents": 1195,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "bfbac102-6db5-4076-8ad5-ad6723bcf2e6",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pato-a-la-pekinesa",
+      "name": "Pato a la Pekinesa",
+      "nameEn": "Peking duck with pancake",
+      "categoryId": "pato",
+      "priceCents": 1400,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d0eac5aa-b8ab-4166-ac23-45585f527d65",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pato-con-naranja",
+      "name": "Pato con Naranja",
+      "nameEn": "Duck with orange sauce",
+      "categoryId": "pato",
+      "priceCents": 1195,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "cbbf8ba7-f910-4a99-af20-8c137e8389fd",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pato-con-pina",
+      "name": "Pato con Piña",
+      "nameEn": "Duck with pineapple",
+      "categoryId": "pato",
+      "priceCents": 1195,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2e63afe7-1e71-4598-a866-04316a862081",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pato-con-bambu-y-setas-a-la-plancha",
+      "name": "Pato con Bambú y Setas a la Plancha",
+      "nameEn": "Sizzling duck with bamboo mushrooms",
+      "categoryId": "pato",
+      "priceCents": 1195,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0c5affdd-bd51-4bfa-a977-61db8bf1ec30",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-salsa-roja-thai",
+      "name": "Pollo con Salsa Roja Thai",
+      "nameEn": "Chicken with thai red curry sauce",
+      "categoryId": "pollo",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "36452bf4-0ade-474c-bde9-f97cd6cc3548",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-con-salsa-de-limon",
+      "name": "Pollo con Salsa de Limón",
+      "nameEn": "Lemon chicken",
+      "categoryId": "pollo",
+      "priceCents": 765,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "99270b88-12bb-4755-8af1-8252545126e4",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-salsa-agridulce",
+      "name": "Pollo con Salsa Agridulce",
+      "nameEn": "Sweet sour chicken balls",
+      "categoryId": "pollo",
+      "priceCents": 775,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "30e68d8f-f22d-4e90-a463-f39bae9bbc96",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-con-pina-natural",
+      "name": "Pollo con Piña Natural",
+      "categoryId": "pollo",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "83048b18-45b3-40ee-9618-1c651d9b94b2",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "La descripción publicada («Chicken with almonds») corresponde a otro plato."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-almendras",
+      "name": "Pollo con Almendras",
+      "nameEn": "Chicken with almonds",
+      "categoryId": "pollo",
+      "priceCents": 765,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "915cc436-c09a-4d23-843b-0262e2d38347",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-bambu-y-setas",
+      "name": "Pollo con Bambú y Setas",
+      "nameEn": "Chicken with bamboo mushrooms",
+      "categoryId": "pollo",
+      "priceCents": 765,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "595e81ef-f420-4fe1-83ef-a169e752696a",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-estilo-hong-kong",
+      "name": "Pollo Estilo Hong Kong",
+      "nameEn": "Hong kong style chicken",
+      "categoryId": "pollo",
+      "priceCents": 795,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b8c0b2d3-3811-4613-b4b4-3807e176776a",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-salsa-gon-bao",
+      "name": "Pollo con Salsa Gon Bao",
+      "nameEn": "Chicken with gon bao sauce",
+      "categoryId": "pollo",
+      "priceCents": 775,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "116031bf-2b83-4139-8813-27dcd8e90328",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-salsa-de-judias-negras",
+      "name": "Pollo con Salsa de Judías Negras",
+      "nameEn": "Chicken with black bean sauce",
+      "categoryId": "pollo",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "ca061de2-4769-471c-a255-e6bdbda80a6c",
+      "sourceName": "Pollo con Salsa de Judías Neg",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-a-la-plancha",
+      "name": "Pollo a la Plancha",
+      "nameEn": "Sizzling chicken with leek and ginger",
+      "categoryId": "pollo",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "722e9520-c520-462c-ac7e-59bf1a0d5909",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "alas-de-pollo-fritas",
+      "name": "Alas de Pollo Fritas",
+      "nameEn": "Fried chicken wings",
+      "categoryId": "pollo",
+      "priceCents": 775,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "75c9bb55-b770-4b1e-880d-8027e8ddf307",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-con-salsa-curry",
+      "name": "Pollo con Salsa Curry",
+      "nameEn": "Chicken with curry sauce",
+      "categoryId": "pollo",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0bcb58aa-4b14-4f00-abae-a7f61f751a85",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pollo-con-champinones",
+      "name": "Pollo con Champiñones",
+      "nameEn": "Chicken mushrooms",
+      "categoryId": "pollo",
+      "priceCents": 765,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "104ee614-4af7-4b90-901a-b7dc22ad3add",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-cebolla",
+      "name": "Ternera con Cebolla",
+      "nameEn": "Beef with onion",
+      "categoryId": "pollo",
+      "priceCents": 875,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "881b6bd2-25f9-447a-bc46-db141712de1e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Publicado dentro de la categoría Pollo; confirmar categoría."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-salsa-roja-thai",
+      "name": "Ternera con Salsa Roja Thai",
+      "nameEn": "Beef with thai red curry sauce",
+      "categoryId": "ternera",
+      "priceCents": 895,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d70dc67e-22d0-41d4-b29d-8655dc91473a",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tiras-de-buey-crujiente-con-salsa-de-piel-de-naranja",
+      "name": "Tiras de Buey Crujiente con Salsa de Piel de Naranja",
+      "nameEn": "Crispy beef with sauce of orange peel",
+      "categoryId": "ternera",
+      "priceCents": 865,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "885d0ee4-a4e0-46da-aef8-d87e204b4aef",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ternera-con-salsa-de-pimienta-negra-a-la-plancha",
+      "name": "Ternera con Salsa de Pimienta Negra a la Plancha",
+      "nameEn": "Sizzling beef with black pepper sauce",
+      "categoryId": "ternera",
+      "priceCents": 895,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1523eaf4-d4df-4fb6-843e-12176ab75944",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ternera-con-bambu-y-setas",
+      "name": "Ternera con Bambú y Setas",
+      "nameEn": "Beef with bamboo mushrooms",
+      "categoryId": "ternera",
+      "priceCents": 865,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2cb01360-312b-41f2-b188-8c3d39dedacb",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-pimientos-verdes",
+      "name": "Ternera con Pimientos Verdes",
+      "nameEn": "Beef with green peppers",
+      "categoryId": "ternera",
+      "priceCents": 875,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "676c5531-d4af-4ca3-9265-f164a985a5a9",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-salsa-gong-bao",
+      "name": "Ternera con Salsa Gong Bao",
+      "nameEn": "Beef with gong bao sauce",
+      "categoryId": "ternera",
+      "priceCents": 875,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d9e1bbd9-21de-4029-b3a2-643f7e6232f0",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-salsa-de-ostras",
+      "name": "Ternera con Salsa de Ostras",
+      "nameEn": "Beef with oyster sauce",
+      "categoryId": "ternera",
+      "priceCents": 865,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0869bbec-bf95-48f1-bc14-5a15faee445c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "ternera-con-judias-negras",
+      "name": "Ternera con Judías Negras",
+      "nameEn": "Beef with black beans sauce",
+      "categoryId": "ternera",
+      "priceCents": 875,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4463e1fa-ef02-4560-91ad-6d750d8ae859",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "costillas-con-salsa-bbq",
+      "name": "Costillas con Salsa BBQ",
+      "nameEn": "BBQ spare ribs",
+      "categoryId": "carne",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "39be5c23-ef4f-4bc2-aa28-29ef901e2007",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "costillas-con-sal-y-pimienta",
+      "name": "Costillas con Sal y Pimienta",
+      "nameEn": "Salt and pepper ribs",
+      "categoryId": "carne",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "51c667f5-1bad-491e-9b90-0120e7744e05",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "cerdo-con-salsa-agridulce",
+      "name": "Cerdo con Salsa Agridulce",
+      "nameEn": "Sweet sour pork",
+      "categoryId": "carne",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "372e6d9f-2fa1-46bc-9689-2e753414c436",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "costillas-con-salsa-agridulce",
+      "name": "Costillas con Salsa Agridulce",
+      "nameEn": "Sweet sour spare ribs",
+      "categoryId": "carne",
+      "priceCents": 775,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "3d9929dc-f15b-4cc7-a658-fa4c0ada7ebe",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "costillas-asadas",
+      "name": "Costillas Asadas",
+      "nameEn": "Roasted spare ribs",
+      "categoryId": "carne",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "50a62a8f-ce2b-4aec-8f94-fcd057fbcd9c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "cerdo-asado",
+      "name": "Cerdo Asado",
+      "nameEn": "Roasted pork with sweet chilli sauce",
+      "categoryId": "carne",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c19c0449-d189-49f0-96ef-88d389207e72",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-salsa-roja-thai",
+      "name": "Gambas con Salsa Roja Thai",
+      "nameEn": "Prawns with thai red curry sauce",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "49dbca00-f273-44e1-b485-1e0922d0da6d",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-sal-y-pimienta",
+      "name": "Gambas con Sal y Pimienta",
+      "nameEn": "Salt and pepper prawns",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "11ea9332-42e7-4ccf-96d5-ddd13ce67000",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-bambu-y-setas",
+      "name": "Gambas Bambú y Setas",
+      "nameEn": "Prawns with bamboo and mushrooms",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d7cc6f6c-8d02-4313-9140-0b26717992e7",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-ajo-a-la-plancha",
+      "name": "Gambas con Ajo a la Plancha",
+      "nameEn": "Sizzling prawns with garlic",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0a48ddf7-c1d9-4575-8561-e1ec2443c4c3",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-verduras",
+      "name": "Gambas con Verduras",
+      "nameEn": "Prawns with mixed vegetables",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "a9be63b9-2a88-4465-b507-d734d426ea0b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "gambas-con-salsa-de-ostras",
+      "name": "Gambas con Salsa de Ostras",
+      "nameEn": "Prawns with oyster sauce",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7d8aed01-d83d-4a21-9075-0d74233e8857",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-salsa-picante",
+      "name": "Gambas con Salsa Picante",
+      "nameEn": "Prawns with hot sauce",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9322553d-07ad-459d-9c71-e964cbafd155",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-salsa-curry",
+      "name": "Gambas con Salsa Curry",
+      "nameEn": "Prawns with curry sauce",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b5783fbf-cfd9-4116-b351-29016ada212b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gambas-con-salsa-agridulce",
+      "name": "Gambas con Salsa Agridulce",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6e329783-652f-4389-988a-146ac2737da9",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Texto en inglés publicado incompleto («Sweet sour sauce»)."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "langostinos-fritos",
+      "name": "Langostinos Fritos",
+      "nameEn": "Fried king prawns",
+      "categoryId": "marisco-y-gambas",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d3ecc581-7488-4aa1-b387-e5d5697c65e8",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sepia-con-salsa-gon-bao",
+      "name": "Sepia con Salsa Gon Bao",
+      "nameEn": "Squid with gon bao sauce",
+      "categoryId": "pescados-y-mariscos",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e28511aa-2aaf-4f67-bff4-efe7a074caf0",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sepia-con-bambu-y-setas",
+      "name": "Sepia con Bambú y Setas",
+      "nameEn": "Squid with bamboo and mushrooms",
+      "categoryId": "pescados-y-mariscos",
+      "priceCents": 900,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6f2a91e0-e0e1-453a-9b08-4f850d2d4750",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "cangrejo-con-puerro-y-jengibre",
+      "name": "Cangrejo con Puerro y Jengibre",
+      "nameEn": "Sizzling crab with leek and ginger",
+      "categoryId": "pescados-y-mariscos",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b23b50e5-32fe-4f95-ad84-89f5ecc2031b",
+      "sourceName": "Cangrejo con Puero y Jengibres",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-familia-feliz",
+      "name": "La Familia Feliz",
+      "nameEn": "Happy family",
+      "categoryId": "pescados-y-mariscos",
+      "priceCents": 945,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4e3ec944-506d-4f3f-abec-6a832a4f2e53",
+      "sourceName": "la Familia Feliz",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "kubak-de-marisco",
+      "name": "Kubak de Marisco",
+      "categoryId": "pescados-y-mariscos",
+      "priceCents": 895,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9798152a-3983-474b-ab4d-10b26e0d52d0",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Texto en inglés publicado no corresponde («Cuba seafood»)."
+      ]
+    },
+    {
+      "id": "ku-bak-con-tres-delicias",
+      "name": "Ku Bak con Tres Delicias",
+      "nameEn": "Crispy rice with three delicacies",
+      "categoryId": "acompanamientos",
+      "priceCents": 895,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "31eb1cd5-fcc8-4887-a4cc-30a69569f949",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "arroz-frito-de-la-casa",
+      "name": "Arroz Frito de la Casa",
+      "nameEn": "Special fried rice",
+      "categoryId": "acompanamientos",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "16b0b31e-4088-4e85-8883-e1d419c9d20f",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "arroz-frito-con-pollo-y-curry",
+      "name": "Arroz Frito con Pollo y Curry",
+      "nameEn": "Fried rice with chicken and curry",
+      "categoryId": "acompanamientos",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "edb9fd5c-b35f-4711-b630-bffdb6b86e21",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "arroz-frito-con-huevo",
+      "name": "Arroz Frito con Huevo",
+      "nameEn": "Egg fried rice",
+      "categoryId": "acompanamientos",
+      "priceCents": 440,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4e3d38c6-09d0-45b8-860f-87cb459b5c73",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "arroz-frito-con-tres-delicias",
+      "name": "Arroz Frito con Tres Delicias",
+      "nameEn": "Fried rice with three delights",
+      "categoryId": "acompanamientos",
+      "priceCents": 450,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "71b6f716-34fd-41bf-8271-cb13bb8b25d0",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "arroz-blanco",
+      "name": "Arroz Blanco",
+      "nameEn": "Plain rice",
+      "categoryId": "acompanamientos",
+      "priceCents": 260,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4fdd980c-e039-45e1-96c2-802368db20c5",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "udon-tallarines-con-marisco",
+      "name": "Udon Tallarines con Marisco",
+      "nameEn": "Udon noodles with Seafood",
+      "categoryId": "acompanamientos",
+      "priceCents": 845,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "14bd1a12-dbf1-488f-8688-3e8f554de668",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tallarines-estilo-chino",
+      "name": "Tallarines Estilo Chino",
+      "nameEn": "Chinese noodles",
+      "categoryId": "acompanamientos",
+      "priceCents": 895,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6a6b17f2-07f6-48d3-a3c4-1fbcebab935d",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "tallarines-fritos-con-tres-delicias",
+      "name": "Tallarines Fritos con Tres Delicias",
+      "nameEn": "Noodles with three delights",
+      "categoryId": "acompanamientos",
+      "priceCents": 695,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "aa8c4759-c898-4add-8638-c74fcb48880e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tallarines-con-gambas",
+      "name": "Tallarines con Gambas",
+      "nameEn": "Noodles with prawns",
+      "categoryId": "acompanamientos",
+      "priceCents": 695,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "41c7f490-fa90-479e-b544-e1a12dcdc902",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tallarines-con-pollo",
+      "name": "Tallarines con Pollo",
+      "nameEn": "Noodles with chicken",
+      "categoryId": "acompanamientos",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "a5ebea5f-eb97-4e02-868a-2ce71b340992",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "fideos-de-arroz-singapur-al-curry",
+      "name": "Fideos de Arroz Singapur Al Curry",
+      "nameEn": "Singapore style noodles with prawns",
+      "categoryId": "acompanamientos",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "26a7efa5-4b35-4fac-b861-e7c040d61ae7",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "fideos-de-arroz-con-tres-delicias",
+      "name": "Fideos de Arroz con Tres Delicias",
+      "nameEn": "Rice noodles with three delights",
+      "categoryId": "acompanamientos",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0b6488d2-0d75-44bc-83a6-4e0e0d9bee0e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "fideos-de-arroz-con-gambas",
+      "name": "Fideos de Arroz con Gambas",
+      "nameEn": "Rice noodles with prawns",
+      "categoryId": "acompanamientos",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "22ad899a-9bb1-4b7c-9192-c0fb1622ec66",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pan-de-gambas",
+      "name": "Pan de Gambas",
+      "nameEn": "Prawn cracker",
+      "categoryId": "acompanamientos",
+      "priceCents": 300,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1a714806-c965-4586-890d-86504e36720c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "pan-chino",
+      "name": "Pan Chino",
+      "nameEn": "Chinese bread",
+      "categoryId": "acompanamientos",
+      "priceCents": 245,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "335bf71a-7da3-480a-b986-5d43780daea6",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "patatas-fritas",
+      "name": "Patatas Fritas",
+      "nameEn": "Fried chips",
+      "categoryId": "acompanamientos",
+      "priceCents": 375,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "efb88c63-4fb4-459b-8f80-7b577c436ebd",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "verduras-salteadas",
+      "name": "Verduras Salteadas",
+      "nameEn": "Chop suey mixed vegetables",
+      "categoryId": "acompanamientos",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "f2314479-6966-4a7e-9c8e-e4542e1ce8ee",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "bambu-y-setas-salteadas",
+      "name": "Bambú y Setas Salteadas",
+      "nameEn": "Sautéed bamboo and mushrooms",
+      "categoryId": "acompanamientos",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "682add62-dbde-4a82-9e0d-39c95d74fc00",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tortilla-con-pollo-y-patatas-fritas",
+      "name": "Tortilla con Pollo y Patatas Fritas",
+      "nameEn": "Omelette with chicken and chips",
+      "categoryId": "platos-combinados",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0fa8c068-2918-4aff-9822-03a52567e4b5",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ternera-con-patatas-fritas",
+      "name": "Ternera con Patatas Fritas",
+      "nameEn": "Beef with chips",
+      "categoryId": "platos-combinados",
+      "priceCents": 745,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8e3af345-b128-4e5b-ba3b-ba021d04120c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pechuga-de-pollo-con-patatas",
+      "name": "Pechuga de Pollo con Patatas",
+      "nameEn": "Chicken with chips",
+      "categoryId": "platos-combinados",
+      "priceCents": 800,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "fe2993fd-4d6a-4263-b7de-afe527ae323b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ensalada-de-algas-wakame",
+      "name": "Ensalada de Algas Wakame",
+      "categoryId": "dim-sum",
+      "priceCents": 500,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "57c37901-63f3-41b9-80f2-130c0a07e468",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "shien-lo-pao",
+      "name": "Shien Ló Pao",
+      "categoryId": "dim-sum",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "43cb9a70-d50e-49a4-b6be-d7ab4d1dfa88",
+      "sourceName": "Shien Ló Pao, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "shia-chiao",
+      "name": "Shia Chiao",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "16e09af6-efc4-4ab3-8a07-e443a0aacbc3",
+      "sourceName": "Shia Chiao, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sau-mai",
+      "name": "Sau Mai",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9d19370b-815d-4397-be5d-07f05917a459",
+      "sourceName": "Sau Mai, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "kuotie",
+      "name": "Kuotie",
+      "categoryId": "dim-sum",
+      "priceCents": 645,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "58edf436-1890-44f2-a470-b569bca78dce",
+      "sourceName": "Kuotie, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "siau-long-pao",
+      "name": "Siau Long Pao",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "f4c89923-3f73-44c9-8424-d1906f011cb1",
+      "sourceName": "Siau Long Pao, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sau-mai-de-4-estaciones",
+      "name": "Sau Mai de 4 Estaciones",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7005018a-5015-4996-83eb-93e9d411df54",
+      "sourceName": "Sau Maide 4 Estaciones, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "gyozas-de-pollo-a-la-plancha",
+      "name": "Gyozas de Pollo a la Plancha",
+      "categoryId": "dim-sum",
+      "priceCents": 645,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "08c624f3-05bb-44f2-9704-42ce3bfb9f11",
+      "sourceName": "Gyozas de Pollo a la Plancha, 6 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "empanadillas-vegetables-shuijing",
+      "name": "Empanadillas Vegetables Shuijing",
+      "categoryId": "dim-sum",
+      "priceCents": 505,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7a2937a9-c7d4-4ff6-a863-b2bdffb4f846",
+      "sourceName": "Empanadillas Vegetables Shuijing, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "albondigas-de-sepia-y-gambas",
+      "name": "Albóndigas de Sepia y Gambas",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8839206d-02c4-4b0b-ad99-7800012dfa26",
+      "sourceName": "Albóndigas de Sepia y Gambas, 6 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "samosa",
+      "name": "Samosa",
+      "categoryId": "dim-sum",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0014f171-349c-4716-8515-a36d0688f510",
+      "sourceName": "Samosa, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "saumai-de-marisco",
+      "name": "Saumai de Marisco",
+      "categoryId": "dim-sum",
+      "priceCents": 575,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7dbdc119-3f8f-4f1a-8d0b-9e1e4bbb688b",
+      "sourceName": "Saumai de Marisco, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combinado-1",
+      "name": "Combinado 1",
+      "description": "Sau mai",
+      "categoryId": "dim-sum",
+      "priceCents": 600,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "66309b5d-f564-4ee0-8e1e-5eff546e4273",
+      "sourceName": "Combinado 1, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combinado-2",
+      "name": "Combinado 2",
+      "description": "Vapor",
+      "categoryId": "dim-sum",
+      "priceCents": 845,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "71a9b478-e981-45f9-99f2-70fd81d0b445",
+      "sourceName": "Combinado 2, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "combinado-3",
+      "name": "Combinado 3",
+      "description": "Fritos",
+      "categoryId": "dim-sum",
+      "priceCents": 845,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "512091b0-bf00-46bd-8f75-d6620e3bde3a",
+      "sourceName": "Combinado 3, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nigiri-gamba",
+      "name": "Nigiri Gamba",
+      "categoryId": "nigiris",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "32d063c0-7b07-4d49-8b26-b49d99997d26",
+      "sourceName": "Nigiri Gamba, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "nigiri-anguila",
+      "name": "Nigiri Anguila",
+      "categoryId": "nigiris",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "ef13e30b-b06a-46f4-8f73-aef506714af3",
+      "sourceName": "Nigiri Anguila, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "nigiri-aguacate",
+      "name": "Nigiri Aguacate",
+      "categoryId": "nigiris",
+      "priceCents": 345,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "bc8723b1-7e93-4a29-86df-b6ec76525438",
+      "sourceName": "Nigiri Aguacate, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "nigiri-surimi",
+      "name": "Nigiri Surimi",
+      "categoryId": "nigiris",
+      "priceCents": 345,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "dd4b8620-b60d-4819-af70-c48ca6672b20",
+      "sourceName": "Nigiri Surimi, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nigiri-mixto",
+      "name": "Nigiri Mixto",
+      "description": "2 Atún, 2 salmón, 2 gambas y 2 anguila",
+      "categoryId": "nigiris",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2c3b8569-52bb-4966-ab45-4dcb84d99134",
+      "sourceName": "Nigiri Mixto, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "zamburina",
+      "name": "Zamburiña",
+      "description": "Viera",
+      "categoryId": "nigiris",
+      "priceCents": 645,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "bd1cce55-e028-4f5b-9377-64e1304ee679",
+      "sourceName": "Zamburiña, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "flambeado-salmon",
+      "name": "Flambeado Salmón",
+      "categoryId": "nigiris",
+      "priceCents": 500,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "32e18080-e06c-4226-8416-6d8cf43e7aa1",
+      "sourceName": "Flambeado Salmón, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "flambeado-atun",
+      "name": "Flambeado Atún",
+      "categoryId": "nigiris",
+      "priceCents": 500,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8d2967fd-44ae-4483-bb32-eec3c13bf7a6",
+      "sourceName": "Flambeado Atún, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nigiri-flambeado-ternera",
+      "name": "Nigiri Flambeado Ternera",
+      "categoryId": "nigiris",
+      "priceCents": 645,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "138bab96-4337-4ffc-b9a5-313230991ce6",
+      "sourceName": "Nigiri Flambeado Ternera, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pulpo",
+      "name": "Pulpo",
+      "categoryId": "nigiris",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "a9fd181b-d4d3-483f-a88b-aa3a6357943c",
+      "sourceName": "Pulpo, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "atun",
+      "name": "Atún",
+      "categoryId": "nigiris",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8499eaba-4a8a-4169-95c0-e091c156bff4",
+      "sourceName": "Atún, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "lubina",
+      "name": "Lubina",
+      "categoryId": "nigiris",
+      "priceCents": 445,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "979b51dd-6a70-43de-9d28-7e82f068e698",
+      "sourceName": "Lubina, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "poke-bowl-de-salmon",
+      "name": "Poke Bowl de Salmón",
+      "categoryId": "bowls",
+      "priceCents": 1145,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "ec995443-a3b2-49f6-a2b9-947767fe5493",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "poke-bowl-de-atun",
+      "name": "Poke Bowl de Atún",
+      "categoryId": "bowls",
+      "priceCents": 1145,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "812a1502-fe5c-41d0-ad6f-10e60c1a3767",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "poke-bowl-de-pollo",
+      "name": "Poke Bowl de Pollo",
+      "categoryId": "bowls",
+      "priceCents": 1145,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "2b32980a-b1d4-4430-a185-9aa82b390d6c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "maki-salmon",
+      "name": "Maki Salmón",
+      "categoryId": "makis",
+      "priceCents": 945,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "32d6af5c-f6e5-49fa-8e0a-aaa0ca589181",
+      "sourceName": "Maki Salmón, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-atun",
+      "name": "Maki Atún",
+      "categoryId": "makis",
+      "priceCents": 945,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8ab389a3-a5cd-4f86-8d03-0ffea7f87d33",
+      "sourceName": "Maki Atún, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-pollo-crujiente",
+      "name": "Maki Pollo Crujiente",
+      "categoryId": "makis",
+      "priceCents": 845,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b32d5bc1-8b25-4732-be62-4d792db57d2f",
+      "sourceName": "Maki Pollo Crujiente, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "maki-vegetal",
+      "name": "Maki Vegetal",
+      "categoryId": "makis",
+      "priceCents": 600,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "452a6bd7-c07f-4eed-b410-c8f326a1f311",
+      "sourceName": "Maki Vegetal, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-pepino",
+      "name": "Maki Pepino",
+      "categoryId": "makis",
+      "priceCents": 700,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "139d247b-cb0b-4fd5-850b-4885a58c8f41",
+      "sourceName": "Maki Pepino, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-aguacate",
+      "name": "Maki Aguacate",
+      "categoryId": "makis",
+      "priceCents": 700,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "3cb65a29-4ce3-4d77-be21-6472903d3f47",
+      "sourceName": "Maki Aguacate, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-california",
+      "name": "Maki California",
+      "categoryId": "makis",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b1a614cf-6d61-461f-ba61-e80dd00d5ac0",
+      "sourceName": "Maki California, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-surimi",
+      "name": "Maki Surimi",
+      "categoryId": "makis",
+      "priceCents": 845,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1201beea-3232-4185-9de4-0a5c07f5a182",
+      "sourceName": "Maki Surimi, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-gambas",
+      "name": "Maki Gambas",
+      "categoryId": "makis",
+      "priceCents": 1045,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "5f7590cc-bf14-40fb-aabc-9aacafe15622",
+      "sourceName": "Maki Gambas, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-dragon",
+      "name": "Maki Dragón",
+      "categoryId": "makis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c97652f3-4217-4245-8057-15d259fbf757",
+      "sourceName": "Maki Dragón, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "maki-rollo-variado",
+      "name": "Maki Rollo Variado",
+      "description": "Atún, salmón y vegetal",
+      "categoryId": "makis",
+      "priceCents": 1145,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "341829e1-dc93-4eb2-8c84-7040d49b5043",
+      "sourceName": "Maki Rollo Variado, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "salmon-con-aguacate-y-mango",
+      "name": "Salmón con Aguacate y Mango",
+      "categoryId": "makis",
+      "priceCents": 945,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "56e41ce2-d7e4-426c-a9af-575ed3e9b731",
+      "sourceName": "Salmón con Aguacate y Mango, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hoso-maki-frito",
+      "name": "Hoso Maki Frito",
+      "description": "Fresas con queso",
+      "categoryId": "makis",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "204505d3-410d-4400-bd22-3630d5f1c5d3",
+      "sourceName": "Hoso Maki Frito, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "uramaki-salmon",
+      "name": "Uramaki Salmón",
+      "categoryId": "uramakis",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d41c8f08-9112-49c1-8cd7-c4c47f30d14b",
+      "sourceName": "Uramaki Salmón, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "uramaki-atun",
+      "name": "Uramaki Atún",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1834bdc0-5b11-4df8-9342-b56eacdbd903",
+      "sourceName": "Uramaki Atún, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "uramaki-anguila",
+      "name": "Uramaki Anguila",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7f9a7bd1-883a-42c8-b4be-0081b6823f33",
+      "sourceName": "Uramaki Anguila, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "uramaki-rainbow-roll",
+      "name": "Uramaki Rainbow Roll",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "80b33557-1c33-4456-b9f8-275569e35ea2",
+      "sourceName": "Uramaki Rainbow Roll, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mango-con-salmon",
+      "name": "Mango con Salmón",
+      "categoryId": "uramakis",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4b70ce85-7557-474d-98ac-2412b28325d9",
+      "sourceName": "Mango con Salmón, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "picante-atun",
+      "name": "Picante Atún",
+      "description": "Aguacate, atún y chili",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "dietaryTags": [
+        "spicy"
+      ],
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "050c5b63-95a8-41da-993f-59e339672ad8",
+      "sourceName": "Picante Atún, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "frito-salmon",
+      "name": "Frito Salmón",
+      "description": "Salmón, aguacate con queso",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "61209581-b67f-41b9-972c-9a66a4dae26e",
+      "sourceName": "Frito Salmón, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "frito-gambas-con-atun",
+      "name": "Frito Gambas con Atún",
+      "description": "Gambas con aguacate",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "44ebe13c-eac7-4b5d-b51e-a084e9b85d15",
+      "sourceName": "Frito Gambas con Atún, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sashimi-de-atun",
+      "name": "Sashimi de Atún",
+      "categoryId": "uramakis",
+      "priceCents": 1045,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "af091a5f-0afd-4794-bcd0-cf867d560661",
+      "sourceName": "Sashimi de Atún, 6 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "conflicting",
+      "issues": [
+        "Sashimi de atún (6 piezas) aparece en Uramakis a 10,45 € y en Sushi a 12,45 €."
+      ]
+    },
+    {
+      "id": "sashimi-de-salmon",
+      "name": "Sashimi de Salmón",
+      "categoryId": "uramakis",
+      "priceCents": 1045,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "007547e7-12a3-4d6d-9a0a-657e18afc52f",
+      "sourceName": "Sashimi de Salmón, 6 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Sashimi de salmón (6 piezas) aparece en Uramakis y en Sushi, ambos a 10,45 €; posible duplicado."
+      ]
+    },
+    {
+      "id": "arroz-negro-de-gambas-con-fresa",
+      "name": "Arroz Negro de Gambas con Fresa",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "7f36cb6e-ee0c-48f2-b2ac-fcebd1078e6f",
+      "sourceName": "Arroz Negro de Gambas con Fresa, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "arroz-negro-de-almendras-con-salmon-y-aguacate",
+      "name": "Arroz Negro de Almendras con Salmón y Aguacate",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9530e9be-fcbd-451e-ab08-511e6447e707",
+      "sourceName": "Arroz Negro de Almendras con Salmón y Aguacate, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "pollo-crujiente-rollo",
+      "name": "Pollo Crujiente Rollo",
+      "description": "Pollo con pepino",
+      "categoryId": "uramakis",
+      "priceCents": 1145,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b7f61302-4526-441a-a07c-12e73ed00ddc",
+      "sourceName": "Pollo Crujiente Rollo, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "arroz-negro-de-salmon-con-katafi",
+      "name": "Arroz Negro de Salmón con Katafi",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "80fe950d-ccb2-4831-91aa-181c09aaf302",
+      "sourceName": "Arroz Negro de Salmón con Katafi, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "hoso-putu-maki",
+      "name": "Hoso Putu Maki",
+      "description": "Aguacate, salmón con surimi con queso",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d2c41ef4-2380-47ef-a1aa-aae4336bba05",
+      "sourceName": "Hoso Putu Maki, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "frito-gambas-con-atun-2",
+      "name": "Frito Gambas con Atún",
+      "description": "Gambas con aguacate",
+      "categoryId": "uramakis",
+      "priceCents": 1345,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "72fa00be-f834-4874-8176-0d0d6709b084",
+      "sourceName": "Frito Gambas con Atún, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "duplicateOf": "frito-gambas-con-atun",
+      "issues": [
+        "Entrada duplicada de «Frito Gambas con Atún, 8 Piezas» (mismo precio; una de las dos descripciones tenía una errata). Oculta en la carta."
+      ]
+    },
+    {
+      "id": "sashimi-salmon",
+      "name": "Sashimi Salmón",
+      "categoryId": "sushi",
+      "priceCents": 1045,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "4950bee8-f6fd-4dc4-abea-79a37896f09a",
+      "sourceName": "Sashimi salmón, 6 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "Sashimi de salmón (6 piezas) aparece en Uramakis y en Sushi, ambos a 10,45 €; posible duplicado."
+      ]
+    },
+    {
+      "id": "sashimi-atun",
+      "name": "Sashimi Atún",
+      "categoryId": "sushi",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 6,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d09aafcd-1052-445b-b4e5-ee698ab7d081",
+      "sourceName": "Sashimi atún, 6 piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "conflicting",
+      "issues": [
+        "Sashimi de atún (6 piezas) aparece en Uramakis a 10,45 € y en Sushi a 12,45 €."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "futomaki",
+      "name": "Futomaki",
+      "description": "Atún, salmón y verduras",
+      "categoryId": "sushi",
+      "priceCents": 1045,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "01f07df8-29e3-4fe6-a424-3f92b057acf1",
+      "sourceName": "Futomaki, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sushi-variado",
+      "name": "Sushi Variado",
+      "categoryId": "sushi",
+      "priceCents": 1745,
+      "pieces": {
+        "count": 14,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "c2091a81-b7f6-43eb-be38-717b7e0dcd2a",
+      "sourceName": "Sushi Variado, 14 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "issues": [
+        "La descripción publicada (6 piezas sashimi salmón + 6 piezas sashimi atún) no coincide con «Sushi Variado, 14 Piezas»; es la misma que la del Sashimi Variado."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sashimi-variado",
+      "name": "Sashimi Variado",
+      "description": "6 Piezas sashimi salmón, 6 Piezas sashimi atún",
+      "categoryId": "sushi",
+      "priceCents": 1545,
+      "pieces": {
+        "count": 12,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9c79f57b-e976-43d3-8267-d6cf07f25dd0",
+      "sourceName": "Sashimi Variado, 12 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sushi-y-sashimi-variado",
+      "name": "Sushi y Sashimi Variado",
+      "categoryId": "sushi",
+      "priceCents": 2545,
+      "pieces": {
+        "count": 20,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "3cbd6c96-b5e3-434a-9a46-9da6d5adec9f",
+      "sourceName": "Sushi y Sashimi Variado, 20 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "sushi-tempura",
+      "name": "Sushi Tempura",
+      "categoryId": "sushi",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "d87ad619-ae24-4220-bfed-0a07376ea3c5",
+      "sourceName": "Sushi Tempura, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "sushi-tempura-con-queso",
+      "name": "Sushi Tempura con Queso",
+      "categoryId": "sushi",
+      "priceCents": 1245,
+      "pieces": {
+        "count": 8,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b62cabf3-936a-4fcc-9953-b9db1147f9bd",
+      "sourceName": "Sushi Tempura con Queso, 8 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "temaki-salmon",
+      "name": "Temaki Salmón",
+      "categoryId": "temakis",
+      "priceCents": 545,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "0168831f-3fb0-4189-a5d2-ae07b3ae183e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "temaki-atun",
+      "name": "Temaki Atún",
+      "categoryId": "temakis",
+      "priceCents": 545,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "f24d6746-8a12-481b-a742-fc13a60e25b5",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "temaki-gamba",
+      "name": "Temaki Gamba",
+      "categoryId": "temakis",
+      "priceCents": 645,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b28895a1-46b2-4f83-beee-92c557fad539",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "gunkan-maki-wakame",
+      "name": "Gunkan Maki Wakame",
+      "categoryId": "gunkan-maki",
+      "priceCents": 400,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "ed942a58-0a7a-46eb-8fbc-a32aaef491fb",
+      "sourceName": "Gunkan Maki Wakame, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "gunkan-maki-salmon",
+      "name": "Gunkan Maki Salmón",
+      "categoryId": "gunkan-maki",
+      "priceCents": 400,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6627c88b-dcff-44e1-bfc3-651ba03b232d",
+      "sourceName": "Gunkan Maki Salmón, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "gunkan-maki-atun",
+      "name": "Gunkan Maki Atún",
+      "categoryId": "gunkan-maki",
+      "priceCents": 400,
+      "pieces": {
+        "count": 2,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "59092c2a-3321-4f68-a6ff-4ff5e74eb925",
+      "sourceName": "Gunkan Maki Atún, 2 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "arroz-negro-con-queso-con-mango",
+      "name": "Arroz Negro con Queso con Mango",
+      "categoryId": "gunkan-maki",
+      "priceCents": 545,
+      "pieces": {
+        "count": 4,
+        "unit": "piezas"
+      },
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e84d3c96-bc65-48e7-bc3b-498ad21162fa",
+      "sourceName": "Arroz Negro con Queso con Mango, 4 Piezas",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "cerveza-china",
+      "name": "Cerveza China",
+      "categoryId": "otros",
+      "priceCents": 300,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "08730261-a44a-48ba-982e-b31a5e7e2d36",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "conflicting",
+      "issues": [
+        "Hay dos «Cerveza China» publicadas con precios distintos (3,00 € y 2,25 €)."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "refrescos",
+      "name": "Refrescos",
+      "description": "Coca cola, zero, fanta naranja, fanta limón, seven up, aquarius naranja o nestea",
+      "categoryId": "otros",
+      "priceCents": 225,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "befebca2-bf3f-46f9-81c4-a1f2b954f4e1",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "agua-mineral-pequena",
+      "name": "Agua Mineral, Pequeña",
+      "categoryId": "otros",
+      "priceCents": 225,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "8c6f6fa1-e4e6-478c-abdf-6b746a063c1e",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "freixenet-cava-brut",
+      "name": "Freixenet Cava Brut",
+      "categoryId": "otros",
+      "priceCents": 1445,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "70706bdb-e20b-412d-9cd1-efe176cd13e2",
+      "sourceName": "Freixenet.Cava Brut",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "zumos",
+      "name": "Zumos",
+      "description": "Naranja, piña o melocotón",
+      "categoryId": "otros",
+      "priceCents": 225,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "bd3fd4a6-2806-4ee5-8371-452b6b136d26",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "cerveza-china-2",
+      "name": "Cerveza China",
+      "categoryId": "otros",
+      "priceCents": 225,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "b60fbc6b-3fd6-4151-ab74-2b19e56a1c34",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "conflicting",
+      "issues": [
+        "Hay dos «Cerveza China» publicadas con precios distintos (3,00 € y 2,25 €)."
+      ],
+      "platformImageOnSource": true
+    },
+    {
+      "id": "agua-con-gas",
+      "name": "Agua con Gas",
+      "categoryId": "otros",
+      "priceCents": 225,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e1f260c4-894f-4fb4-9cfa-e4daf5e8d7f8",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "agua-mineral-grande",
+      "name": "Agua Mineral, Grande",
+      "categoryId": "otros",
+      "priceCents": 300,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1c9d1365-4558-442a-a03c-e1bed972d8de",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-marques-de-caceres",
+      "name": "Vino Tinto Marques de Cáceres",
+      "categoryId": "vino-tinto",
+      "priceCents": 1745,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "cc986568-56cd-425b-a16a-9e8074320147",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-marques-de-riscal",
+      "name": "Vino Tinto Marques de Riscal",
+      "categoryId": "vino-tinto",
+      "priceCents": 2400,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "bd93a2c2-e533-449d-ae8b-758234a59a8b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-campo-viejo",
+      "name": "Vino Tinto Campo Viejo",
+      "categoryId": "vino-tinto",
+      "priceCents": 1345,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "64730e37-6e4f-4e4c-ad78-174ac845db9b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-faustino-v",
+      "name": "Vino Tinto Faustino V",
+      "categoryId": "vino-tinto",
+      "priceCents": 1845,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "fdac0dc2-8142-4e63-b615-814cd80c3c6b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-sangre-de-toro",
+      "name": "Vino Tinto Sangre de Toro",
+      "categoryId": "vino-tinto",
+      "priceCents": 1245,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "1e543431-92d9-435e-8325-7fd49506ebf9",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-coto",
+      "name": "Vino Tinto Coto",
+      "categoryId": "vino-tinto",
+      "priceCents": 1445,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e34d9725-4245-485d-8850-23be318fa435",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-faustino-vii",
+      "name": "Vino Tinto Faustino VII",
+      "categoryId": "vino-tinto",
+      "priceCents": 1245,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "9cdd0da9-6fe5-4179-a6f2-98943b46d9d7",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-tinto-de-la-casa",
+      "name": "Vino Tinto de la Casa",
+      "categoryId": "vino-tinto",
+      "priceCents": 745,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "062c9895-2fab-4623-9e13-859c7c51d212",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-coto",
+      "name": "Vino Blanco Coto",
+      "categoryId": "vino-blanco",
+      "priceCents": 1145,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "a0ad99c8-015e-4018-8602-e06c7b609b5b",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-vinasol",
+      "name": "Vino Blanco Viñasol",
+      "categoryId": "vino-blanco",
+      "priceCents": 1145,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "6456ef8d-7fa1-40f3-9b79-50bc4c1b1547",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-marina-alta",
+      "name": "Vino Blanco Marina Alta",
+      "categoryId": "vino-blanco",
+      "priceCents": 1345,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "db5a6f65-69f2-4546-8bff-78bf14f8691d",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-diamante",
+      "name": "Vino Blanco Diamante",
+      "categoryId": "vino-blanco",
+      "priceCents": 1245,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "32f8314c-f969-44c5-abb0-6a69edcb3c0a",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-emparrado",
+      "name": "Vino Blanco Emparrado",
+      "categoryId": "vino-blanco",
+      "priceCents": 745,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "da23070c-f57f-48a1-ab0b-0753438f5f4c",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-barbadillo",
+      "name": "Vino Blanco Barbadillo",
+      "categoryId": "vino-blanco",
+      "priceCents": 1245,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "db813ef9-3feb-4963-8fc2-8425d2ec6ad1",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-blanco-de-la-casa",
+      "name": "Vino Blanco de la Casa",
+      "categoryId": "vino-blanco",
+      "priceCents": 745,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "e5f3f935-7410-4300-919f-bae55fd0bcc2",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-rosado-mateus",
+      "name": "Vino Rosado Mateus",
+      "categoryId": "vino-rosado",
+      "priceCents": 1145,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "42ef2525-4702-4cb4-836b-15b6d017f4a6",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "vino-rosado-marques-de-caceres",
+      "name": "Vino Rosado Marques de Cáceres",
+      "categoryId": "vino-rosado",
+      "priceCents": 1245,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "238d978e-50f5-448f-90bb-faf57f2d96f9",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-rosado-penascal",
+      "name": "Vino Rosado Peñascal",
+      "categoryId": "vino-rosado",
+      "priceCents": 1045,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "eea15d84-21f9-4d20-9524-1b08bd5364ee",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-rosado-lambrusco",
+      "name": "Vino Rosado Lambrusco",
+      "categoryId": "vino-rosado",
+      "priceCents": 845,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "dfa08efb-5ad7-493f-8d8e-37b506097c3d",
+      "sourceName": "VinosRosado Lambrusco",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    },
+    {
+      "id": "vino-rosado-de-la-casa",
+      "name": "Vino Rosado de la Casa",
+      "categoryId": "vino-rosado",
+      "priceCents": 745,
+      "ageRestricted": true,
+      "available": true,
+      "source": "just-eat",
+      "sourceId": "268c3a75-bc79-4a04-9a04-86b54b0b12e7",
+      "verifiedAt": "2026-10-29",
+      "verificationStatus": "verified",
+      "platformImageOnSource": true
+    }
+  ]
+}

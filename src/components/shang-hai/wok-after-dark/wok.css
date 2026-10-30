@@ -1,0 +1,688 @@
+/* ============================================================================
+   SHANG HAI — WOK AFTER DARK (Propuesta 02)
+   Night poster + kitchen order ticket. Everything is scoped under .wok so it never
+   leaks into ATELIER, MERIDIA or the other proposals (Next keeps CSS loaded across
+   client navigations). Rules live in @layer components: they beat ATELIER's base
+   layer but still yield to Tailwind utilities used for layout in the JSX.
+   ========================================================================== */
+
+@layer components {
+  .wok {
+    --wok-petrol: #101e24;
+    --wok-petrol-2: #162a33;
+    --wok-petrol-3: #1e3842;
+    --wok-orange: #ff6b35;
+    --wok-orange-deep: #b8431a; /* orange text on warm paper (4.9:1) */
+    --wok-white: #f6f3ea;
+    --wok-metal: #607079;
+    --wok-metal-light: #93a3ab;
+    --wok-heat: #ffb13b;
+    --wok-error: #ff9a76;
+    --wok-line: rgba(147, 163, 171, 0.28);
+    --wok-display: var(--font-wok-display), "Arial Narrow", Impact, sans-serif;
+    --wok-text: var(--font-wok-text), ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --wok-ease: cubic-bezier(0.2, 0.9, 0.15, 1);
+
+    background: var(--wok-petrol);
+    color: var(--wok-white);
+    font-family: var(--wok-text);
+    font-size: 1rem;
+    line-height: 1.45;
+    min-height: 100dvh;
+  }
+
+  html:has(.wok) body {
+    background-color: #101e24;
+    color: #f6f3ea;
+  }
+
+  /* Neutralise ATELIER's global serif headings, borders, focus and selection. */
+  .wok :where(h1, h2, h3, h4, h5) {
+    font-family: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    line-height: inherit;
+  }
+  .wok,
+  .wok *,
+  .wok ::before,
+  .wok ::after {
+    border-color: var(--wok-line);
+  }
+  .wok :focus-visible {
+    outline: 3px solid var(--wok-heat);
+    outline-offset: 3px;
+  }
+  .wok ::selection {
+    background: var(--wok-orange);
+    color: var(--wok-petrol);
+  }
+  .wok [id] {
+    scroll-margin-top: 7.75rem;
+  }
+  @media (min-width: 1024px) {
+    .wok [id] {
+      scroll-margin-top: 4.5rem;
+    }
+  }
+
+  /* ---------------------------------------------------------------- type */
+  .wok-display {
+    font-family: var(--wok-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.82;
+    letter-spacing: -0.005em;
+  }
+  .wok-cond {
+    font-stretch: 78%;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 650;
+  }
+  .wok-cond-tight {
+    font-stretch: 72%;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 760;
+  }
+  .wok-mono::before {
+    content: "SH";
+  }
+  .wok-muted {
+    color: var(--wok-metal-light);
+  }
+  .wok-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------------------------------------------------------------- frame */
+  .wok-frame {
+    overflow-x: clip;
+  }
+
+  /* --------------------------------------------------------- scroll bar */
+  .wok-progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--wok-orange);
+    transform-origin: 0 50%;
+    z-index: 80;
+    pointer-events: none;
+  }
+
+  /* --------------------------------------------------------------- hero */
+  .wok-hero-type {
+    container-type: inline-size;
+  }
+  .wok-hero-word {
+    display: block;
+    font-family: var(--wok-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.78;
+    letter-spacing: -0.012em;
+    white-space: nowrap;
+    color: var(--wok-orange);
+  }
+  /* The fire photo burns inside the letters. A flat orange layer is screened over it,
+     so the darkest pixels resolve to brand orange (never dark-on-dark) and the flames
+     go white-hot. */
+  .wok-hero-word[data-fill="photo"] {
+    background-image: linear-gradient(var(--wok-orange), var(--wok-orange)), var(--wok-fire-sm);
+    background-size: cover;
+    background-position: center, 45% 38%;
+    background-blend-mode: screen, normal;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Phones: two stacked words, each filling the width (measured: SHANG = 2.413em,
+     HAI = 1.157em wide in Big Shoulders 900), bounded by the viewport height. */
+  .wok-hero-word--shang {
+    font-size: min(41cqi, 17vh);
+  }
+  .wok-hero-word--hai {
+    font-size: min(86cqi, 36vh);
+  }
+  /* Tablet and up: one line across the poster, bounded by the viewport height. */
+  @media (min-width: 640px) {
+    .wok-hero-type {
+      white-space: nowrap;
+    }
+    .wok-hero-type .wok-rise {
+      display: inline-block;
+      vertical-align: top;
+    }
+    .wok-hero-type .wok-rise + .wok-rise {
+      margin-left: 2.5cqi;
+    }
+    .wok-hero-word--shang,
+    .wok-hero-word--hai {
+      font-size: min(26.6cqi, 38vh);
+    }
+  }
+  @media (min-width: 1024px) {
+    .wok-hero-word[data-fill="photo"] {
+      background-image: linear-gradient(var(--wok-orange), var(--wok-orange)), var(--wok-fire-lg);
+    }
+  }
+  .wok-rise {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.04em;
+  }
+  .wok-rise > span {
+    display: block;
+    animation: wok-rise 0.95s var(--wok-ease) both;
+    animation-delay: calc(var(--i, 0) * 110ms + 80ms);
+  }
+  @keyframes wok-rise {
+    from {
+      transform: translate3d(0, 104%, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  .wok-pop {
+    animation: wok-pop 0.7s var(--wok-ease) both;
+    animation-delay: 0.45s;
+  }
+  @keyframes wok-pop {
+    from {
+      transform: scale(0.86) translateY(18px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* ------------------------------------------------------------- buttons */
+  .wok-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0 1.25rem;
+    font-stretch: 78%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition:
+      transform 0.18s var(--wok-ease),
+      background-color 0.18s,
+      color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .wok-btn:active {
+    transform: scale(0.97);
+  }
+  .wok-btn--hot {
+    background: var(--wok-orange);
+    color: var(--wok-petrol);
+  }
+  .wok-btn--hot:hover {
+    background: #ff8150;
+  }
+  .wok-btn--line {
+    color: var(--wok-white);
+    box-shadow: inset 0 0 0 2px var(--wok-white);
+  }
+  .wok-btn--line:hover {
+    background: var(--wok-white);
+    color: var(--wok-petrol);
+  }
+  .wok-btn[disabled],
+  .wok-btn[aria-disabled="true"] {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* -------------------------------------------------------------- marquee */
+  .wok-marquee {
+    background: var(--wok-orange);
+    color: var(--wok-petrol);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .wok-marquee-track {
+    display: inline-flex;
+    animation: wok-marquee 46s linear infinite;
+    will-change: transform;
+  }
+  .wok-marquee:hover .wok-marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes wok-marquee {
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  /* ------------------------------------------------------------- left rail */
+  .wok-rail-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-stretch: 75%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8125rem;
+  }
+
+  /* --------------------------------------------------------------- ticker */
+  .wok-ticker {
+    scrollbar-width: none;
+    /* Functional fade: tells you the row keeps going. */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 3.5rem), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 3.5rem), transparent);
+  }
+  .wok-ticker::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------- posters */
+  .wok-poster-title {
+    container-type: inline-size;
+  }
+  .wok-outline {
+    font-family: var(--wok-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--wok-white);
+    letter-spacing: 0.005em;
+    font-size: min(27cqi, 13rem);
+  }
+  @media (min-width: 768px) {
+    .wok-outline {
+      -webkit-text-stroke-width: 3px;
+      font-size: min(16cqi, 13rem);
+    }
+  }
+  .wok-slant {
+    clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+  }
+
+  /* -------------------------------------------------------- ticket cards */
+  .wok-ticket {
+    --bite: 6px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.35rem 1.1rem 1rem;
+    background: var(--wok-petrol-2);
+    -webkit-mask: radial-gradient(circle at 50% 0, transparent var(--bite), #000 calc(var(--bite) + 0.5px)) top / 18px 100% repeat-x;
+    mask: radial-gradient(circle at 50% 0, transparent var(--bite), #000 calc(var(--bite) + 0.5px)) top / 18px 100% repeat-x;
+    transition: background-color 0.2s;
+  }
+  .wok-ticket[data-incart="true"] {
+    background: var(--wok-petrol-3);
+    box-shadow: inset 0 0 0 2px var(--wok-orange);
+  }
+  .wok-ticket-name {
+    font-stretch: 76%;
+    font-weight: 780;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-size: 1.1875rem;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .wok-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 1.375rem;
+    padding: 0 0.45rem;
+    font-stretch: 75%;
+    font-weight: 750;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1.5px var(--wok-metal);
+    color: var(--wok-white);
+  }
+  .wok-badge--heat {
+    box-shadow: none;
+    background: var(--wok-heat);
+    color: var(--wok-petrol);
+  }
+  .wok-price {
+    font-family: var(--wok-display);
+    font-weight: 850;
+    color: var(--wok-orange);
+    line-height: 0.85;
+    font-size: 2.75rem;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .wok-price small {
+    font-size: 0.5em;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin-left: 0.04em;
+  }
+  .wok-qty-mark {
+    font-family: var(--wok-display);
+    font-weight: 900;
+    color: var(--wok-orange);
+    font-size: 2.25rem;
+    line-height: 0.8;
+  }
+
+  /* add / stepper */
+  .wok-add {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    background: var(--wok-orange);
+    color: var(--wok-petrol);
+    transition:
+      transform 0.16s var(--wok-ease),
+      background-color 0.16s;
+    touch-action: manipulation;
+  }
+  .wok-add:hover {
+    background: #ff8150;
+  }
+  .wok-add:active {
+    transform: scale(0.92);
+  }
+  .wok-plus {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .wok-plus::before,
+  .wok-plus::after {
+    content: "";
+    position: absolute;
+    background: currentColor;
+    inset: 50% 0 auto 0;
+    height: 3px;
+    transform: translateY(-50%);
+  }
+  .wok-plus::after {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  .wok-minus {
+    position: relative;
+    width: 1.1rem;
+    height: 3px;
+    background: currentColor;
+  }
+  .wok-stepper {
+    display: flex;
+    align-items: stretch;
+    height: 3.25rem;
+    box-shadow: inset 0 0 0 2px var(--wok-orange);
+  }
+  .wok-stepper button {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    color: var(--wok-orange);
+    touch-action: manipulation;
+  }
+  .wok-stepper button:hover {
+    background: rgba(255, 107, 53, 0.14);
+  }
+  .wok-stepper output {
+    display: grid;
+    place-items: center;
+    min-width: 2.25rem;
+    font-family: var(--wok-display);
+    font-weight: 900;
+    font-size: 1.75rem;
+    color: var(--wok-white);
+  }
+  .wok-spark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    background: var(--wok-heat);
+    pointer-events: none;
+  }
+  .wok-pending {
+    font-stretch: 75%;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--wok-metal-light);
+    max-width: 12rem;
+    line-height: 1.25;
+  }
+
+  /* --------------------------------------------------------------- search */
+  .wok-search {
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 4px solid var(--wok-metal);
+    border-radius: 0;
+    color: var(--wok-white);
+    font-family: var(--wok-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: clamp(2rem, 7vw, 4.25rem);
+    line-height: 1;
+    padding: 0.35rem 3.25rem 0.5rem 0;
+    caret-color: var(--wok-orange);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .wok-search::placeholder {
+    color: #6f8089;
+  }
+  .wok-search:focus-visible {
+    border-bottom-color: var(--wok-orange);
+    outline: none;
+  }
+  .wok-search::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  /* ----------------------------------------------------------- the ticket */
+  .wok-paper {
+    background: var(--wok-white);
+    color: var(--wok-petrol);
+  }
+  .wok-paper :focus-visible {
+    outline-color: var(--wok-orange-deep);
+  }
+  .wok-paper ::selection {
+    background: var(--wok-petrol);
+    color: var(--wok-white);
+  }
+  .wok-perf-top {
+    -webkit-mask: radial-gradient(circle at 50% 0, transparent 7px, #000 7.5px) top / 20px 100% repeat-x;
+    mask: radial-gradient(circle at 50% 0, transparent 7px, #000 7.5px) top / 20px 100% repeat-x;
+  }
+  .wok-perf-left {
+    -webkit-mask: radial-gradient(circle at 0 50%, transparent 7px, #000 7.5px) left / 100% 20px repeat-y;
+    mask: radial-gradient(circle at 0 50%, transparent 7px, #000 7.5px) left / 100% 20px repeat-y;
+  }
+  .wok-dash {
+    border: 0;
+    border-top: 2px dashed rgba(16, 30, 36, 0.32);
+  }
+  .wok-paper .wok-total {
+    font-family: var(--wok-display);
+    font-weight: 900;
+    line-height: 0.85;
+    font-variant-numeric: tabular-nums;
+  }
+  .wok-paper-stepper {
+    display: flex;
+    align-items: stretch;
+    height: 2.75rem;
+    box-shadow: inset 0 0 0 2px var(--wok-petrol);
+  }
+  .wok-paper-stepper button {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    color: var(--wok-petrol);
+    touch-action: manipulation;
+  }
+  .wok-paper-stepper button:hover {
+    background: rgba(16, 30, 36, 0.08);
+  }
+  .wok-paper-stepper output {
+    display: grid;
+    place-items: center;
+    min-width: 2.25rem;
+    font-family: var(--wok-display);
+    font-weight: 900;
+    font-size: 1.5rem;
+  }
+
+  /* ---------------------------------------------------------------- forms */
+  .wok-field label,
+  .wok-label {
+    display: block;
+    font-stretch: 76%;
+    font-weight: 750;
+    font-size: 0.8125rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--wok-metal-light);
+    margin-bottom: 0.4rem;
+  }
+  .wok-input {
+    appearance: none;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--wok-petrol-2);
+    color: var(--wok-white);
+    border: 0;
+    border-bottom: 3px solid var(--wok-metal);
+    border-radius: 0;
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    transition:
+      border-color 0.18s,
+      background-color 0.18s;
+  }
+  .wok-input:focus-visible {
+    outline: none;
+    border-bottom-color: var(--wok-orange);
+    background: var(--wok-petrol-3);
+  }
+  .wok-input[aria-invalid="true"] {
+    border-bottom-color: var(--wok-error);
+  }
+  .wok-input::placeholder {
+    color: #8a9aa2;
+  }
+  .wok-error-text {
+    margin-top: 0.4rem;
+    color: var(--wok-error);
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  .wok-check {
+    appearance: none;
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    box-shadow: inset 0 0 0 2px var(--wok-white);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .wok-check:checked {
+    background: var(--wok-orange);
+    box-shadow: none;
+  }
+  .wok-check:checked::after {
+    content: "";
+    width: 0.55rem;
+    height: 0.95rem;
+    border: solid var(--wok-petrol);
+    border-width: 0 3px 3px 0;
+    transform: translateY(-2px) rotate(45deg);
+  }
+  .wok-check[aria-invalid="true"] {
+    box-shadow: inset 0 0 0 2px var(--wok-error);
+  }
+  .wok-radio {
+    appearance: none;
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 2px var(--wok-white);
+    display: grid;
+    place-items: center;
+  }
+  .wok-radio:checked {
+    box-shadow: inset 0 0 0 2px var(--wok-orange);
+  }
+  .wok-radio:checked::after {
+    content: "";
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    background: var(--wok-orange);
+  }
+
+  /* ------------------------------------------------------------- heat bar */
+  .wok-heat-seg {
+    height: 0.875rem;
+    background: var(--wok-petrol-3);
+    position: relative;
+    overflow: hidden;
+  }
+  .wok-heat-seg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--wok-orange);
+    transform: scaleX(var(--fill, 0));
+    transform-origin: 0 50%;
+    transition: transform 0.7s var(--wok-ease);
+  }
+
+  .wok-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wok-marquee-track,
+    .wok-rise > span,
+    .wok-pop {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .wok-heat-seg::after {
+      transition: none;
+    }
+  }
+}
