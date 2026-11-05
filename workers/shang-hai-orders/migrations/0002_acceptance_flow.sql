@@ -59,6 +59,8 @@ CREATE TABLE orders_v2 (
   prep_minutes              INTEGER CHECK (prep_minutes IS NULL OR prep_minutes BETWEEN 5 AND 180),
   rejection_reason          TEXT,
   review_reason             TEXT,
+  -- First time a signed-in staff device showed the order (board or detail).
+  staff_seen_at             TEXT,
   created_at                TEXT NOT NULL,
   updated_at                TEXT NOT NULL,
   authorized_at             TEXT,

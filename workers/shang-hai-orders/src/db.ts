@@ -40,6 +40,7 @@ export type OrderRow = {
   prep_minutes: number | null;
   rejection_reason: string | null;
   review_reason: string | null;
+  staff_seen_at: string | null;
   created_at: string;
   updated_at: string;
   authorized_at: string | null;
@@ -437,4 +438,13 @@ export async function setState(db: D1Like, key: string, value: string, now: stri
 export async function getStates(db: D1Like): Promise<Record<string, { value: string; updatedAt: string }>> {
   const res = await db.prepare(`SELECT key, value, updated_at FROM system_state`).all<{ key: string; value: string; updated_at: string }>();
   return Object.fromEntries(res.results.map((r) => [r.key, { value: r.value, updatedAt: r.updated_at }]));
+}
+
+/** Records that staff have had these orders on screen (first time only). */
+export async function markSeenByStaff(db: D1Like, ids: string[], now: string) {
+  if (!ids.length) return;
+  await db
+    .prepare(`UPDATE orders SET staff_seen_at = ? WHERE staff_seen_at IS NULL AND id IN (${ids.map(() => "?").join(", ")})`)
+    .bind(now, ...ids)
+    .run();
 }

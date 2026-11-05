@@ -10,6 +10,7 @@ import {
   placedOrder,
   runCron,
   staffAction,
+  staffCall,
   staffCookie,
   world,
   type World,
@@ -302,6 +303,45 @@ describe("timeouts and reminders (cron)", () => {
       rejectionReason: "El restaurante no ha podido confirmar el pedido a tiempo",
     });
     expect(w.telegram.messages().filter((m) => m.text.includes("cancelado automáticamente"))).toHaveLength(2);
+  });
+
+  it("never declines an order the restaurant could not see (alerts failed, panel not opened)", async () => {
+    const w = world({ ACCEPTANCE_TIMEOUT_MINUTES: "30" });
+    w.telegram.failNext({ status: 403 });
+    w.telegram.failNext({ status: 403 });
+    const order = await placedOrder(w);
+    expect(count(w.env, "SELECT COUNT(*) AS n FROM notifications WHERE kind = 'new_order' AND status = 'sent'")).toBe(0);
+    w.advance(3 * 60 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "awaiting_acceptance", payment_status: "authorized" });
+
+    // A staff phone opens the board: from now on the 30 minutes run.
+    const cookie = await staff(w);
+    await staffCall(w, cookie, "/api/admin/board");
+    w.advance(29 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+    w.advance(2 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "rejected", payment_status: "canceled" });
+  });
+
+  it("without Telegram configured, waits for the panel instead of declining blindly", async () => {
+    const w = world({ TELEGRAM_BOT_TOKEN: "", TELEGRAM_CHAT_IDS: "" });
+    const order = await placedOrder(w);
+    w.advance(2 * 60 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+  });
+
+  it("can switch the automatic decline off (0) until the owner confirms the policy", async () => {
+    const w = world({ ACCEPTANCE_TIMEOUT_MINUTES: "0" });
+    const order = await placedOrder(w);
+    w.advance(5 * 60 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+    // Reminders still go out.
+    expect(w.telegram.messages().some((m) => m.text.includes("sin aceptar"))).toBe(true);
   });
 
   it("recovers an authorisation whose webhook never arrived", async () => {

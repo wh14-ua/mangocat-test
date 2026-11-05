@@ -18,6 +18,7 @@ import {
   getOrderEvents,
   getStates,
   listBoardOrders,
+  markSeenByStaff,
   type OrderItemRow,
   type OrderRow,
 } from "./db";
@@ -146,6 +147,12 @@ export async function handleBoard(env: Env, deps: Deps): Promise<Response> {
     notificationsForOrders(env, ids),
     getStates(env.DB),
   ]);
+  // The restaurant has now seen the pending orders: from here the acceptance timeout may run.
+  await markSeenByStaff(
+    env.DB,
+    orders.filter((o) => o.status === "awaiting_acceptance").map((o) => o.id),
+    now.toISOString(),
+  );
   const columns: Record<BoardColumn, OrderCard[]> = { new: [], preparing: [], ready: [], completed: [], rejected: [] };
   for (const order of orders) {
     const column = columnOf(order);
@@ -182,6 +189,7 @@ export async function handleOrderDetail(env: Env, deps: Deps, id: string): Promi
   if (!ORDER_ID_PATTERN.test(id)) return errorJson("not-found", 404);
   const order = await getOrder(env.DB, id);
   if (!order) return errorJson("not-found", 404);
+  await markSeenByStaff(env.DB, [id], deps.now().toISOString());
   const [items, events, notifications] = await Promise.all([
     getItemsForOrders(env.DB, [id]),
     getOrderEvents(env.DB, id),

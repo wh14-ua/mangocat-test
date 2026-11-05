@@ -41,12 +41,23 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
   });
 
   // 2. Nobody decided in time: decline and release the hold so the customer is not left waiting.
+  //    The clock only starts once the restaurant is known to have been told about the order
+  //    (a new-order alert was delivered, or a signed-in device showed it). An order nobody was
+  //    able to see — Telegram down, blocked or not configured, panel closed — is never declined
+  //    automatically: it stays pending (and visible) until a person decides.
   const timeout = acceptanceTimeoutMinutes(env);
   if (timeout > 0) {
     await step("timeouts", async () => {
       for (const order of await rows(
         env,
-        `SELECT * FROM orders WHERE status = 'awaiting_acceptance' AND COALESCE(authorized_at, created_at) <= ? LIMIT ?`,
+        `SELECT o.* FROM orders o
+          WHERE o.status = 'awaiting_acceptance'
+            AND MIN(
+              COALESCE(o.staff_seen_at, '9999'),
+              COALESCE((SELECT MIN(n.sent_at) FROM notifications n
+                         WHERE n.order_id = o.id AND n.kind = 'new_order' AND n.status = 'sent'), '9999')
+            ) <= ?
+          LIMIT ?`,
         at(timeout * 60_000),
         BATCH,
       )) {
