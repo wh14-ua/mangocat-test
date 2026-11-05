@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "typecheck": "tsc -p tsconfig.json",
+    "build:panel": "node panel/build.mjs",
     "build:dry-run": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
     "db:migrate:local": "wrangler d1 migrations apply shang-hai-orders --local",
     "db:migrate:remote": "wrangler d1 migrations apply shang-hai-orders --remote",
