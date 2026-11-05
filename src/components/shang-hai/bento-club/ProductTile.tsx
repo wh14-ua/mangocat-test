@@ -3,8 +3,13 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "@phosphor-icons/react/dist/ssr";
 import type { MenuItem } from "@/lib/commerce/types";
-import { getOrderability, NOT_ORDERABLE_COPY } from "@/lib/commerce/catalog";
-import { formatCents } from "@/lib/commerce/money";
+import { getOrderability } from "@/lib/commerce/catalog";
+import { NOT_ORDERABLE_TEXT } from "@/lib/commerce/messages";
+import { formatMoney } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { itemDescription, itemName } from "@/lib/shang-hai/menu-i18n";
+import { DishPhoto, useDishPhotos } from "@/components/shang-hai/shared/DishPhotos";
+import { useBento } from "./hooks";
 
 export function Stepper({
   name,
@@ -23,13 +28,14 @@ export function Stepper({
   withTestIds?: boolean;
   incRef?: React.Ref<HTMLButtonElement>;
 }) {
+  const { t } = useBento();
   return (
-    <div className="bc-stepper" role="group" aria-label={`Cantidad de ${name}`}>
+    <div className="bc-stepper" role="group" aria-label={t.tile.quantityOf(name)}>
       <button
         type="button"
         onClick={onDec}
         data-testid={withTestIds ? "qty-dec" : undefined}
-        aria-label={quantity <= 1 ? `Quitar ${name} del pedido` : `Quitar una unidad de ${name}`}
+        aria-label={quantity <= 1 ? t.tile.removeAll(name) : t.tile.removeOne(name)}
       >
         <Minus size={20} weight="bold" aria-hidden />
       </button>
@@ -47,7 +53,7 @@ export function Stepper({
         onClick={onInc}
         disabled={quantity >= max}
         data-testid={withTestIds ? "qty-inc" : undefined}
-        aria-label={`Añadir una unidad de ${name}`}
+        aria-label={t.tile.addOne(name)}
       >
         <Plus size={20} weight="bold" aria-hidden />
       </button>
@@ -61,6 +67,20 @@ const BUMP: Keyframe[] = [
   { transform: "scale(0.99)", offset: 0.7 },
   { transform: "scale(1)" },
 ];
+
+/**
+ * The small grey line under the name: the description when the menu has one. In Spanish,
+ * dishes without one keep showing the English name the restaurant published.
+ */
+function tileNote(item: MenuItem, locale: Locale): { text: string; lang?: "en" } | null {
+  const description = itemDescription(item, locale);
+  if (description) return { text: description };
+  if (locale === "es" && item.nameEn) {
+    const en = itemName(item, "en");
+    return { text: en.charAt(0).toUpperCase() + en.slice(1), lang: "en" };
+  }
+  return null;
+}
 
 type TileProps = {
   item: MenuItem;
@@ -77,6 +97,7 @@ type TileProps = {
 /**
  * One compartment of the box. Empty compartments show a round "+"; once the dish is
  * in the order the compartment is "filled" (butter) and the + becomes a stepper.
+ * With dish photos on (?fotos=1) a dish that has one gets a small window on top.
  */
 export const ProductTile = memo(function ProductTile({
   item,
@@ -88,6 +109,9 @@ export const ProductTile = memo(function ProductTile({
   onInc,
   onDec,
 }: TileProps) {
+  const { locale, t } = useBento();
+  const { photoFor } = useDishPhotos();
+  const photo = photoFor(item.id);
   const orderability = getOrderability(item);
   const needsOptions = Boolean(item.options?.length);
   const inCart = quantity > 0;
@@ -129,9 +153,8 @@ export const ProductTile = memo(function ProductTile({
     }
   }
 
-  const description =
-    item.description ??
-    (item.nameEn ? item.nameEn.charAt(0).toUpperCase() + item.nameEn.slice(1) : undefined);
+  const name = itemName(item, locale);
+  const note = tileNote(item, locale);
   const spicy = item.dietaryTags?.includes("spicy");
 
   return (
@@ -146,34 +169,39 @@ export const ProductTile = memo(function ProductTile({
           +1
         </span>
       )}
-      <h4 className="bc-tile__name">{item.name}</h4>
+      {photo && (
+        <DishPhoto
+          photo={photo}
+          decorative
+          sizes="(min-width: 1600px) 300px, (min-width: 1024px) 24vw, (min-width: 640px) 30vw, (min-width: 360px) 45vw, 90vw"
+          className="bc-tile__photo"
+          labelClassName="bc-tile__sticker"
+        />
+      )}
+      <h4 className="bc-tile__name">{name}</h4>
       {(item.pieces || spicy || item.ageRestricted || (needsOptions && inCart)) && (
         <p className="bc-tile__meta">
-          {item.pieces && (
-            <span className="bc-pill">
-              {item.pieces.count} {item.pieces.unit === "piezas" ? "pzs" : "uds"}
-            </span>
-          )}
-          {spicy && <span className="bc-pill bc-pill--spicy">Picante</span>}
+          {item.pieces && <span className="bc-pill">{t.tile.pieces(item.pieces.count, item.pieces.unit)}</span>}
+          {spicy && <span className="bc-pill bc-pill--spicy">{t.tile.spicy}</span>}
           {item.ageRestricted && <span className="bc-pill bc-pill--age">+18</span>}
-          {needsOptions && inCart && <span className="bc-pill">{quantity} en tu pedido</span>}
+          {needsOptions && inCart && <span className="bc-pill">{t.tile.inOrder(quantity)}</span>}
         </p>
       )}
-      {description && (
-        <p className="bc-tile__desc" lang={item.description ? undefined : "en"}>
-          {description}
+      {note && (
+        <p className="bc-tile__desc" lang={note.lang}>
+          {note.text}
         </p>
       )}
       <div className="bc-tile__foot">
         {orderability.orderable ? (
-          <span className="bc-price">{formatCents(item.priceCents as number)}</span>
+          <span className="bc-price">{formatMoney(item.priceCents as number, locale)}</span>
         ) : (
-          <span className="bc-pending">{NOT_ORDERABLE_COPY[orderability.reason]}</span>
+          <span className="bc-pending">{NOT_ORDERABLE_TEXT[locale][orderability.reason]}</span>
         )}
         {orderability.orderable &&
           (showStepper ? (
             <Stepper
-              name={item.name}
+              name={name}
               quantity={quantity}
               max={max}
               incRef={incRef}
@@ -185,7 +213,7 @@ export const ProductTile = memo(function ProductTile({
               type="button"
               className="bc-add"
               data-testid={`add-${item.id}`}
-              aria-label={needsOptions ? `Elegir opciones y añadir ${item.name}` : `Añadir ${item.name}`}
+              aria-label={needsOptions ? t.tile.chooseAndAdd(name) : t.tile.add(name)}
               aria-haspopup={needsOptions ? "dialog" : undefined}
               onClick={handleAdd}
             >

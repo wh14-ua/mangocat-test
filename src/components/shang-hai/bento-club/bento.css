@@ -130,6 +130,73 @@ html:has(.bc-root) body {
   display: none;
 }
 
+/* ------------------------------------------------------------ language -- */
+
+/* ES | EN: a little box of two compartments split by a wall; the language on screen
+   is filled in black, like the active category chip. */
+.bc-root .bc-lang {
+  display: inline-flex;
+  align-items: stretch;
+  flex: none;
+  border: var(--bc-wall) solid var(--bc-black);
+  border-radius: 999px;
+  background: var(--bc-paper);
+}
+.bc-root .bc-lang__btn {
+  display: grid;
+  place-items: center;
+  min-width: 50px;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--bc-black);
+  font-family: var(--bc-display);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  transition:
+    background-color 0.15s var(--bc-ease),
+    color 0.15s var(--bc-ease);
+}
+.bc-root .bc-lang__btn[data-locale="es"] {
+  border-radius: 999px 0 0 999px;
+  padding-left: 16px;
+}
+.bc-root .bc-lang__btn[data-locale="en"] {
+  border-radius: 0 999px 999px 0;
+  padding-right: 16px;
+}
+.bc-root .bc-lang__btn:hover {
+  background: var(--bc-butter);
+}
+.bc-root .bc-lang__btn[data-active="true"] {
+  background: var(--bc-black);
+  color: var(--bc-cream);
+  cursor: default;
+}
+/* Inset ring: the box's own wall would hide an outer one. */
+.bc-root .bc-lang__btn:focus-visible {
+  outline: 3px solid var(--bc-black);
+  outline-offset: -6px;
+}
+.bc-root .bc-lang__btn[data-active="true"]:focus-visible {
+  outline-color: var(--bc-butter);
+}
+.bc-root .bc-lang__wall {
+  width: var(--bc-wall);
+  flex: none;
+  background: var(--bc-black);
+}
+
+/* Phones and tablets: the language sits in the top-right corner of the page. */
+.bc-root .bc-langbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--bc-gap);
+}
+
 /* ---------------------------------------------------------- entry tray -- */
 
 .bc-root .bc-tray {
@@ -924,6 +991,43 @@ html:has(.bc-root) body {
   padding: 0 4px 2px;
 }
 
+/* Dish photo (only with ?fotos=1 and only for dishes that have one): a small window
+   at the top of the compartment, with its honesty label stuck on like a sticker. */
+.bc-root .bc-tile__photo {
+  position: relative;
+  flex: none;
+  aspect-ratio: 4 / 3;
+  margin: -4px -4px 2px;
+  border: var(--bc-wall) solid var(--bc-black);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bc-cream-deep);
+}
+.bc-root .bc-tile__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bc-root .bc-tile__sticker {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  max-width: calc(100% - 12px);
+  padding: 3px 8px;
+  border: 1.5px solid var(--bc-black);
+  border-radius: 999px;
+  background: var(--bc-paper);
+  color: var(--bc-black);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Search results + empty states */
 .bc-root .bc-results {
   margin-top: 22px;
@@ -1613,6 +1717,12 @@ html:has(.bc-root) body {
   margin: 0 auto;
   padding: 12px 12px 0;
 }
+.bc-root .bc-subhead__end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
 .bc-root .bc-subhead__brand {
   font-family: var(--bc-display);
   font-size: 20px;
@@ -1928,6 +2038,30 @@ html:has(.bc-root) body {
   line-height: 1.3;
 }
 
+/* "Only put on hold until the restaurant accepts": a note stuck next to the pay button. */
+.bc-root .bc-hold {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px 14px 12px 12px;
+  border: 1.5px dashed var(--bc-black);
+  border-radius: var(--bc-r-s);
+  background: var(--bc-paper);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.bc-root .bc-hold__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bc-black);
+  color: var(--bc-butter);
+}
+
 .bc-root .bc-paybar {
   position: fixed;
   left: 0;
@@ -2050,8 +2184,154 @@ html:has(.bc-root) body {
 .bc-root .bc-progress li[data-state="current"] .bc-progress__dot {
   background: var(--bc-black);
 }
-.bc-root .bc-demo-advance {
-  justify-self: start;
+.bc-root .bc-st__now {
+  display: grid;
+  gap: 14px;
+}
+/* #1042 is the number to say at the counter; the long reference sits under it. */
+.bc-root .bc-st__number[data-short] {
+  display: grid;
+  gap: 6px;
+  white-space: normal;
+}
+.bc-root .bc-st__short {
+  font-size: clamp(2.6rem, 18cqi, 5rem);
+  line-height: 0.9;
+  white-space: nowrap;
+}
+.bc-root .bc-st__number[data-short] .bc-st__id {
+  font-family: var(--bc-text);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+.bc-root .bc-st__ref {
+  font-weight: 700;
+}
+.bc-root .bc-st__eta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "label label"
+    "clock text";
+  align-items: center;
+  gap: 4px 14px;
+  padding: 12px 14px;
+  border: var(--bc-wall) solid var(--bc-black);
+  border-radius: var(--bc-r-s);
+  background: var(--bc-butter);
+}
+.bc-root .bc-st__eta-label {
+  grid-area: label;
+  font-size: 13px;
+  font-weight: 800;
+}
+.bc-root .bc-st__eta-clock {
+  grid-area: clock;
+  font-family: var(--bc-display);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.bc-root .bc-st__eta-text {
+  grid-area: text;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.bc-root .bc-st__reason {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--bc-black);
+  border-radius: var(--bc-r-s);
+  background: var(--bc-cream);
+}
+.bc-root .bc-st__reason-label {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--bc-muted);
+}
+.bc-root .bc-st__reason p {
+  font-weight: 800;
+  font-size: 15.5px;
+  overflow-wrap: anywhere;
+}
+/* Money is its own line: an authorisation is never shown as a charge. */
+.bc-root .bc-st__pay {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px 14px 12px 12px;
+  border: var(--bc-wall) solid var(--bc-black);
+  border-radius: var(--bc-r-s);
+  background: var(--bc-cream);
+}
+.bc-root .bc-st__pay-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: var(--bc-wall) solid var(--bc-black);
+  border-radius: 50%;
+  background: var(--bc-butter);
+  color: var(--bc-black);
+}
+.bc-root .bc-st__pay[data-tone="success"] .bc-st__pay-icon {
+  background: var(--bc-lime);
+}
+.bc-root .bc-st__pay[data-tone="negative"] .bc-st__pay-icon,
+.bc-root .bc-st__pay[data-tone="attention"] .bc-st__pay-icon {
+  background: var(--bc-tomato);
+}
+.bc-root .bc-st__pay-label {
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.25;
+}
+.bc-root .bc-st__pay-detail {
+  margin-top: 2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--bc-muted);
+}
+.bc-root .bc-st__sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--bc-muted);
+}
+.bc-root .bc-warn--action {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.bc-root .bc-warn--action p {
+  flex: 1 1 200px;
+}
+
+/* The demo restaurant simulator is shared and deliberately neutral (system font, greys).
+   Bento's element resets above are unlayered, so they would beat its Tailwind utilities
+   (dark text on its green and blue buttons): hand those back inside this wrapper. */
+.bc-root .bc-neutral *,
+.bc-root .bc-neutral :focus-visible {
+  border-color: revert-layer;
+  border-radius: revert-layer;
+  color: revert-layer;
+  font: revert-layer;
+  letter-spacing: revert-layer;
+  margin: revert-layer;
+  outline: revert-layer;
+  outline-offset: revert-layer;
+  text-wrap: revert-layer;
 }
 
 /* ------------------------------------------------------------- motion -- */
@@ -2118,6 +2398,31 @@ html:has(.bc-root) body {
       "fact1"
       "fact2"
       "search";
+  }
+}
+
+@media (max-width: 639px) {
+  .bc-root .bc-subhead {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "lang lang"
+      "back brand";
+    gap: 10px 12px;
+  }
+  .bc-root .bc-subhead__end {
+    display: contents;
+  }
+  .bc-root .bc-subhead .bc-lang {
+    grid-area: lang;
+    justify-self: end;
+  }
+  .bc-root .bc-subhead .bc-back {
+    grid-area: back;
+  }
+  .bc-root .bc-subhead__brand {
+    grid-area: brand;
+    justify-self: end;
   }
 }
 
@@ -2223,6 +2528,9 @@ html:has(.bc-root) body {
     display: grid;
     gap: 2px;
     text-decoration: none;
+    /* With the language box in the bar, a 1024 px screen would squeeze the brand onto
+       two lines: the search field gives up that width instead (it keeps ≥ 280 px). */
+    white-space: nowrap;
   }
   .bc-root .bc-topbar__brand strong {
     font-family: var(--bc-display);
@@ -2234,10 +2542,18 @@ html:has(.bc-root) body {
     font-size: 12.5px;
     font-weight: 700;
   }
+  .bc-root .bc-topbar__end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
   .bc-root .bc-topbar__nav {
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+  .bc-root .bc-langbar {
+    display: none;
   }
   .bc-root .bc-topbar__link {
     display: inline-flex;
@@ -2403,5 +2719,12 @@ html:has(.bc-root) body {
 @media (min-width: 1600px) {
   .bc-root .bc-box {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Mouse and trackpad on a wide screen: the language box matches the 44 px top-bar links. */
+@media (min-width: 1024px) and (pointer: fine) {
+  .bc-root .bc-lang__btn {
+    height: 40px;
   }
 }

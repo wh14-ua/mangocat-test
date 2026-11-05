@@ -2,31 +2,39 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Check, MapPin } from "@phosphor-icons/react/dist/ssr";
-import { DEMO_NOTICE } from "@/components/shang-hai/shared/StorefrontShell";
+import { ArrowLeft, Check, LockSimple, MapPin } from "@phosphor-icons/react/dist/ssr";
+import { DEMO_NOTICE_TEXT } from "@/components/shang-hai/shared/StorefrontShell";
 import { useCart } from "@/hooks/shang-hai/useCart";
 import { useCheckoutForm, type CheckoutValues } from "@/hooks/shang-hai/useCheckoutForm";
-import { formatCents } from "@/lib/commerce/money";
-import { QUOTE_ISSUE_COPY } from "@/lib/commerce/pricing";
+import { QUOTE_ISSUE_TEXT } from "@/lib/commerce/messages";
 import { validateCustomer } from "@/lib/commerce/validation";
+import { formatMoney } from "@/lib/i18n/format";
+import { lineName, lineOptionsLabel } from "@/lib/shang-hai/menu-i18n";
 import { shangHaiRestaurant } from "@/data/shang-hai/restaurant";
 import { CHECKOUT_KIND } from "@/lib/shang-hai/checkout";
 import { storefrontRoutes } from "@/lib/shang-hai/storefronts";
+import { BentoLanguageSwitch } from "./Chrome";
 import { EmptyTrayArt } from "./Graphics";
+import { useBento, useDocumentTitle } from "./hooks";
 
 const routes = storefrontRoutes("bento-club");
 
+/** Checkout and status pages: back button, the language box and the brand. */
 export function SubHeader({ backHref, backLabel }: { backHref: string; backLabel: string }) {
+  const { c } = useBento();
   return (
     <header className="bc-subhead">
       <Link className="bc-back" href={backHref}>
         <ArrowLeft size={18} weight="bold" aria-hidden />
         {backLabel}
       </Link>
-      <Link className="bc-subhead__brand" href={routes.home}>
-        SHANG HAI
-        <small>Restaurante Asiático · Orihuela</small>
-      </Link>
+      <div className="bc-subhead__end">
+        <BentoLanguageSwitch />
+        <Link className="bc-subhead__brand" href={routes.home}>
+          SHANG HAI
+          <small>{c.brand.descriptor}</small>
+        </Link>
+      </div>
     </header>
   );
 }
@@ -41,7 +49,7 @@ type FieldProps = {
   autoComplete?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   hint?: string;
-  optional?: boolean;
+  optional?: string;
   textarea?: boolean;
   maxLength?: number;
 };
@@ -63,7 +71,7 @@ function Field(p: FieldProps) {
     <div className="bc-field">
       <label className="bc-label" htmlFor={id}>
         {p.label}
-        {p.optional && <small> (opcional)</small>}
+        {p.optional && <small>{p.optional}</small>}
       </label>
       {p.textarea ? (
         <textarea {...common} rows={3} maxLength={p.maxLength} onChange={(e) => p.onChange(e.target.value)} />
@@ -92,6 +100,8 @@ function Field(p: FieldProps) {
 
 /** Checkout as four stacked compartments, with a tape-style progress strip. */
 export function CheckoutView() {
+  const { locale, t, c } = useBento();
+  useDocumentTitle(t.meta.checkout);
   const params = useSearchParams();
   const cancelled = params.get("cancelado") === "1";
   const cart = useCart();
@@ -108,30 +118,31 @@ export function CheckoutView() {
   } = useCheckoutForm();
   const a = shangHaiRestaurant.address.value;
   const empty = cart.hydrated && cart.lines.length === 0;
+  const co = t.checkout;
 
-  const detailsDone = validateCustomer(values, cart.limits).ok;
+  const detailsDone = validateCustomer(values, cart.limits, locale).ok;
   const steps = [
-    { label: "Datos", done: detailsDone },
-    { label: "Recogida", done: true },
-    { label: "Pedido", done: quote.payable },
-    { label: "Pago", done: false },
+    { id: "details", label: co.steps.details, done: detailsDone },
+    { id: "pickup", label: co.steps.pickup, done: true },
+    { id: "order", label: co.steps.order, done: quote.payable },
+    { id: "payment", label: co.steps.payment, done: false },
   ];
   const blocking = quote.issues.filter((i) => i.code !== "empty");
 
   return (
     <>
-      <SubHeader backHref={`${routes.home}#carta`} backLabel="Seguir pidiendo" />
+      <SubHeader backHref={`${routes.home}#carta`} backLabel={co.keepOrdering} />
       <main id="bc-main" className="bc-co">
-        <h1 className="bc-co__title">Tu pedido para recoger</h1>
+        <h1 className="bc-co__title">{co.title}</h1>
 
-        <ol className="bc-tape" aria-label="Pasos del pedido">
+        <ol className="bc-tape" aria-label={co.stepsLabel}>
           {steps.map((s, i) => (
-            <li key={s.label} className="bc-tape__step" data-done={s.done || undefined}>
+            <li key={s.id} className="bc-tape__step" data-done={s.done || undefined}>
               <span className="bc-tape__mark" aria-hidden>
                 {s.done ? <Check size={14} weight="bold" /> : i + 1}
               </span>
               {s.label}
-              {s.done && <span className="bc-sr"> (completado)</span>}
+              {s.done && <span className="bc-sr">{co.stepDone}</span>}
             </li>
           ))}
         </ol>
@@ -139,12 +150,12 @@ export function CheckoutView() {
         <div className="bc-notices">
           {CHECKOUT_KIND === "demo" && (
             <p className="bc-warn" role="note">
-              {DEMO_NOTICE}
+              {DEMO_NOTICE_TEXT[locale]}
             </p>
           )}
           {cancelled && (
             <p className="bc-warn bc-warn--cancel" role="status">
-              Pago cancelado. Tu pedido sigue aquí: revísalo y vuelve a intentarlo cuando quieras.
+              {c.payment.cancelledNotice}
             </p>
           )}
           {failureMessage && (
@@ -156,15 +167,15 @@ export function CheckoutView() {
 
         {!cart.hydrated ? (
           <p className="bc-module" aria-busy="true">
-            Cargando tu pedido…
+            {co.loading}
           </p>
         ) : empty ? (
           <div className="bc-empty">
             <EmptyTrayArt className="bc-empty__art" />
-            <p className="bc-info__big">Tu pedido está vacío.</p>
-            <p className="bc-help">Elige platos en la carta y vuelve aquí para pagar.</p>
+            <p className="bc-info__big">{co.emptyTitle}</p>
+            <p className="bc-help">{co.emptyText}</p>
             <Link className="bc-primary" href={`${routes.home}#carta`} style={{ width: "auto" }}>
-              Ir a la carta
+              {co.goToMenu}
             </Link>
           </div>
         ) : (
@@ -176,12 +187,12 @@ export function CheckoutView() {
                     1
                   </span>
                   <h2 id="bc-m1" className="bc-module__title">
-                    Tus datos
+                    {co.details}
                   </h2>
                 </div>
                 <Field
                   name="name"
-                  label="Nombre"
+                  label={co.name}
                   value={values.name}
                   error={errors.name}
                   onChange={(v) => setField("name", v)}
@@ -189,36 +200,36 @@ export function CheckoutView() {
                 />
                 <Field
                   name="phone"
-                  label="Teléfono"
+                  label={co.phone}
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
                   value={values.phone}
                   error={errors.phone}
                   onChange={(v) => setField("phone", v)}
-                  hint="Solo para avisarte si hay algo que confirmar del pedido."
+                  hint={co.phoneHint}
                 />
                 <Field
                   name="email"
-                  label="Correo electrónico"
+                  label={co.email}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   value={values.email}
                   error={errors.email}
                   onChange={(v) => setField("email", v)}
-                  hint="Te enviaremos la confirmación del pedido."
+                  hint={co.emailHint}
                 />
                 <Field
                   name="notes"
-                  label="Comentarios para la cocina"
-                  optional
+                  label={co.notes}
+                  optional={co.optional}
                   textarea
                   maxLength={cart.limits.maxNotesLength}
                   value={values.notes}
                   error={errors.notes}
                   onChange={(v) => setField("notes", v)}
-                  hint="Por ejemplo: sin cebolla. Si tienes alergias, llama al restaurante antes de pedir."
+                  hint={co.notesHint}
                 />
               </section>
 
@@ -228,17 +239,15 @@ export function CheckoutView() {
                     2
                   </span>
                   <h2 id="bc-m2" className="bc-module__title">
-                    Recogida
+                    {co.pickup}
                   </h2>
                 </div>
                 <div className="bc-pickup">
-                  <span style={{ fontWeight: 800, fontSize: 13.5 }}>Recoges en el local</span>
+                  <span style={{ fontWeight: 800, fontSize: 13.5 }}>{co.youCollect}</span>
                   <strong>
                     {a.street}, {a.postalCode} {a.city}
                   </strong>
-                  <span style={{ fontWeight: 600, fontSize: 14.5 }}>
-                    El restaurante te confirmará la hora de recogida.
-                  </span>
+                  <span style={{ fontWeight: 600, fontSize: 14.5 }}>{c.pickup.timeAfterAcceptance}</span>
                 </div>
                 <a
                   className="bc-linkbtn"
@@ -247,12 +256,10 @@ export function CheckoutView() {
                   rel="noopener noreferrer"
                 >
                   <MapPin size={18} weight="bold" aria-hidden />
-                  Cómo llegar
-                  <span className="bc-sr"> (se abre Google Maps)</span>
+                  {c.restaurant.directions}
+                  <span className="bc-sr"> {c.restaurant.directionsHint}</span>
                 </a>
-                <p style={{ fontWeight: 600, fontSize: 13.5 }}>
-                  Reparto a domicilio: todavía no disponible en esta web.
-                </p>
+                <p style={{ fontWeight: 600, fontSize: 13.5 }}>{co.noDelivery}</p>
               </section>
             </div>
 
@@ -263,26 +270,29 @@ export function CheckoutView() {
                     3
                   </span>
                   <h2 id="bc-m3" className="bc-module__title">
-                    Tu pedido
+                    {co.yourOrder}
                   </h2>
                 </div>
                 <ul className="bc-sumlines">
-                  {quote.lines.map((l) => (
-                    <li key={l.key}>
-                      <span className="bc-sumlines__q">
-                        {l.quantity}
-                        <span className="bc-sr"> unidades de</span>
-                      </span>
-                      <span className="bc-sumlines__n">
-                        {l.name}
-                        {l.optionsLabel && <small>{l.optionsLabel}</small>}
-                      </span>
-                      <span className="bc-sumlines__p">{formatCents(l.lineTotalCents)}</span>
-                    </li>
-                  ))}
+                  {quote.lines.map((l) => {
+                    const options = lineOptionsLabel(l, locale);
+                    return (
+                      <li key={l.key}>
+                        <span className="bc-sumlines__q">
+                          {l.quantity}
+                          <span className="bc-sr">{co.unitsOf}</span>
+                        </span>
+                        <span className="bc-sumlines__n">
+                          {lineName(l, locale)}
+                          {options && <small>{options}</small>}
+                        </span>
+                        <span className="bc-sumlines__p">{formatMoney(l.lineTotalCents, locale)}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <Link className="bc-linkbtn" href={`${routes.home}#carta`}>
-                  Editar el pedido
+                  {co.edit}
                 </Link>
               </section>
 
@@ -292,21 +302,21 @@ export function CheckoutView() {
                     4
                   </span>
                   <h2 id="bc-m4" className="bc-module__title">
-                    Pago
+                    {co.payment}
                   </h2>
                 </div>
                 <div className="bc-sums">
                   <div className="bc-sums__row">
-                    <span>Subtotal</span>
-                    <span className="bc-nums">{formatCents(quote.subtotalCents)}</span>
+                    <span>{t.cart.subtotal}</span>
+                    <span className="bc-nums">{formatMoney(quote.subtotalCents, locale)}</span>
                   </div>
                   <div className="bc-sums__row">
-                    <span>Recogida en el local</span>
-                    <span>Sin coste</span>
+                    <span>{c.pickup.title}</span>
+                    <span>{t.cart.noCharge}</span>
                   </div>
                   <div className="bc-sums__total">
-                    <span>Total</span>
-                    <strong>{formatCents(quote.totalCents)}</strong>
+                    <span>{t.cart.total}</span>
+                    <strong>{formatMoney(quote.totalCents, locale)}</strong>
                   </div>
                 </div>
 
@@ -321,10 +331,7 @@ export function CheckoutView() {
                         aria-invalid={errors.ageConfirmed ? "true" : undefined}
                         aria-describedby={errors.ageConfirmed ? "bc-err-age" : undefined}
                       />
-                      <span>
-                        Confirmo que tengo 18 años o más. Tu pedido incluye bebidas alcohólicas; el
-                        restaurante puede pedirte el DNI al recogerlo.
-                      </span>
+                      <span>{co.ageConfirm}</span>
                     </label>
                     {errors.ageConfirmed && (
                       <p id="bc-err-age" className="bc-error">
@@ -336,20 +343,26 @@ export function CheckoutView() {
 
                 {blocking.length > 0 && (
                   <p className="bc-error" role="status">
-                    {QUOTE_ISSUE_COPY[blocking[0].code]}
+                    {QUOTE_ISSUE_TEXT[locale][blocking[0].code]}
                   </p>
                 )}
 
                 <p style={{ fontWeight: 600, fontSize: 13.5, lineHeight: 1.4 }}>
-                  {CHECKOUT_KIND === "demo"
-                    ? "En esta demostración el pago es simulado: no se pide ninguna tarjeta."
-                    : "Pagarás en la página segura de Stripe. No guardamos los datos de tu tarjeta."}
+                  {CHECKOUT_KIND === "demo" ? co.payDemo : co.payStripe}
+                </p>
+
+                {/* Authorise first, charge on acceptance: said right where the customer pays. */}
+                <p className="bc-hold" id="bc-hold">
+                  <span className="bc-hold__icon" aria-hidden>
+                    <LockSimple size={18} weight="bold" />
+                  </span>
+                  <span>{c.payment.holdExplainer}</span>
                 </p>
 
                 <div className="bc-paybar">
                   <p className="bc-paybar__sum">
-                    <span>Total</span>
-                    <strong>{formatCents(quote.totalCents)}</strong>
+                    <span>{t.cart.total}</span>
+                    <strong>{formatMoney(quote.totalCents, locale)}</strong>
                   </p>
                   <button
                     type="submit"
@@ -357,8 +370,9 @@ export function CheckoutView() {
                     data-testid="checkout-pay"
                     disabled={submitting}
                     aria-busy={submitting || undefined}
+                    aria-describedby="bc-hold"
                   >
-                    {submitting ? "Preparando el pago…" : `Pagar ${formatCents(quote.totalCents)}`}
+                    {submitting ? co.preparing : co.pay(formatMoney(quote.totalCents, locale))}
                   </button>
                 </div>
               </section>

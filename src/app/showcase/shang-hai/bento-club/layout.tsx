@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Dela_Gothic_One, Rethink_Sans } from "next/font/google";
 import { StorefrontShell } from "@/components/shang-hai/shared/StorefrontShell";
+import { BENTO_TEXT } from "@/lib/shang-hai/i18n/bento-club";
 import "@/components/shang-hai/bento-club/bento.css";
 
 /*
@@ -20,7 +21,8 @@ const text = Rethink_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { absolute: "SHANG HAI · Restaurante Asiático en Orihuela — Propuesta 03 · Bento Club" },
+  // Static export: Spanish here; the pages switch the tab title to English when chosen.
+  title: { absolute: BENTO_TEXT.es.meta.home },
   description:
     "Propuesta 03 de MangoCat Studios para Restaurante Shang Hai (Orihuela): toda la carta en una caja de bento, búsqueda inmediata y pedidos para recoger en pocos toques.",
 };
