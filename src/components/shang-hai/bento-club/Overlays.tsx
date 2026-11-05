@@ -4,9 +4,11 @@ import { useState } from "react";
 import { AnimatePresence, motion, useDragControls, useReducedMotion } from "motion/react";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { useDialog } from "@/hooks/shang-hai/useDialog";
-import { formatCents } from "@/lib/commerce/money";
+import { formatMoney } from "@/lib/i18n/format";
 import type { MenuItem, OptionSelections } from "@/lib/commerce/types";
+import { choiceName, itemDescription, itemName, optionName } from "@/lib/shang-hai/menu-i18n";
 import { CartContents } from "./CartContents";
+import { useBento } from "./hooks";
 
 const SHEET_SPRING = { type: "spring", stiffness: 460, damping: 40 } as const;
 
@@ -32,6 +34,7 @@ function SheetBody({ onClose, onBrowse }: { onClose: () => void; onBrowse: () =>
   const reduce = useReducedMotion();
   const controls = useDragControls();
   const [expanded, setExpanded] = useState(false);
+  const { t } = useBento();
 
   return (
     <>
@@ -70,7 +73,7 @@ function SheetBody({ onClose, onBrowse }: { onClose: () => void; onBrowse: () =>
         <button
           type="button"
           className="bc-sheet__handle"
-          aria-label={expanded ? "Reducir el panel del pedido" : "Ampliar el panel del pedido"}
+          aria-label={expanded ? t.sheet.collapse : t.sheet.expand}
           aria-expanded={expanded}
           onPointerDown={(e) => controls.start(e)}
           onClick={() => setExpanded((v) => !v)}
@@ -118,8 +121,10 @@ function ChooserBody({
 }) {
   const ref = useDialog<HTMLDivElement>(true, onClose);
   const reduce = useReducedMotion();
+  const { locale, t } = useBento();
   const options = item.options ?? [];
   const [picked, setPicked] = useState<OptionSelections>({});
+  const description = itemDescription(item, locale);
 
   const complete = options.every((o) => (picked[o.id]?.length ?? 0) >= o.minChoices);
   const extra = options.reduce(
@@ -163,7 +168,7 @@ function ChooserBody({
           role="dialog"
           aria-modal="true"
           aria-labelledby="bc-choose-title"
-          aria-describedby={item.description ? "bc-choose-desc" : undefined}
+          aria-describedby={description ? "bc-choose-desc" : undefined}
           className="bc-modal"
           tabIndex={-1}
           initial={reduce ? { opacity: 0 } : { y: 60, opacity: 0, scale: 0.98 }}
@@ -173,15 +178,15 @@ function ChooserBody({
         >
           <div className="bc-cart__head" style={{ padding: "8px 0 0" }}>
             <h2 id="bc-choose-title" className="bc-modal__title">
-              {item.name}
+              {itemName(item, locale)}
             </h2>
-            <button type="button" className="bc-iconbtn" onClick={onClose} aria-label="Cerrar sin añadir">
+            <button type="button" className="bc-iconbtn" onClick={onClose} aria-label={t.chooser.close}>
               <X size={22} weight="bold" aria-hidden />
             </button>
           </div>
-          {item.description && (
+          {description && (
             <p id="bc-choose-desc" className="bc-modal__desc">
-              {item.description}
+              {description}
             </p>
           )}
           <form
@@ -196,8 +201,8 @@ function ChooserBody({
               return (
                 <fieldset key={option.id} className="bc-choices">
                   <legend>
-                    {option.name === "Elige" ? "Elige una opción" : option.name}
-                    {option.minChoices > 0 ? " (obligatorio)" : ""}
+                    {option.name === "Elige" ? t.chooser.chooseOne : optionName(option, locale)}
+                    {option.minChoices > 0 ? t.chooser.required : ""}
                   </legend>
                   {option.choices.map((choice) => (
                     <label key={choice.id} className="bc-choice">
@@ -208,9 +213,11 @@ function ChooserBody({
                         checked={(picked[option.id] ?? []).includes(choice.id)}
                         onChange={() => toggle(option.id, choice.id, single)}
                       />
-                      {choice.name}
+                      {choiceName(choice, locale)}
                       <small>
-                        {choice.priceDeltaCents ? `+${formatCents(choice.priceDeltaCents)}` : "Incluido"}
+                        {choice.priceDeltaCents
+                          ? `+${formatMoney(choice.priceDeltaCents, locale)}`
+                          : t.chooser.included}
                       </small>
                     </label>
                   ))}
@@ -218,7 +225,7 @@ function ChooserBody({
               );
             })}
             <button type="submit" className="bc-primary" disabled={!complete}>
-              {complete ? `Añadir al pedido · ${formatCents(unit)}` : "Elige una opción para añadir"}
+              {complete ? t.chooser.addFor(formatMoney(unit, locale)) : t.chooser.pickToAdd}
             </button>
           </form>
         </motion.div>

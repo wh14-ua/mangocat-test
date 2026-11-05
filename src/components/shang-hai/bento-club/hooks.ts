@@ -1,6 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import { COMMON_TEXT } from "@/lib/shang-hai/i18n/common";
+import { BENTO_TEXT } from "@/lib/shang-hai/i18n/bento-club";
+
+/**
+ * The visitor's language with both dictionaries: `t` is Bento Club's own copy, `c` the
+ * facts every Shang Hai storefront words the same way.
+ */
+export function useBento() {
+  const { locale } = useLocale();
+  return { locale, t: BENTO_TEXT[locale], c: COMMON_TEXT[locale] };
+}
+
+/**
+ * The static export ships Spanish <title>s; this keeps the tab title in the visitor's
+ * language once the page has rendered (and again after every language switch).
+ */
+export function useDocumentTitle(title: string) {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+}
 
 /** matchMedia as an external store (false on the server and during hydration). */
 export function useMediaQuery(query: string): boolean {

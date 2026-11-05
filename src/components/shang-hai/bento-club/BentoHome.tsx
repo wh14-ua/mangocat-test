@@ -5,36 +5,43 @@ import { useCart } from "@/hooks/shang-hai/useCart";
 import { useMenuSearch } from "@/hooks/shang-hai/useMenuSearch";
 import type { CartEvent } from "@/lib/commerce/cart-store";
 import type { MenuItem, OptionSelections } from "@/lib/commerce/types";
+import type { Locale } from "@/lib/i18n/locale";
+import type { BentoText } from "@/lib/shang-hai/i18n/bento-club";
 import { shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { itemName } from "@/lib/shang-hai/menu-i18n";
 import { CartContents } from "./CartContents";
-import { MiniCart, TabBar, TopBar } from "./Chrome";
+import { BentoLanguageSwitch, MiniCart, TabBar, TopBar } from "./Chrome";
 import { EntryTray } from "./Entry";
 import { BentoFooter, InfoSection } from "./Info";
 import { MenuBoard, type TileHandlers } from "./Menu";
 import { CartSheet, OptionChooser } from "./Overlays";
-import { DESKTOP_QUERY, scrollToId, useEvent, useMediaQuery } from "./hooks";
+import { DESKTOP_QUERY, scrollToId, useBento, useDocumentTitle, useEvent, useMediaQuery } from "./hooks";
 
-const REJECTION_COPY: Record<string, string> = {
-  "quantity-limit": "Has llegado al máximo de unidades de este plato para un pedido online.",
-  "order-limit": "Has llegado al máximo de unidades de un pedido online.",
-  "line-limit": "El pedido ya tiene el máximo de platos distintos.",
-};
-
-function announcement(event: CartEvent | null, quantityOf: (id: string) => number): string {
+function announcement(
+  event: CartEvent | null,
+  quantityOf: (id: string) => number,
+  t: BentoText,
+  locale: Locale,
+): string {
   if (!event) return "";
   if (event.type === "added") {
-    const name = shangHaiCatalog.byId.get(event.itemId)?.name ?? "Plato";
-    return `Añadido: ${name}. Llevas ${quantityOf(event.itemId)} en tu pedido.`;
+    const item = shangHaiCatalog.byId.get(event.itemId);
+    return t.live.added(item ? itemName(item, locale) : t.live.dish, quantityOf(event.itemId));
   }
   if (event.type === "rejected") {
-    return REJECTION_COPY[event.error] ?? "No se ha podido añadir este plato.";
+    if (event.error === "quantity-limit") return t.live.quantityLimit;
+    if (event.error === "order-limit") return t.live.orderLimit;
+    if (event.error === "line-limit") return t.live.lineLimit;
+    return t.live.notAdded;
   }
-  if (event.type === "removed") return "Plato quitado de tu pedido.";
+  if (event.type === "removed") return t.live.removed;
   return "";
 }
 
 /** BENTO CLUB home: entry tray, the whole carta, information, and the order UI. */
 export function BentoHome() {
+  const { locale, t } = useBento();
+  useDocumentTitle(t.meta.home);
   const cart = useCart();
   const search = useMenuSearch();
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
@@ -118,6 +125,10 @@ export function BentoHome() {
       />
       <div className="bc-frame">
         <main id="bc-main" className="bc-page">
+          {/* Phones and tablets have no top bar: the language sits at the top of the page. */}
+          <div className="bc-langbar">
+            <BentoLanguageSwitch />
+          </div>
           <EntryTray onSearch={focusSearch} />
           <MenuBoard
             query={search.query}
@@ -133,10 +144,10 @@ export function BentoHome() {
           <InfoSection />
           <BentoFooter />
           <p className="bc-sr" role="status" aria-live="polite">
-            {announcement(cart.lastEvent, cart.quantityOf)}
+            {announcement(cart.lastEvent, cart.quantityOf, t, locale)}
           </p>
         </main>
-        <aside className="bc-sidebar" aria-label="Tu pedido">
+        <aside className="bc-sidebar" aria-label={t.cart.title}>
           {isDesktop && (
             <div className="bc-sidebar__inner" data-testid="cart-panel">
               <div className="bc-sidebar__lid" aria-hidden />
