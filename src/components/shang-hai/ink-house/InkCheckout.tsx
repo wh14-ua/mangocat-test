@@ -5,12 +5,16 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/hooks/shang-hai/useCart";
 import { useCheckoutForm, type CheckoutValues } from "@/hooks/shang-hai/useCheckoutForm";
-import { formatCents } from "@/lib/commerce/money";
-import { QUOTE_ISSUE_COPY } from "@/lib/commerce/pricing";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import { QUOTE_ISSUE_TEXT } from "@/lib/commerce/messages";
+import { formatMoney } from "@/lib/i18n/format";
 import { shangHaiRestaurant } from "@/data/shang-hai/restaurant";
 import { CHECKOUT_KIND } from "@/lib/shang-hai/checkout";
+import { COMMON_TEXT } from "@/lib/shang-hai/i18n/common";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
+import { lineName, lineOptionsLabel } from "@/lib/shang-hai/menu-i18n";
 import { storefrontRoutes } from "@/lib/shang-hai/storefronts";
-import { DEMO_NOTICE } from "@/components/shang-hai/shared/StorefrontShell";
+import { DEMO_NOTICE_TEXT } from "@/components/shang-hai/shared/StorefrontShell";
 import { Seal } from "./Seal";
 import { useInkUI } from "./InkUI";
 
@@ -19,24 +23,25 @@ const address = shangHaiRestaurant.address.value;
 
 function CancelledNotice() {
   const params = useSearchParams();
+  const t = INK_TEXT[useLocale().locale].checkout;
   if (params.get("cancelado") !== "1") return null;
   return (
     <div className="ink-note ink-note--lacquer" role="status">
       <p>
-        <strong>Pago cancelado.</strong> No se ha cobrado nada y tu pedido sigue aquí: revisa los datos y
-        vuelve a intentarlo cuando quieras.
+        <strong>{t.cancelledTitle}</strong> {t.cancelledText}
       </p>
     </div>
   );
 }
 
 export function DemoStamp({ children }: { children?: React.ReactNode }) {
+  const { locale } = useLocale();
   if (CHECKOUT_KIND !== "demo") return null;
   return (
     <div className="ink-demo-stamp" role="note">
       <Seal className="ink-demo-stamp__seal" />
       <div>
-        <p className="ink-demo-stamp__title">{DEMO_NOTICE}</p>
+        <p className="ink-demo-stamp__title">{DEMO_NOTICE_TEXT[locale]}</p>
         {children && <p className="ink-demo-stamp__text">{children}</p>}
       </div>
     </div>
@@ -49,7 +54,8 @@ type FieldProps = {
   value: string;
   error?: string;
   hint?: string;
-  optional?: boolean;
+  /** The "(opcional)" mark, in the page's language. */
+  optional?: string;
   multiline?: boolean;
   onChange: (value: string) => void;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
@@ -62,7 +68,7 @@ function Field({ name, label, value, error, hint, optional, multiline, onChange,
     <div className="ink-field" data-invalid={error ? "" : undefined}>
       <label htmlFor={id} className="ink-field__label">
         {label}
-        {optional && <span className="ink-field__optional"> (opcional)</span>}
+        {optional && <span className="ink-field__optional"> {optional}</span>}
       </label>
       {multiline ? (
         <textarea
@@ -105,6 +111,10 @@ function Field({ name, label, value, error, hint, optional, multiline, onChange,
 export function InkCheckout() {
   const cart = useCart();
   const ui = useInkUI();
+  const { locale } = useLocale();
+  const ink = INK_TEXT[locale];
+  const t = ink.checkout;
+  const common = COMMON_TEXT[locale];
   const {
     values,
     errors,
@@ -121,8 +131,8 @@ export function InkCheckout() {
   return (
     <div className="ink-checkout">
       <header className="ink-checkout__head">
-        <p className="ink-kicker">Pedido para recoger</p>
-        <h1 className="ink-checkout__title">Completa tu pedido</h1>
+        <p className="ink-kicker">{t.kicker}</p>
+        <h1 className="ink-checkout__title">{t.title}</h1>
         <Suspense fallback={null}>
           <CancelledNotice />
         </Suspense>
@@ -130,31 +140,31 @@ export function InkCheckout() {
 
       {!cart.hydrated ? (
         <div className="ink-checkout__loading" aria-busy="true">
-          <p>Preparando tu pedido…</p>
+          <p>{t.loading}</p>
         </div>
       ) : cart.lines.length === 0 ? (
         <div className="ink-checkout__empty">
-          <p className="ink-checkout__empty-title">Tu pedido está vacío.</p>
-          <p>Elige tus platos en la carta y vuelve aquí para pagar y recogerlos.</p>
+          <p className="ink-checkout__empty-title">{t.emptyTitle}</p>
+          <p>{t.emptyText}</p>
           <Link href={`${routes.home}#carta`} className="ink-button ink-button--ink">
-            Ir a la carta
+            {t.goToMenu}
           </Link>
         </div>
       ) : (
         <div className="ink-checkout__grid">
           <form ref={formRef} noValidate onSubmit={submit} className="ink-form">
-            <DemoStamp>Al pagar verás un simulador: no se pide ni se guarda ninguna tarjeta.</DemoStamp>
+            <DemoStamp>{t.demoNote}</DemoStamp>
 
             <fieldset className="ink-step">
               <legend className="ink-step__legend">
                 <span className="ink-step__num" aria-hidden="true">
                   1
                 </span>
-                Tus datos
+                {t.stepDetails}
               </legend>
               <Field
                 name="name"
-                label="Nombre"
+                label={t.name}
                 value={values.name}
                 error={errors.name}
                 onChange={(v) => setField("name", v)}
@@ -162,19 +172,19 @@ export function InkCheckout() {
               />
               <Field
                 name="phone"
-                label="Teléfono"
+                label={t.phone}
                 value={values.phone}
                 error={errors.phone}
-                hint="Solo para avisarte si hay algo que confirmar del pedido."
+                hint={t.phoneHint}
                 onChange={(v) => setField("phone", v)}
                 inputProps={{ type: "tel", inputMode: "tel", autoComplete: "tel", enterKeyHint: "next" }}
               />
               <Field
                 name="email"
-                label="Correo electrónico"
+                label={t.email}
                 value={values.email}
                 error={errors.email}
-                hint="Te enviaremos la confirmación del pedido."
+                hint={t.emailHint}
                 onChange={(v) => setField("email", v)}
                 inputProps={{
                   type: "email",
@@ -187,12 +197,12 @@ export function InkCheckout() {
               />
               <Field
                 name="notes"
-                label="Comentarios para la cocina"
-                optional
+                label={t.notes}
+                optional={t.optional}
                 multiline
                 value={values.notes}
                 error={errors.notes}
-                hint="Por ejemplo: sin cebolla. Si tienes alergias, llama antes al restaurante."
+                hint={t.notesHint}
                 onChange={(v) => setField("notes", v)}
               />
             </fieldset>
@@ -202,7 +212,7 @@ export function InkCheckout() {
                 <span className="ink-step__num" aria-hidden="true">
                   2
                 </span>
-                Recogida
+                {t.stepPickup}
               </legend>
               <p className="ink-step__place">
                 {address.street}
@@ -210,8 +220,7 @@ export function InkCheckout() {
                 {address.postalCode} {address.city}
               </p>
               <p className="ink-step__text">
-                El restaurante te confirmará la hora de recogida. El reparto a domicilio todavía no está
-                disponible en este canal.
+                {common.pickup.timeAfterAcceptance} {t.noDelivery}
               </p>
             </fieldset>
 
@@ -220,7 +229,7 @@ export function InkCheckout() {
                 <span className="ink-step__num" aria-hidden="true">
                   3
                 </span>
-                Pago
+                {t.stepPayment}
               </legend>
 
               {requiresAge && (
@@ -234,10 +243,7 @@ export function InkCheckout() {
                     aria-describedby={errors.ageConfirmed ? "ink-f-age-err" : undefined}
                     onChange={(e) => setField("ageConfirmed", e.target.checked)}
                   />
-                  <label htmlFor="ink-f-age">
-                    Tengo 18 años o más. El pedido incluye bebidas alcohólicas y el restaurante puede
-                    pedirme un documento al recoger.
-                  </label>
+                  <label htmlFor="ink-f-age">{t.ageConfirm}</label>
                   {errors.ageConfirmed && (
                     <p id="ink-f-age-err" className="ink-field__error">
                       {errors.ageConfirmed}
@@ -250,10 +256,15 @@ export function InkCheckout() {
                 <div className="ink-alert" role="alert">
                   <p>{failureMessage}</p>
                   {failure?.error === "not-payable" && failure.issues[0] && (
-                    <p>{QUOTE_ISSUE_COPY[failure.issues[0].code]}</p>
+                    <p>{QUOTE_ISSUE_TEXT[locale][failure.issues[0].code]}</p>
                   )}
                 </div>
               )}
+
+              {/* Authorise first, charge on acceptance: said before the button, not after. */}
+              <p className="ink-hold" id="ink-hold-note">
+                {common.payment.holdExplainer}
+              </p>
 
               <button
                 type="submit"
@@ -261,41 +272,41 @@ export function InkCheckout() {
                 className="ink-button ink-button--lacquer ink-button--pay"
                 disabled={submitting}
                 aria-busy={submitting || undefined}
+                aria-describedby="ink-hold-note"
               >
-                {submitting ? "Preparando el pago…" : `Pagar ${formatCents(quote.totalCents)}`}
+                {submitting ? t.paying : t.pay(formatMoney(quote.totalCents, locale))}
               </button>
-              <p className="ink-step__text">
-                {CHECKOUT_KIND === "demo"
-                  ? "Esto es una demostración: el pago es simulado y el pedido no llega al restaurante."
-                  : "Te llevaremos a la página de pago segura de Stripe. No guardamos los datos de tu tarjeta."}
-              </p>
+              <p className="ink-step__text">{CHECKOUT_KIND === "demo" ? t.demoPayNote : t.stripeNote}</p>
             </fieldset>
           </form>
 
           <aside className="ink-comanda" aria-labelledby="ink-comanda-title">
             <div className="ink-comanda__head">
               <h2 id="ink-comanda-title" className="ink-comanda__title">
-                Tu pedido
+                {t.summaryTitle}
               </h2>
               <button type="button" className="ink-text-button" onClick={ui.openCart}>
-                Editar
+                {t.edit}
               </button>
             </div>
             <ul className="ink-comanda__lines">
-              {quote.lines.map((line) => (
-                <li key={line.key}>
-                  <span className="ink-comanda__qty">{line.quantity} ×</span>
-                  <span className="ink-comanda__name">
-                    {line.name}
-                    {line.optionsLabel && <span className="ink-comanda__opt">{line.optionsLabel}</span>}
-                  </span>
-                  <span className="ink-comanda__price">{formatCents(line.lineTotalCents)}</span>
-                </li>
-              ))}
+              {quote.lines.map((line) => {
+                const optionsLabel = lineOptionsLabel(line, locale);
+                return (
+                  <li key={line.key}>
+                    <span className="ink-comanda__qty">{line.quantity} ×</span>
+                    <span className="ink-comanda__name">
+                      {lineName(line, locale)}
+                      {optionsLabel && <span className="ink-comanda__opt">{optionsLabel}</span>}
+                    </span>
+                    <span className="ink-comanda__price">{formatMoney(line.lineTotalCents, locale)}</span>
+                  </li>
+                );
+              })}
             </ul>
             <dl className="ink-total ink-total--comanda">
-              <dt>Total</dt>
-              <dd>{formatCents(quote.totalCents)}</dd>
+              <dt>{ink.total}</dt>
+              <dd>{formatMoney(quote.totalCents, locale)}</dd>
             </dl>
           </aside>
         </div>

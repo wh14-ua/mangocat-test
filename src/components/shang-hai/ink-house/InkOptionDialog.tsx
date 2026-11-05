@@ -3,9 +3,18 @@
 import { useId, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useDialog } from "@/hooks/shang-hai/useDialog";
-import { formatCents } from "@/lib/commerce/money";
-import type { MenuItem, OptionSelections } from "@/lib/commerce/types";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import type { MenuItem, OptionSelections, ProductOption } from "@/lib/commerce/types";
+import { formatMoney } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
+import { choiceName, itemDescription, itemName, optionName } from "@/lib/shang-hai/menu-i18n";
 import { useInkUI } from "./InkUI";
+
+/** "Elige" is the platform's generic option title: the sheet asks in its own words instead. */
+function legend(option: ProductOption, locale: Locale): string {
+  return option.name === "Elige" ? INK_TEXT[locale].options.chooseOne : optionName(option, locale);
+}
 
 /** Chooser for dishes with real options (the 6-person set menus: dessert or coffee). */
 export function InkOptionDialog() {
@@ -34,25 +43,27 @@ export function InkOptionDialog() {
 
 function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
   const ui = useInkUI();
+  const { locale } = useLocale();
+  const t = INK_TEXT[locale].options;
   const ref = useDialog<HTMLDivElement>(true, ui.closeOptions);
   const titleId = useId();
   const [selections, setSelections] = useState<OptionSelections>({});
-  const [error, setError] = useState<string | null>(null);
+  // The option missing a choice (the message is worded at render time, in the current language).
+  const [missing, setMissing] = useState<ProductOption | null>(null);
   const options = item.options ?? [];
+  const description = itemDescription(item, locale);
 
   const extra = options.reduce((sum, o) => {
     const chosen = selections[o.id] ?? [];
     return sum + o.choices.filter((c) => chosen.includes(c.id)).reduce((s, c) => s + c.priceDeltaCents, 0);
   }, 0);
 
+  const error = missing ? (missing.name === "Elige" ? t.missingAny : t.missingIn(optionName(missing, locale))) : null;
+
   function confirm() {
-    const missing = options.find((o) => (selections[o.id]?.length ?? 0) < o.minChoices);
-    if (missing) {
-      setError(
-        missing.name === "Elige"
-          ? "Elige una de las opciones antes de añadirlo."
-          : `Elige una opción en «${missing.name}».`,
-      );
+    const firstMissing = options.find((o) => (selections[o.id]?.length ?? 0) < o.minChoices);
+    if (firstMissing) {
+      setMissing(firstMissing);
       return;
     }
     if (ui.addItem(item, selections)) ui.closeOptions();
@@ -70,11 +81,11 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
       exit={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: reduce ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
     >
-      <p className="ink-sheet__kicker">Antes de añadirlo</p>
+      <p className="ink-sheet__kicker">{t.kicker}</p>
       <h2 id={titleId} className="ink-sheet__title">
-        {item.name}
+        {itemName(item, locale)}
       </h2>
-      {item.description && <p className="ink-sheet__desc">{item.description}</p>}
+      {description && <p className="ink-sheet__desc">{description}</p>}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -83,9 +94,7 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
       >
         {options.map((option) => (
           <fieldset key={option.id} className="ink-choices" aria-describedby={error ? `${titleId}-err` : undefined}>
-            <legend className="ink-choices__legend">
-              {option.name === "Elige" ? "Elige una opción" : option.name}
-            </legend>
+            <legend className="ink-choices__legend">{legend(option, locale)}</legend>
             {option.choices.map((choice) => {
               const checked = selections[option.id]?.includes(choice.id) ?? false;
               return (
@@ -96,7 +105,7 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
                     value={choice.id}
                     checked={checked}
                     onChange={(e) => {
-                      setError(null);
+                      setMissing(null);
                       setSelections((prev) => {
                         const current = prev[option.id] ?? [];
                         const next =
@@ -109,9 +118,9 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
                       });
                     }}
                   />
-                  <span className="ink-choice__name">{choice.name}</span>
+                  <span className="ink-choice__name">{choiceName(choice, locale)}</span>
                   <span className="ink-choice__price">
-                    {choice.priceDeltaCents > 0 ? `+ ${formatCents(choice.priceDeltaCents)}` : "Incluido"}
+                    {choice.priceDeltaCents > 0 ? `+ ${formatMoney(choice.priceDeltaCents, locale)}` : t.included}
                   </span>
                 </label>
               );
@@ -125,10 +134,10 @@ function OptionSheet({ item, reduce }: { item: MenuItem; reduce: boolean }) {
         )}
         <div className="ink-sheet__actions">
           <button type="submit" className="ink-button ink-button--lacquer">
-            Añadir por {formatCents((item.priceCents ?? 0) + extra)}
+            {t.addFor(formatMoney((item.priceCents ?? 0) + extra, locale))}
           </button>
           <button type="button" className="ink-text-button" onClick={ui.closeOptions}>
-            Cancelar
+            {t.cancel}
           </button>
         </div>
       </form>

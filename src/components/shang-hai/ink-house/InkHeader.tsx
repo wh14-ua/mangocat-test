@@ -5,10 +5,13 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCart } from "@/hooks/shang-hai/useCart";
 import { useDialog } from "@/hooks/shang-hai/useDialog";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
 import { storefrontRoutes } from "@/lib/shang-hai/storefronts";
 import { Seal } from "./Seal";
 import { useInkUI } from "./InkUI";
-import { CHAPTERS, PARTS } from "./chapters";
+import { InkLanguageSwitch } from "./InkLanguageSwitch";
+import { CHAPTERS, PARTS, chapterTitle, partTitle } from "./chapters";
 
 const routes = storefrontRoutes("ink-house");
 
@@ -29,16 +32,15 @@ export function goToAnchor(id: string, focus = true) {
 export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }) {
   const { itemCount } = useCart();
   const ui = useInkUI();
+  const { locale } = useLocale();
+  const t = INK_TEXT[locale].header;
   const [indexOpen, setIndexOpen] = useState(false);
-
-  const cartDetail =
-    itemCount > 0 ? `, ${itemCount} ${itemCount === 1 ? "producto" : "productos"}` : ", vacío";
 
   return (
     <>
       <header className="ink-header" data-variant={variant}>
         <div className="ink-header__inner">
-          <Link href={routes.home} className="ink-brand" aria-label="SHANG HAI, inicio">
+          <Link href={routes.home} className="ink-brand" aria-label={t.home}>
             <Seal className="ink-brand__seal" />
             <span className="ink-brand__word" aria-hidden="true">
               SHANG HAI
@@ -46,27 +48,28 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
           </Link>
 
           {variant === "full" ? (
-            <nav className="ink-nav" aria-label="Secciones">
+            <nav className="ink-nav" aria-label={t.sections}>
               <a href="#carta" className="ink-nav__link">
-                Carta
+                {t.menu}
               </a>
               <a href="#informacion" className="ink-nav__link">
-                Información
+                {t.info}
               </a>
               <a href="#contacto" className="ink-nav__link">
-                Contacto
+                {t.contact}
               </a>
             </nav>
           ) : (
-            <nav className="ink-nav" aria-label="Secciones">
+            <nav className="ink-nav" aria-label={t.sections}>
               <Link href={`${routes.home}#carta`} className="ink-nav__link ink-nav__link--always">
-                <span className="ink-nav__long">Volver a la carta</span>
-                <span className="ink-nav__short">La carta</span>
+                <span className="ink-nav__long">{t.backToMenu}</span>
+                <span className="ink-nav__short">{t.backToMenuShort}</span>
               </Link>
             </nav>
           )}
 
           <div className="ink-header__actions">
+            <InkLanguageSwitch />
             <button
               type="button"
               className="ink-cart-trigger"
@@ -75,8 +78,8 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
               aria-expanded={ui.cartOpen}
               onClick={ui.openCart}
             >
-              <span className="ink-cart-trigger__label">Pedido</span>
-              <span className="ink-sr-only">{cartDetail}</span>
+              <span className="ink-cart-trigger__label">{t.order}</span>
+              <span className="ink-sr-only">{t.orderDetail(itemCount)}</span>
               <span
                 key={ui.stamp}
                 className="ink-count"
@@ -95,7 +98,7 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
                 aria-expanded={indexOpen}
                 onClick={() => setIndexOpen(true)}
               >
-                Índice
+                {t.index}
               </button>
             )}
           </div>
@@ -109,6 +112,8 @@ export function InkHeader({ variant = "full" }: { variant?: "full" | "compact" }
 
 function InkIndexDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ui = useInkUI();
+  const { locale } = useLocale();
+  const t = INK_TEXT[locale].index;
   const reduce = useReducedMotion();
   const closeRef = useRef<HTMLButtonElement>(null);
   const ref = useDialog<HTMLDivElement>(open, onClose, { initialFocus: closeRef });
@@ -134,26 +139,29 @@ function InkIndexDialog({ open, onClose }: { open: boolean; onClose: () => void 
         >
           <div className="ink-index-dialog__top">
             <h2 id="ink-index-title" className="ink-index-dialog__title">
-              Índice
+              {t.title}
             </h2>
-            <button ref={closeRef} type="button" className="ink-close" onClick={onClose}>
-              Cerrar
-            </button>
+            <div className="ink-index-dialog__tools">
+              <InkLanguageSwitch />
+              <button ref={closeRef} type="button" className="ink-close" onClick={onClose}>
+                {t.close}
+              </button>
+            </div>
           </div>
           <ul className="ink-index-dialog__main">
             <li>
               <button type="button" onClick={() => go("carta")}>
-                La carta
+                {t.menu}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("informacion")}>
-                Información
+                {t.info}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("contacto")}>
-                Contacto
+                {t.contact}
               </button>
             </li>
             <li>
@@ -164,20 +172,20 @@ function InkIndexDialog({ open, onClose }: { open: boolean; onClose: () => void 
                   ui.openCart();
                 }}
               >
-                Tu pedido
+                {t.yourOrder}
               </button>
             </li>
           </ul>
           <div className="ink-index-dialog__chapters">
             {PARTS.map((part) => (
-              <section key={part.id} aria-label={part.title}>
-                <p className="ink-index-dialog__part">{part.title}</p>
+              <section key={part.id} aria-label={partTitle(part, locale)}>
+                <p className="ink-index-dialog__part">{partTitle(part, locale)}</p>
                 <ol>
                   {part.chapters.map((c) => (
                     <li key={c.id}>
                       <button type="button" onClick={() => go(c.anchor)}>
                         <span className="ink-num">{c.number}</span>
-                        <span>{c.title}</span>
+                        <span>{chapterTitle(c, locale)}</span>
                       </button>
                     </li>
                   ))}
@@ -185,7 +193,7 @@ function InkIndexDialog({ open, onClose }: { open: boolean; onClose: () => void 
               </section>
             ))}
           </div>
-          <p className="ink-index-dialog__foot">{CHAPTERS.length} capítulos en la carta</p>
+          <p className="ink-index-dialog__foot">{t.chapterCount(CHAPTERS.length)}</p>
         </motion.div>
       )}
     </AnimatePresence>
