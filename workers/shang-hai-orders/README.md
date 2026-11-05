@@ -1,169 +1,124 @@
 # Shang Hai order Worker
 
-The single order backend shared by the three Shang Hai storefront proposals
-(Ink House, Wok After Dark, Bento Club). Cloudflare Workers + D1 + Stripe Checkout,
-**test mode only** until the restaurant owner explicitly approves live payments.
+The single order backend shared by the three Shang Hai storefronts (Ink House, Wok After
+Dark, Bento Club): Cloudflare Workers + D1 + Stripe Checkout, **test mode only** until the
+restaurant owner explicitly approves live payments. Operator guide (Spanish):
+[`../../SHANG_HAI_PEDIDOS.md`](../../SHANG_HAI_PEDIDOS.md).
 
 ```
-Storefront (static, GitHub Pages)          Order Worker (this folder)                 Stripe
----------------------------------          --------------------------                 ------
-cart: item ids + quantities  --POST /api/checkout-->  prepareOrder() re-prices from
-                                                       the shared catalog (menu.json)
-                                                       -> pending order in D1
-                                                       -> Checkout Session  ------------> hosted payment page
-<------------------ 201 { checkoutUrl } -------------                                         |
-redirect to Stripe ---------------------------------------------------------------------------+
-                                                       POST /api/stripe/webhook <--------- signed events
-                                                       verify signature, idempotent,
-                                                       reconcile amount -> paid/failed/...
-status page --GET /api/orders/:id (Bearer token)-->    status from D1 (never from the URL)
-staff (Cloudflare Access) --/admin-->                   list, detail, preparing/ready/completed
+Storefront ─POST /api/checkout─► prepareOrder() re-prices ─► pending order (#1042) ─► Checkout Session
+                                 (shared engine + menu.json)                         capture_method=manual
+Stripe ─webhooks─► /api/stripe/webhook ─► re-read the PaymentIntent ─► awaiting_acceptance + authorized
+                                                                    └► Telegram alert (outbox, retries)
+Staff phone ─/admin (PWA)─► ACEPTAR {prepMinutes} ─► capture ─► preparing ─► ready ─► completed
+                          └► RECHAZAR {reason}     ─► cancel PI (hold released) / refund ─► rejected
+Customer ─GET /api/orders/:id (Bearer token)─► status + paymentStatus + readyBy (polling)
+Cron (every minute) ─► stale locks · reminders · acceptance timeout · missed webhooks · pending refunds · alert retries
 ```
-
-The Worker imports the storefronts' own engine by relative path
-(`src/lib/commerce`, `src/lib/shang-hai/catalog.ts`, `src/data/shang-hai/menu.json`),
-so the server always prices with exactly the same catalog and rules as the UI. Rebuild
-and redeploy the Worker whenever the menu is re-imported.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/health` | `{ ok, paymentsMode }` |
-| GET | `/api/config` | `{ paymentsMode: "stripe-test" \| "stripe-live" \| "disabled" }` |
-| POST | `/api/checkout` | Body: `CheckoutRequest` (ids, quantities, options, customer). 201 `{ orderId, orderToken, checkoutUrl, mode }` |
-| GET | `/api/orders/:id` | `Authorization: Bearer <orderToken>` → `{ order }` (no phone/email/notes) |
-| POST | `/api/stripe/webhook` | Stripe events (signature verified) |
-| GET | `/admin` | Staff panel (HTML), behind Cloudflare Access |
-| GET | `/api/admin/orders?status=` | Staff: list |
-| GET | `/api/admin/orders/:id` | Staff: detail incl. contact, notes, Stripe ids, history |
-| POST | `/api/admin/orders/:id/status` | Staff: `{ "status": "preparing" \| "ready" \| "completed" \| "cancelled" }` |
+| GET | `/api/health`, `/api/config` | `{ paymentsMode: "stripe-test" \| "stripe-live" \| "disabled" }` |
+| POST | `/api/checkout` | `CheckoutRequest` (ids, quantities, options, customer, `locale`) → 201 `{ orderId, orderNumber, orderToken, checkoutUrl, mode }` |
+| GET | `/api/orders/:id` | `Authorization: Bearer <orderToken>` → `{ order }` (status, paymentStatus, prepMinutes, readyBy, rejectionReason; never phone/email/notes/Stripe ids) |
+| POST | `/api/stripe/webhook` | Stripe events (signature verified, see list below) |
+| GET | `/admin`, `/admin/*` | Staff panel shell and assets (no data inside) |
+| POST | `/api/admin/auth/code` | Sends a 6-digit sign-in code to the authorised Telegram chats |
+| POST | `/api/admin/auth/verify` | `{ code, label }` → HttpOnly session cookie (30 days) |
+| POST | `/api/admin/auth/logout` | `{}` or `{ "everywhere": true }` |
+| GET | `/api/admin/session` | Who is signed in |
+| GET | `/api/admin/board` | Columns new / preparing / ready / completed / rejected, prep options, health |
+| GET | `/api/admin/orders/:id` | Detail with contact, history and alert log |
+| POST | `/api/admin/orders/:id/accept` | `{ prepMinutes: 5..180 }` → capture → preparing |
+| POST | `/api/admin/orders/:id/reject` | `{ reason? }` → release the hold or refund → rejected (failure → needs_review) |
+| POST | `/api/admin/orders/:id/ready` · `/complete` · `/retry` | Kitchen steps; retry re-syncs with Stripe and finishes half-done work |
 
-Checkout errors (shapes parsed by `src/lib/commerce/checkout/api-gateway.ts`):
-`400/422 { error: "invalid", fieldErrors }`, `422 { error: "not-payable", issues }`,
-`422 { error: "age-confirmation-required" }`, `409 { error: "price-changed", totalCents }`,
-`503 { error: "payments-disabled" }`, `429` (with `Retry-After`), `413`, `415`,
-`403 { error: "forbidden-origin" }`, `502 { error: "server" }` when Stripe fails (the
-order is cancelled and no URL is returned).
+Staff responses always carry a Spanish `message` ready to show, and the order card with the
+`actions` the server allows. 409 = another phone already handled it (or not allowed now),
+202 = Stripe did not answer (the cron resolves it), 502 = Stripe refused (order may be in review).
 
-### Security model
+## Order model
 
-- **Prices**: the browser sends ids and quantities; every amount is recomputed from the
-  catalog. `expectedTotalCents` is only compared (409 if it differs), never charged.
-- **Payment status** changes only through verified Stripe webhooks: HMAC-SHA256 over
-  `${t}.${body}`, constant-time comparison against every `v1` signature, 5-minute
-  tolerance. Each event id is processed once (`stripe_events`). Amount, currency, test/live
-  mode and session id are reconciled with the stored order; any mismatch → `needs_review`.
-  Returning to the success URL changes nothing.
-- **Order tokens**: 32 random bytes, returned once, stored as SHA-256. Wrong token and
-  unknown order both answer 404.
-- **Payments modes**: no key or no webhook secret → `disabled`. `STRIPE_TEST_MODE`
-  defaults to `"true"` and then only `sk_test_`/`rk_test_` keys work. Live keys need
-  `STRIPE_TEST_MODE="false"` **and** `PAYMENTS_LIVE_ENABLED="true"`.
-- **CORS**: exact-origin allowlist (`CORS_ALLOWED_ORIGIN`); requests from other browser
-  origins get 403; no CORS on the webhook or the staff API.
-- **Staff**: Cloudflare Access JWT (`Cf-Access-Jwt-Assertion`) verified in the Worker
-  (RS256 via the team JWKS, `aud`, `iss`, `exp`, `nbf`). Without `ACCESS_TEAM_DOMAIN` and
-  `ACCESS_AUD` every staff route answers 503. Staff can only move orders through
-  `paid → preparing → ready → completed` (or cancel paid/preparing ones); payment states
-  are Stripe's. Status changes are same-origin JSON only (CSRF).
-- **Abuse**: 16 KB body limit, JSON only, Workers Rate Limiting (10 checkouts and 120
-  lookups per IP per minute), strict security headers, CSP with per-request nonce on the
-  panel. Logs contain ids, amounts and reasons only — never names, phones, emails, notes or
-  tokens. No card data is ever stored; payment details stay with Stripe.
+`status` (commercial) and `payment_status` (Stripe facts) are separate columns:
 
-## Data model (D1, `migrations/0001_init.sql`)
+- status: `pending`, `awaiting_acceptance`, `accepting`*, `rejecting`*, `preparing`, `ready`,
+  `completed`, `rejected`, `failed`, `cancelled`, `needs_review` (*short locks while Stripe is called)
+- payment_status: `unpaid`, `processing`, `authorized`, `captured`, `canceled`, `failed`,
+  `refund_pending`, `refunded`, `refund_failed`
 
-- `orders`: status, storefront, fulfillment, catalog version, subtotal/fees/total (cents),
-  customer contact and notes, age confirmation, payments mode, Stripe session /
-  payment intent / payment status / amount / livemode, timestamps.
-- `order_items`: one row per line with the **unit price confirmed at purchase time**.
-- `order_events`: every status change (checkout, Stripe, staff, system) with actor/note.
-- `stripe_events`: one row per Stripe event id (idempotency).
+Transitions live in `src/lib/commerce/orders.ts`; Stripe → order rules in `src/payments.ts`
+(pure, unit-tested). Migration `0002_acceptance_flow.sql` rebuilds the tables preserving every
+existing order, line and event (`paid` → `awaiting_acceptance` + `captured`).
 
-Statuses: `pending, paid, failed, cancelled, preparing, ready, completed, needs_review`
-(transitions in `src/lib/commerce/orders.ts`).
+## Security model
 
-## Local development
+- **Prices**: the browser sends ids and quantities; every amount is recomputed server-side.
+- **Payments**: only verified webhooks and the Worker's own Stripe calls change payment state;
+  every event triggers a fresh `GET /v1/payment_intents/:id`, so duplicates and out-of-order
+  events converge on Stripe's real state. Amount, currency, mode and order id are reconciled
+  (mismatch → `needs_review`). Each event id is processed once (`stripe_events`).
+- **Concurrency**: accept/reject take a lock with a conditional UPDATE; Stripe calls use
+  idempotency keys (`capture-<id>`, `cancel-<id>`, `refund-<id>-<n>`); an unknown outcome is
+  resolved from Stripe by the cron (`STALE_LOCK_MS`), never guessed.
+- **Staff**: Telegram one-time codes (10 min, single use, 5 tries, rate limited, only hashes
+  stored) → `__Host-` HttpOnly Secure SameSite=Strict session; or a Cloudflare Access JWT
+  (RS256, aud, iss, exp, nbf) from the header or the `CF_Authorization` cookie. Without either
+  configured, staff routes answer 503. Mutations are same-origin JSON only (CSRF).
+- **Notifications**: outbox rows unique per order/recipient/kind; no personal data in
+  messages; failures recorded and retried; never the source of truth.
+- **Acceptance timeout** (`ACCEPTANCE_TIMEOUT_MINUTES`, default 30, `0` = off — policy to be
+  confirmed by the owner): counts only from when the restaurant was demonstrably informed (alert
+  delivered or order shown on the panel). Orders nobody could see are never declined automatically.
+- **Payments modes**: no key or no webhook secret → disabled; `STRIPE_TEST_MODE` defaults to
+  `"true"` (only test keys); live keys need `STRIPE_TEST_MODE="false"` and
+  `PAYMENTS_LIVE_ENABLED="true"`. `STRIPE_API_BASE`, `TELEGRAM_API_BASE` and `ACCESS_CERTS_URL`
+  overrides are honoured only in test mode and only for localhost (local mock stack).
+
+## Stripe webhook events
+
+`checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+`checkout.session.async_payment_failed`, `checkout.session.expired`,
+`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
+`payment_intent.payment_failed`, `payment_intent.canceled`, `payment_intent.processing`,
+`charge.refunded`, `charge.expired`, `refund.created`, `refund.updated`, `refund.failed`.
+`node ../../scripts/setup/stripe-webhook.mjs https://<worker> --save` creates the endpoint
+with exactly this list and the pinned API version (`2026-09-30.endive`).
+
+## Configuration
+
+Secrets (`wrangler secret put`): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `TELEGRAM_BOT_TOKEN`.
+Vars (`wrangler.jsonc`): `STRIPE_TEST_MODE`, `PAYMENTS_LIVE_ENABLED`, `STRIPE_CAPTURE_MODE`
+(`manual` | `per-method`), `CORS_ALLOWED_ORIGIN`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`
+(placeholders `{storefront} {orderId} {token} {lang}`), `PANEL_URL`, `TELEGRAM_CHAT_IDS`,
+`PREP_TIME_OPTIONS`, `ACCEPTANCE_REMINDER_MINUTES`, `ACCEPTANCE_TIMEOUT_MINUTES`,
+`WORKER_ROLE` (`all` | `api` | `panel`: split the public API and an Access-protected panel
+into two Workers sharing the D1 database), `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`.
+
+## Development and tests
 
 ```bash
-cd workers/shang-hai-orders
-npm install
-cp .dev.vars.example .dev.vars          # Stripe TEST keys only
-npm run db:migrate:local                # local D1 (SQLite under .wrangler/)
-npm run dev                             # http://localhost:8787
+npm test                        # repo root: engine + Worker (D1 via node:sqlite, fake Stripe/Telegram)
+npm run demo:local              # repo root: full local demo (wrangler dev + fake cloud + storefronts)
+npm run test:e2e:ordering       # repo root: end-to-end journeys on the local stack
+cd workers/shang-hai-orders && npx tsc -p tsconfig.json && npm run build:dry-run
 ```
-
-With the [Stripe CLI](https://docs.stripe.com/stripe-cli) (if installed), forward test
-webhooks and copy the printed `whsec_...` into `.dev.vars`:
-
-```bash
-stripe listen --forward-to localhost:8787/api/stripe/webhook \
-  --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired
-```
-
-Point a local storefront build at it:
-
-```bash
-NEXT_PUBLIC_ORDER_API_BASE_URL=http://localhost:8787 npm run dev   # repo root
-```
-
-Test card: `4242 4242 4242 4242`, any future date, any CVC (test mode only).
-
-Tests run from the repo root with the rest of the suite (`npm test`): the Worker is
-exercised end to end against an in-memory SQLite D1 that applies the real migration,
-a fake Stripe API, real webhook signatures and a locally generated Access key pair.
-Type-check: `npm run typecheck` here (Workers types) and at the root.
 
 ## Deploying (test mode)
 
-Requires a Cloudflare account (`npx --no-install wrangler login`, done by a person).
-
-```bash
-cd workers/shang-hai-orders
-npx --no-install wrangler d1 create shang-hai-orders   # put the id in wrangler.jsonc
-npm run db:migrate:remote
-npx --no-install wrangler secret put STRIPE_SECRET_KEY      # sk_test_...
-npx --no-install wrangler secret put STRIPE_WEBHOOK_SECRET  # whsec_... (see below)
-npm run deploy
-```
-
-Stripe (Dashboard in **test mode** → Developers → Webhooks → Add endpoint):
-URL `https://<worker-host>/api/stripe/webhook`, events
-`checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-`checkout.session.async_payment_failed`, `checkout.session.expired`. Copy its signing
-secret into `STRIPE_WEBHOOK_SECRET`. Requests pin `Stripe-Version: 2026-09-30.endive`
-(`src/config.ts`); create the endpoint with the same API version.
-
-Frontend: build the static site with
-`NEXT_PUBLIC_ORDER_API_BASE_URL=https://<worker-host>` (for GitHub Pages, add it to the
-build step of `.github/workflows/deploy.yml` as an env var) and make sure that origin is
-in `CORS_ALLOWED_ORIGIN`. Leaving it empty keeps the storefronts in demo mode.
-
-## Staff panel (Cloudflare Access)
-
-1. Zero Trust → Access → Applications → Add a **self-hosted** application for the
-   Worker host with paths `/admin` and `/api/admin/*` (for `*.workers.dev` enable
-   Access on the Worker's domain settings, or use a custom domain).
-2. Policy: allow the restaurant staff's emails (one-time PIN or an identity provider).
-3. Copy the application's **AUD tag** to `ACCESS_AUD` and the team domain
-   (`<team>.cloudflareaccess.com`) to `ACCESS_TEAM_DOMAIN` in `wrangler.jsonc`, deploy.
-4. Open `https://<worker-host>/admin`.
-
-Until both values are set, `/admin` and `/api/admin/*` answer 503.
+See `SHANG_HAI_PEDIDOS.md` §4 (D1 create, migrations, secrets, Stripe webhook, Telegram bot,
+`npm run deploy`, storefront build with `NEXT_PUBLIC_ORDER_API_BASE_URL`). Nothing is deployed
+automatically from this repository, and live payments stay disabled until the go-live
+checklist below is complete.
 
 ## Go-live checklist (requires the owner's explicit approval)
 
-Live payments must not be enabled without all of the following:
-
 - [ ] Written approval from the restaurant owner to take online payments.
-- [ ] The owner's own Stripe account, verified (business details, bank account, terms).
-- [ ] Confirmed menu prices (no `pending`/`conflicting` items the owner wants sold),
-      allergen information, pickup hours and preparation time.
-- [ ] Legal texts: terms of sale, privacy policy, refund/cancellation policy, company
-      details; alcohol sale policy (ID check at pickup).
-- [ ] Staff panel protected by Cloudflare Access and tested by the restaurant.
-- [ ] Live webhook endpoint created with the live signing secret.
+- [ ] The owner's own Stripe account, verified; Link/wallets reviewed in Payment methods.
+- [ ] Confirmed prices, allergens, pickup hours, prep-time options and the acceptance timeout policy.
+- [ ] Legal texts (terms, privacy, refunds, company details, alcohol policy).
+- [ ] Staff sign-in tested on the restaurant's phones; Telegram chats confirmed.
+- [ ] Live webhook endpoint with the live signing secret.
 - [ ] End-to-end test in test mode on the production domain.
-- [ ] Then, and only then: live key as `STRIPE_SECRET_KEY`, `STRIPE_TEST_MODE="false"`,
-      `PAYMENTS_LIVE_ENABLED="true"`, redeploy, and place one small real order.
+- [ ] Then: live key, `STRIPE_TEST_MODE="false"`, `PAYMENTS_LIVE_ENABLED="true"`, redeploy, one small real order.
