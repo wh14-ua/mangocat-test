@@ -1,7 +1,6 @@
-import { shangHaiPhotos } from "@/data/shang-hai/photos";
-import type { PhotoLike } from "@/components/shang-hai/shared/ShPhoto";
+import { shangHaiPhotos, type Photo } from "@/data/shang-hai/photos";
 
 /** Wok After Dark photo slots. Provisional, illustrative, licensed (see /creditos/). */
 export type WokPhotoSlot = "fire" | "noodles" | "dumplings" | "sushi" | "street";
 
-export const wokPhotos: Partial<Record<WokPhotoSlot, PhotoLike>> = shangHaiPhotos.wokAfterDark;
+export const wokPhotos: Partial<Record<WokPhotoSlot, Photo>> = shangHaiPhotos.wokAfterDark;
