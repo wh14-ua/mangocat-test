@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { categoryDisplayName, shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { categoryName } from "@/lib/shang-hai/menu-i18n";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { useWokUI } from "./WokUI";
+import { useWokText } from "./WokLanguage";
 
 const CATEGORIES = shangHaiCatalog.catalog.categories;
 
@@ -12,6 +15,8 @@ export function CategoryTicker() {
   const { activeCategory } = useWokUI();
   const reduce = useReducedMotion();
   const scroller = useRef<HTMLDivElement>(null);
+  const { locale } = useLocale();
+  const t = useWokText();
 
   useEffect(() => {
     const box = scroller.current;
@@ -27,7 +32,7 @@ export function CategoryTicker() {
 
   return (
     <nav
-      aria-label="Categorías de la carta"
+      aria-label={t.carta.tickerLabel}
       className="sticky top-14 z-30 -mx-4 mt-12 border-y border-[var(--wok-line)] bg-[var(--wok-petrol)] sm:-mx-6 lg:top-0 lg:-mx-12"
     >
       <div ref={scroller} className="wok-ticker flex overflow-x-auto px-2 sm:px-4 lg:px-10">
@@ -44,7 +49,7 @@ export function CategoryTicker() {
                 (active ? "text-[var(--wok-orange)]" : "text-[var(--wok-metal-light)] hover:text-[var(--wok-white)]")
               }
             >
-              {categoryDisplayName(c.id, c.name)}
+              {categoryName(c, locale)}
               {active && (
                 <motion.span
                   layoutId="wok-ticker-bar"

@@ -1,15 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import {
-  categoryDisplayName,
-  MENU_SECTIONS,
-  sectionOfCategory,
-  shangHaiCatalog,
-} from "@/lib/shang-hai/catalog";
+import { MENU_SECTIONS, sectionOfCategory, shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { categoryName, sectionName } from "@/lib/shang-hai/menu-i18n";
+import { COMMON_TEXT } from "@/lib/shang-hai/i18n/common";
 import { useDialog } from "@/hooks/shang-hai/useDialog";
 import { useCart } from "@/hooks/shang-hai/useCart";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { scrollToId, useWokUI } from "./WokUI";
+import { useWokText, WokLanguageSwitch } from "./WokLanguage";
 
 /** "SH" block. The letters are CSS-generated so links keep their visible label as name. */
 export function Monogram({ className = "" }: { className?: string }) {
@@ -24,14 +23,16 @@ export function Monogram({ className = "" }: { className?: string }) {
 /** Desktop: a fixed left rail with the four sections as vertical labels. */
 export function SideRail() {
   const { activeCategory } = useWokUI();
+  const { locale } = useLocale();
+  const t = useWokText();
   const atInfo = activeCategory === "info";
   const activeSection = activeCategory && !atInfo ? sectionOfCategory(activeCategory) : null;
   return (
     <aside className="sticky top-0 z-40 hidden h-[100dvh] w-[76px] shrink-0 flex-col items-center border-r border-[var(--wok-line)] bg-[var(--wok-petrol)] pb-12 pt-5 lg:flex">
-      <a href="#inicio" aria-label="SHANG HAI, volver al inicio" className="block">
+      <a href="#inicio" aria-label={t.nav.brandHome} className="block">
         <Monogram className="size-12 text-[1.6rem]" />
       </a>
-      <nav aria-label="Secciones de la carta" className="mt-6 flex flex-1 flex-col items-center justify-center gap-1">
+      <nav aria-label={t.nav.sections} className="mt-6 flex flex-1 flex-col items-center justify-center gap-1">
         {MENU_SECTIONS.map((s) => {
           const active = s.id === activeSection;
           return (
@@ -45,7 +46,7 @@ export function SideRail() {
               }
             >
               {active && <span aria-hidden className="absolute inset-y-2 left-0 w-1 bg-[var(--wok-orange)]" />}
-              <span className="wok-rail-label">{s.name}</span>
+              <span className="wok-rail-label">{sectionName(s.id, locale)}</span>
             </a>
           );
         })}
@@ -59,9 +60,10 @@ export function SideRail() {
           }
         >
           {atInfo && <span aria-hidden className="absolute inset-y-2 left-0 w-1 bg-[var(--wok-orange)]" />}
-          <span className="wok-rail-label">Recogida</span>
+          <span className="wok-rail-label">{t.nav.pickup}</span>
         </a>
       </nav>
+      <WokLanguageSwitch variant="rail" className="mt-4" />
     </aside>
   );
 }
@@ -69,27 +71,34 @@ export function SideRail() {
 /** Mobile and tablet: brand bar with the menu drawer trigger. */
 export function TopBar() {
   const { openMenu, menuOpen } = useWokUI();
+  const t = useWokText();
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-[var(--wok-line)] bg-[var(--wok-petrol)] pl-3 pr-1 sm:pl-5 lg:hidden">
-      <a href="#inicio" className="flex min-w-0 items-center gap-2.5">
-        <Monogram className="size-9 text-[1.15rem]" />
-        <span className="wok-display truncate text-[1.6rem] leading-none">Shang Hai</span>
-        <span className="wok-sr">, volver al inicio</span>
-      </a>
-      <button
-        type="button"
-        onClick={openMenu}
-        aria-haspopup="dialog"
-        aria-expanded={menuOpen}
-        className="wok-cond flex h-12 items-center gap-2.5 px-3 text-[0.9375rem] text-[var(--wok-white)]"
-      >
-        Menú
-        <span aria-hidden className="flex w-6 flex-col gap-[5px]">
-          <span className="h-[3px] bg-current" />
-          <span className="h-[3px] w-4 bg-[var(--wok-orange)]" />
-          <span className="h-[3px] bg-current" />
-        </span>
-      </button>
+      {/* The wordmark folds into the SH block when the bar is too narrow for it and ES | EN. */}
+      <div className="wok-bar-brand min-w-0 flex-1">
+        <a href="#inicio" className="flex w-fit max-w-full items-center gap-2.5">
+          <Monogram className="size-9 text-[1.15rem]" />
+          <span className="wok-bar-word wok-display truncate text-[1.6rem] leading-none">Shang Hai</span>
+          <span className="wok-sr">{t.nav.backToTop}</span>
+        </a>
+      </div>
+      <div className="flex shrink-0 items-center">
+        <WokLanguageSwitch />
+        <button
+          type="button"
+          onClick={openMenu}
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          className="wok-cond flex h-12 items-center gap-2.5 px-3 text-[0.9375rem] text-[var(--wok-white)]"
+        >
+          {t.nav.menu}
+          <span aria-hidden className="flex w-6 flex-col gap-[5px]">
+            <span className="h-[3px] bg-current" />
+            <span className="h-[3px] w-4 bg-[var(--wok-orange)]" />
+            <span className="h-[3px] bg-current" />
+          </span>
+        </button>
+      </div>
     </header>
   );
 }
@@ -98,6 +107,9 @@ export function TopBar() {
 export function MenuDrawer() {
   const { menuOpen, closeMenu, openCart, activeCategory } = useWokUI();
   const { itemCount } = useCart();
+  const { locale } = useLocale();
+  const t = useWokText();
+  const common = COMMON_TEXT[locale];
   const reduce = useReducedMotion();
   const ref = useDialog<HTMLDivElement>(menuOpen, closeMenu);
 
@@ -133,18 +145,24 @@ export function MenuDrawer() {
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--wok-line)] pl-4 pr-1">
               <h2 id="wok-drawer-title" className="wok-display text-[1.75rem]">
-                Menú
+                {t.nav.menu}
               </h2>
               <button
                 type="button"
                 onClick={closeMenu}
                 className="wok-cond flex h-12 items-center gap-2 px-3 text-[0.9375rem]"
               >
-                Cerrar
+                {t.nav.close}
                 <span aria-hidden className="relative block size-4 before:absolute before:inset-x-0 before:top-1/2 before:h-[3px] before:-translate-y-1/2 before:rotate-45 before:bg-current after:absolute after:inset-x-0 after:top-1/2 after:h-[3px] after:-translate-y-1/2 after:-rotate-45 after:bg-current" />
               </button>
             </div>
-            <nav aria-label="Carta" className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-4">
+            <nav aria-label={t.nav.drawerNav} className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-4">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--wok-line)] pb-3">
+                <p aria-hidden className="wok-cond text-[0.8125rem] text-[var(--wok-metal-light)]">
+                  {common.language.groupLabel}
+                </p>
+                <WokLanguageSwitch className="-mr-1" />
+              </div>
               {MENU_SECTIONS.map((s) => (
                 <div key={s.id} className="border-b border-[var(--wok-line)] py-4">
                   <a
@@ -152,7 +170,7 @@ export function MenuDrawer() {
                     onClick={jump(`sec-${s.id}`)}
                     className="wok-display block text-[2.6rem] hover:text-[var(--wok-orange)]"
                   >
-                    {s.name}
+                    {sectionName(s.id, locale)}
                   </a>
                   <ul className="mt-3 grid grid-cols-2 gap-x-3">
                     {s.categoryIds.map((cid) => {
@@ -170,7 +188,7 @@ export function MenuDrawer() {
                               (active ? "text-[var(--wok-orange)]" : "text-[var(--wok-metal-light)] hover:text-[var(--wok-white)]")
                             }
                           >
-                            {categoryDisplayName(cid, cat.name)}
+                            {categoryName(cat, locale)}
                           </a>
                         </li>
                       );
@@ -180,7 +198,7 @@ export function MenuDrawer() {
               ))}
               <div className="grid gap-2 pt-5">
                 <a href="#info" onClick={jump("info")} className="wok-btn wok-btn--line justify-between">
-                  Recogida y horario
+                  {t.nav.pickupAndHours}
                 </a>
                 <button
                   type="button"
@@ -190,7 +208,7 @@ export function MenuDrawer() {
                     openCart();
                   }}
                 >
-                  Tu ticket <span className="wok-nums">{itemCount}</span>
+                  {t.nav.ticket} <span className="wok-nums">{itemCount}</span>
                 </button>
               </div>
             </nav>
