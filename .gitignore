@@ -69,3 +69,4 @@ node_modules/
 # local end-to-end stack (scripts/local-stack)
 /out-local/
 /.local-stack/
+/.local-stack-e2e/

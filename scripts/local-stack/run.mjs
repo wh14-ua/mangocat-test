@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const WORKER_DIR = join(ROOT, "workers/shang-hai-orders");
-const STATE_DIR = join(ROOT, ".local-stack");
+const STATE_DIR = join(ROOT, process.env.LOCAL_STACK_STATE ?? ".local-stack");
 const args = new Set(process.argv.slice(2));
 
 export const LOCAL = {
@@ -138,9 +138,29 @@ export function startCronLoop(everyMs = 20_000) {
   }, everyMs);
 }
 
+/** Worker + fake cloud only, with a fresh database (used by the E2E suite). */
+export async function startBackend({ fresh = false, cronEveryMs = 20_000 } = {}) {
+  if (fresh) rmSync(STATE_DIR, { recursive: true, force: true });
+  migrate();
+  startCloud();
+  startWorker();
+  await waitFor(`${cloud}/`, "fake cloud");
+  await waitFor(`${worker}/api/health`, "Worker", 90_000);
+  startCronLoop(cronEveryMs);
+}
+
 async function main() {
   process.on("SIGINT", stopAll);
   process.on("SIGTERM", stopAll);
+  if (args.has("--build-only")) {
+    buildSite();
+    return;
+  }
+  if (args.has("--backend-only")) {
+    await startBackend({ fresh: args.has("--fresh"), cronEveryMs: Number(process.env.CRON_EVERY_MS ?? 20_000) });
+    console.log("Backend ready");
+    return;
+  }
   if (!args.has("--no-site") && (args.has("--build") || !existsSync(join(ROOT, "out-local")))) buildSite();
   migrate();
   startCloud();

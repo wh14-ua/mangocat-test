@@ -17,7 +17,7 @@
     "lint:shang-hai": "eslint src/lib src/hooks src/components/shang-hai src/app/showcase/shang-hai src/data scripts tests workers",
     "previews:shang-hai": "node scripts/capture-shang-hai-previews.mjs",
     "demo:local": "node scripts/local-stack/run.mjs",
-    "test:e2e:ordering": "playwright test --config playwright.ordering.config.ts"
+    "test:e2e:ordering": "node scripts/local-stack/run.mjs --build-only && playwright test --config playwright.ordering.config.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
