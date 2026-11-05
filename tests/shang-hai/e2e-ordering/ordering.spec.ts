@@ -32,8 +32,18 @@ async function control(path: string, body: unknown) {
   await fetch(`${CLOUD}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
-/** Staff signed in through the real sign-in flow (code delivered by the fake Telegram). */
-async function staffSession(): Promise<{ api: APIRequestContext; cookie: string }> {
+let cachedStaff: Promise<{ api: APIRequestContext; cookie: string }> | null = null;
+
+/**
+ * Staff signed in through the real sign-in flow (code delivered by the fake Telegram), once
+ * per run like a real phone: code requests are rate limited (one every 30 s, 8 per hour).
+ */
+function staffSession(): Promise<{ api: APIRequestContext; cookie: string }> {
+  cachedStaff ??= signIn();
+  return cachedStaff;
+}
+
+async function signIn(): Promise<{ api: APIRequestContext; cookie: string }> {
   const api = await playwrightRequest.newContext({ baseURL: WORKER, extraHTTPHeaders: { Origin: WORKER } });
   expect((await api.post("/api/admin/auth/code", { data: {} })).status()).toBe(202);
   const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
@@ -110,6 +120,7 @@ for (const storefront of ["bento-club", "ink-house", "wok-after-dark"] as const)
     await expect(page.getByText(/listo hacia las \d{2}:\d{2}/i).first()).toBeVisible();
     const pi = (await cloudState()).intents.find((i) => i.order === orderId);
     expect(pi?.status).toBe("succeeded");
+    expect((await cloudState()).intents.filter((i) => i.order === orderId)).toHaveLength(1);
 
     expect((await staffPost(staff, `/api/admin/orders/${orderId}/ready`)).status).toBe(200);
     await expect(status).toHaveAttribute("data-status", "ready", { timeout: 30_000 });
@@ -156,15 +167,15 @@ test("a declined card can be retried; a cancelled payment returns to the order w
   await expect(page.getByTestId("checkout-pay").filter({ visible: true })).toBeVisible();
 });
 
-test("two staff phones accept at the same time: only one capture", async ({ page }) => {
+test("two ACEPTAR taps at the same time: only one capture", async ({ page }) => {
   await orderOneDish(page, "bento-club");
   await fillCheckout(page);
   const orderId = await authorise(page);
-  const [a, b] = await Promise.all([staffSession(), staffSession().catch(() => null)]);
-  const second = b ?? (await staffSession());
+  // The guard is on the order, whatever the device (two distinct sessions: Worker unit tests).
+  const staff = await staffSession();
   const results = await Promise.all([
-    staffPost(a, `/api/admin/orders/${orderId}/accept`, { prepMinutes: 15 }),
-    staffPost(second, `/api/admin/orders/${orderId}/accept`, { prepMinutes: 30 }),
+    staffPost(staff, `/api/admin/orders/${orderId}/accept`, { prepMinutes: 15 }),
+    staffPost(staff, `/api/admin/orders/${orderId}/accept`, { prepMinutes: 30 }),
   ]);
   expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
   await expect(visible(page.getByTestId("order-status"))).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
