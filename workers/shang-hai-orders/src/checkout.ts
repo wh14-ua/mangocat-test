@@ -1,7 +1,9 @@
 import { prepareOrder } from "../../../src/lib/commerce/checkout/prepare-order";
+import type { PricedLine } from "../../../src/lib/commerce/types";
 import { shangHaiCatalog, shangHaiOrdering } from "../../../src/lib/shang-hai/catalog";
+import { itemFullName, selectionsLabel } from "../../../src/lib/shang-hai/menu-i18n";
 import { STOREFRONT_IDS } from "../../../src/lib/shang-hai/storefronts";
-import { buildReturnUrls, resolvePayments } from "./config";
+import { buildReturnUrls, captureMode, isAllowedCheckoutUrl, resolvePayments, stripeApiBase } from "./config";
 import { newOrderId, newOrderToken, sha256Hex } from "./crypto";
 import { attachStripeSession, insertOrder, transitionOrder, type NewOrder } from "./db";
 import type { Deps, Env } from "./env";
@@ -9,6 +11,16 @@ import { clientIp, errorJson, isAllowedOrigin, isJsonRequest, json, readBodyLimi
 import { allow } from "./rate-limit";
 import { buildCheckoutSessionForm, createCheckoutSession } from "./stripe";
 import { log } from "./log";
+
+/** Line names as the customer reads them on Stripe's page (stored lines stay in Spanish for the kitchen). */
+function customerLines(lines: PricedLine[], locale: "es" | "en"): PricedLine[] {
+  if (locale === "es") return lines;
+  return lines.map((line) => {
+    const item = shangHaiCatalog.byId.get(line.itemId);
+    if (!item) return line;
+    return { ...line, name: itemFullName(item, locale), optionsLabel: selectionsLabel(item, line.selections, locale) };
+  });
+}
 
 /**
  * POST /api/checkout
@@ -63,10 +75,11 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
     }
   }
   const { request: order, quote } = prepared.value;
+  const locale = order.locale ?? "es";
 
   const orderId = newOrderId(now);
   const token = newOrderToken();
-  const urls = buildReturnUrls(env, { storefront: order.storefront, orderId, token });
+  const urls = buildReturnUrls(env, { storefront: order.storefront, orderId, token, locale });
   if (!urls) {
     log("checkout.config-error", { reason: "invalid-return-url" });
     return errorJson("server", 500);
@@ -76,8 +89,8 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
   const row: NewOrder = {
     id: orderId,
     token_hash: await sha256Hex(token),
-    status: "pending",
     storefront: order.storefront,
+    locale,
     fulfillment: order.fulfillment,
     catalog_id: shangHaiCatalog.catalog.catalogId,
     catalog_version: shangHaiCatalog.catalog.version,
@@ -99,8 +112,9 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
     updated_at: timestamp,
   };
 
+  let orderNumber: number;
   try {
-    await insertOrder(env.DB, row, quote.lines);
+    orderNumber = await insertOrder(env.DB, row, quote.lines);
   } catch (error) {
     log("checkout.store-failed", { message: error instanceof Error ? error.message : "unknown" });
     return errorJson("server", 500);
@@ -108,17 +122,25 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
 
   const form = buildCheckoutSessionForm({
     orderId,
+    orderNumber,
     storefront: order.storefront,
     catalogVersion: shangHaiCatalog.catalog.version,
     customerEmail: order.customer.email,
-    lines: quote.lines,
+    lines: customerLines(quote.lines, locale),
     deliveryFeeCents: quote.deliveryFeeCents,
     successUrl: urls.successUrl,
     cancelUrl: urls.cancelUrl,
     now,
     fulfillment: order.fulfillment,
+    locale,
+    captureMode: captureMode(env),
   });
-  const created = await createCheckoutSession(deps.fetch, payments.secretKey, form, `checkout-${orderId}`);
+  const created = await createCheckoutSession(
+    { fetch: deps.fetch, secretKey: payments.secretKey, apiBase: stripeApiBase(env) },
+    form,
+    `checkout-${orderId}`,
+    (url) => isAllowedCheckoutUrl(env, url),
+  );
   if (!created.ok) {
     log("checkout.stripe-failed", { orderId, status: created.status });
     await transitionOrder(env.DB, orderId, "cancelled", {
@@ -137,13 +159,15 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
   }
   log("checkout.created", {
     orderId,
+    number: orderNumber,
     storefront: order.storefront,
+    locale,
     totalCents: quote.totalCents,
     lines: quote.lines.length,
     mode: payments.mode,
   });
   return json(
-    { orderId, orderToken: token, checkoutUrl: created.session.url, mode: payments.mode },
+    { orderId, orderNumber, orderToken: token, checkoutUrl: created.session.url, mode: payments.mode },
     201,
   );
 }

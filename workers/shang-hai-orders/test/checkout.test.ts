@@ -35,7 +35,8 @@ describe("POST /api/checkout", () => {
     const { env, net, res, body } = await checkout(tampered);
     expect(res.status).toBe(201);
     expect(body).toMatchObject({ mode: "stripe-test" });
-    expect(String(body?.checkoutUrl)).toMatch(/^https:\/\/checkout\.stripe\.com\/c\/pay\/cs_test_fake\d+$/);
+    expect(String(body?.checkoutUrl)).toMatch(/^https:\/\/checkout\.stripe\.com\/c\/pay\/cs_test_fake[a-z0-9]+$/);
+    expect(body?.orderNumber).toBe(1001);
     const orderId = String(body?.orderId);
     expect(orderId).toMatch(/^SH-261029-[A-Z0-9]{6}$/);
     expect(String(body?.orderToken)).toMatch(/^[A-Za-z0-9_-]{43}$/);
@@ -43,6 +44,9 @@ describe("POST /api/checkout", () => {
     const row = orderRow(env, orderId);
     expect(row).toMatchObject({
       status: "pending",
+      payment_status: "unpaid",
+      number: 1001,
+      locale: "es",
       total_cents: EXPECTED_TOTAL,
       subtotal_cents: EXPECTED_TOTAL,
       delivery_fee_cents: 0,
@@ -81,12 +85,17 @@ describe("POST /api/checkout", () => {
       "line_items[1][price_data][unit_amount]": "765",
       "line_items[1][quantity]": "1",
       "metadata[order_id]": orderId,
+      "metadata[order_number]": "1001",
       "metadata[storefront]": "ink-house",
       "payment_intent_data[metadata][order_id]": orderId,
+      // Authorise only: the restaurant's acceptance captures the payment.
+      "payment_intent_data[capture_method]": "manual",
     });
+    // The pinned API version rejects payment_method_types: methods come from the Dashboard.
+    expect([...form.keys()].some((k) => k.startsWith("payment_method_types"))).toBe(false);
     const token = String(body?.orderToken);
     expect(form.get("success_url")).toBe(
-      `https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/ink-house/pedido/estado/?pedido=${orderId}&t=${token}`,
+      `https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/ink-house/pedido/estado/?pedido=${orderId}&t=${token}&lang=es`,
     );
     expect(form.get("cancel_url")).toContain("/ink-house/pedido/?cancelado=1");
     const expires = Number(form.get("expires_at"));
@@ -200,6 +209,50 @@ describe("POST /api/checkout", () => {
     const b = await createOrder(env);
     expect(a.orderId).not.toBe(b.orderId);
     expect(a.orderToken).not.toBe(b.orderToken);
+  });
+});
+
+describe("checkout language and capture mode", () => {
+  it("opens Stripe Checkout in English with English line names, but stores Spanish names for the kitchen", async () => {
+    const { env, net, res, body } = await checkout(validCheckout({ locale: "en", lines: [{ itemId: "maki-salmon", quantity: 1 }], expectedTotalCents: undefined }));
+    expect(res.status).toBe(201);
+    const form = net.stripeCalls[0].form;
+    expect(form.get("locale")).toBe("en-GB");
+    expect(form.get("line_items[0][price_data][product_data][name]")).toBe("Salmon maki (8 pieces)");
+    expect(form.get("success_url")).toMatch(/&lang=en$/);
+    expect(form.get("cancel_url")).toMatch(/&lang=en$/);
+    const orderId = String(body?.orderId);
+    expect(orderRow(env, orderId)).toMatchObject({ locale: "en" });
+    const item = env.DB.raw.prepare("SELECT name FROM order_items WHERE order_id = ?").get(orderId) as { name: string };
+    expect(item.name).toBe("Maki Salmón (8 piezas)");
+  });
+
+  it("answers validation errors in the customer's language", async () => {
+    const { res, body } = await checkout(validCheckout({ locale: "en", customer: { name: "", phone: "1", email: "x" } }));
+    expect(res.status).toBe(422);
+    expect((body?.fieldErrors as Record<string, string>)["customer.phone"]).toBe("Please check the phone number, for example 612 345 678.");
+  });
+
+  it("falls back to Spanish for an unknown language and never sends it to Stripe", async () => {
+    const { net, res } = await checkout(validCheckout({ locale: "<script>" }));
+    expect(res.status).toBe(201);
+    expect(net.stripeCalls[0].form.get("locale")).toBe("es");
+  });
+
+  it("per-method capture authorises cards, Link and wallets and charges other methods at once", async () => {
+    const { net, res } = await checkout(validCheckout(), { STRIPE_CAPTURE_MODE: "per-method" });
+    expect(res.status).toBe(201);
+    const form = net.stripeCalls[0].form;
+    expect(form.get("payment_intent_data[capture_method]")).toBeNull();
+    expect(form.get("payment_method_options[card][capture_method]")).toBe("manual");
+    expect(form.get("payment_method_options[link][capture_method]")).toBe("manual");
+  });
+
+  it("numbers orders consecutively", async () => {
+    const env = makeEnv();
+    const first = await createOrder(env);
+    const second = await createOrder(env);
+    expect([first.orderNumber, second.orderNumber]).toEqual([1001, 1002]);
   });
 });
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { OrderSummary } from "@/lib/commerce/types";
-import type { DemoRestaurantAction } from "@/lib/commerce/checkout/gateway";
+import type { DemoRestaurantAction, OrderLookup } from "@/lib/commerce/checkout/gateway";
 import { describeOrder } from "@/lib/commerce/order-view";
 import { getOrderGateway } from "@/lib/shang-hai/checkout";
 import { useCart } from "./useCart";
@@ -42,7 +42,7 @@ export function useOrderStatus() {
   const kickRef = useRef<() => void>(() => {});
   const gateway = getOrderGateway();
 
-  const apply = useCallback((res: Awaited<ReturnType<typeof gateway.getOrder>>) => {
+  const apply = useCallback((res: OrderLookup) => {
     if (res.ok) {
       setState({ phase: "ready", order: res.order });
       setLastUpdated(new Date());

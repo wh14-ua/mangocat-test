@@ -1,160 +1,96 @@
 import { describe, expect, it } from "vitest";
-import {
-  call,
-  count,
-  createOrder,
-  fakeNetwork,
-  makeDeps,
-  makeEnv,
-  NOW,
-  orderRow,
-  sessionEvent,
-  signedWebhook,
-  WEBHOOK_SECRET,
-} from "./helpers";
-import { hmacSha256Hex } from "../src/crypto";
 import { verifyStripeSignature } from "../src/stripe";
+import { hmacSha256Hex } from "../src/crypto";
+import { count, createOrder, deliver, makeEnv, NOW, orderRow, pay, sessionEvent, signedWebhook, WEBHOOK_SECRET, world } from "./helpers";
 
-const TOTAL = 2 * 1945 + 765;
+describe("Stripe signature verification", () => {
+  const body = JSON.stringify({ id: "evt_1", type: "checkout.session.completed" });
+  const t = Math.floor(NOW.getTime() / 1000);
 
-async function paidOrder() {
-  const env = makeEnv();
-  const order = await createOrder(env);
-  const session = {
-    id: order.sessionId,
-    client_reference_id: order.orderId,
-    metadata: { order_id: order.orderId },
-    amount_total: TOTAL,
-    payment_status: "paid",
-    payment_intent: "pi_test_123",
-  };
-  return { env, order, session };
-}
-
-describe("Stripe webhook", () => {
-  it("rejects missing, forged and stale signatures", async () => {
-    const { env, session } = await paidOrder();
-    const event = sessionEvent("checkout.session.completed", session);
-    const unsigned = await call(env, makeDeps(fakeNetwork().fetch), "/api/stripe/webhook", {
-      method: "POST",
-      body: JSON.stringify(event),
-    });
-    expect(unsigned.status).toBe(400);
-    expect((await signedWebhook(env, event, { secret: "whsec_wrong" })).status).toBe(400);
-    const stale = Math.floor(NOW.getTime() / 1000) - 10 * 60;
-    expect((await signedWebhook(env, event, { timestamp: stale })).status).toBe(400);
-    expect(count(env, "SELECT COUNT(*) AS n FROM stripe_events")).toBe(0);
-  });
-
-  it("accepts any of several v1 signatures (secret rotation) and ignores v0", async () => {
-    const body = '{"id":"evt_x"}';
-    const t = Math.floor(NOW.getTime() / 1000);
+  it("accepts a valid v1 signature and any of several (secret rotation)", async () => {
     const good = await hmacSha256Hex(WEBHOOK_SECRET, `${t}.${body}`);
-    const header = `t=${t},v0=${"0".repeat(64)},v1=${"a".repeat(64)},v1=${good}`;
-    expect(await verifyStripeSignature(body, header, WEBHOOK_SECRET, t)).toEqual({ ok: true, timestamp: t });
-    expect(await verifyStripeSignature(body, `t=${t},v0=${good}`, WEBHOOK_SECRET, t)).toMatchObject({ ok: false });
-    expect(await verifyStripeSignature(body + " ", `t=${t},v1=${good}`, WEBHOOK_SECRET, t)).toMatchObject({ ok: false });
+    expect(await verifyStripeSignature(body, `t=${t},v1=${good}`, WEBHOOK_SECRET, t)).toEqual({ ok: true, timestamp: t });
+    expect((await verifyStripeSignature(body, `t=${t},v1=${"0".repeat(64)},v1=${good}`, WEBHOOK_SECRET, t)).ok).toBe(true);
   });
 
-  it("marks the order paid on checkout.session.completed with payment_status=paid", async () => {
-    const { env, order, session } = await paidOrder();
-    const res = await signedWebhook(env, sessionEvent("checkout.session.completed", session, { id: "evt_paid" }));
-    expect(res.status).toBe(200);
-    expect(orderRow(env, order.orderId)).toMatchObject({
-      status: "paid",
-      stripe_payment_intent_id: "pi_test_123",
-      stripe_payment_status: "paid",
-      stripe_amount_total: TOTAL,
-      paid_at: NOW.toISOString(),
-    });
-    expect(env.DB.raw.prepare("SELECT status, order_id FROM stripe_events WHERE id = 'evt_paid'").get()).toMatchObject({
-      status: "processed",
-      order_id: order.orderId,
-    });
+  it("rejects tampered bodies, old timestamps and malformed headers", async () => {
+    const good = await hmacSha256Hex(WEBHOOK_SECRET, `${t}.${body}`);
+    expect(await verifyStripeSignature(`${body} `, `t=${t},v1=${good}`, WEBHOOK_SECRET, t)).toMatchObject({ reason: "no-matching-signature" });
+    expect(await verifyStripeSignature(body, `t=${t},v1=${good}`, WEBHOOK_SECRET, t + 301)).toMatchObject({ reason: "timestamp-out-of-tolerance" });
+    expect(await verifyStripeSignature(body, `v1=${good}`, WEBHOOK_SECRET, t)).toMatchObject({ reason: "malformed-header" });
+    expect(await verifyStripeSignature(body, null, WEBHOOK_SECRET, t)).toMatchObject({ reason: "missing-header" });
+    expect(await verifyStripeSignature(body, `t=${t},v0=${good}`, WEBHOOK_SECRET, t)).toMatchObject({ reason: "malformed-header" });
   });
 
-  it("processes the same event only once", async () => {
-    const { env, order, session } = await paidOrder();
-    const event = sessionEvent("checkout.session.completed", session, { id: "evt_dup" });
-    await signedWebhook(env, event);
-    const eventsAfterFirst = count(env, "SELECT COUNT(*) AS n FROM order_events WHERE order_id = ?", order.orderId);
-    const second = await signedWebhook(env, event);
-    expect(second.status).toBe(200);
-    expect(await second.json()).toMatchObject({ duplicate: true });
-    expect(count(env, "SELECT COUNT(*) AS n FROM order_events WHERE order_id = ?", order.orderId)).toBe(eventsAfterFirst);
-    expect(count(env, "SELECT COUNT(*) AS n FROM stripe_events")).toBe(1);
-  });
-
-  it("sends the order to review when the charged amount does not match", async () => {
-    const { env, order, session } = await paidOrder();
-    await signedWebhook(env, sessionEvent("checkout.session.completed", { ...session, amount_total: TOTAL - 1 }));
-    expect(orderRow(env, order.orderId)?.status).toBe("needs_review");
-  });
-
-  it("sends the order to review when test/live mode does not match", async () => {
-    const { env, order, session } = await paidOrder();
-    await signedWebhook(env, sessionEvent("checkout.session.completed", session, { livemode: true }));
-    expect(orderRow(env, order.orderId)?.status).toBe("needs_review");
-  });
-
-  it("rejects a session that belongs to another order", async () => {
-    const { env, order, session } = await paidOrder();
-    await signedWebhook(env, sessionEvent("checkout.session.completed", { ...session, id: "cs_test_other" }));
-    expect(orderRow(env, order.orderId)?.status).toBe("needs_review");
-  });
-
-  it("waits for asynchronous payments, then follows their outcome", async () => {
-    const { env, order, session } = await paidOrder();
-    await signedWebhook(env, sessionEvent("checkout.session.completed", { ...session, payment_status: "unpaid" }));
-    expect(orderRow(env, order.orderId)?.status).toBe("pending");
-    await signedWebhook(env, sessionEvent("checkout.session.async_payment_succeeded", session));
-    expect(orderRow(env, order.orderId)?.status).toBe("paid");
-
-    const failed = await paidOrder();
-    await signedWebhook(failed.env, sessionEvent("checkout.session.completed", { ...failed.session, payment_status: "unpaid" }));
-    await signedWebhook(failed.env, sessionEvent("checkout.session.async_payment_failed", failed.session));
-    expect(orderRow(failed.env, failed.order.orderId)?.status).toBe("failed");
-  });
-
-  it("cancels pending orders whose session expired, but never paid ones", async () => {
-    const { env, order, session } = await paidOrder();
-    await signedWebhook(env, sessionEvent("checkout.session.expired", { ...session, payment_status: "unpaid" }));
-    expect(orderRow(env, order.orderId)?.status).toBe("cancelled");
-
-    const paid = await paidOrder();
-    await signedWebhook(paid.env, sessionEvent("checkout.session.completed", paid.session));
-    await signedWebhook(paid.env, sessionEvent("checkout.session.expired", paid.session));
-    expect(orderRow(paid.env, paid.order.orderId)?.status).toBe("paid");
-  });
-
-  it("acknowledges unrelated events and unknown orders without changing anything", async () => {
-    const { env, order, session } = await paidOrder();
-    const other = await signedWebhook(env, { id: "evt_other", type: "customer.created", data: { object: {} } });
-    expect(other.status).toBe(200);
-    const unknown = await signedWebhook(
-      env,
-      sessionEvent("checkout.session.completed", { ...session, client_reference_id: "SH-261029-AAAAAA", metadata: {} }),
-    );
-    expect(unknown.status).toBe(200);
-    expect(orderRow(env, order.orderId)?.status).toBe("pending");
-  });
-
-  it("never marks an order paid just because the customer reaches the success URL", async () => {
+  it("the endpoint refuses unsigned or wrongly signed events and changes nothing", async () => {
     const env = makeEnv();
     const order = await createOrder(env);
-    const success = order.stripeCalls[0].form.get("success_url") ?? "";
-    // The storefront's status page only reads the order through the API:
-    const res = await call(env, makeDeps(fakeNetwork().fetch), `/api/orders/${order.orderId}`, {
-      headers: { Authorization: `Bearer ${new URL(success).searchParams.get("t")}` },
-    });
-    expect(res.status).toBe(200);
-    expect(((await res.json()) as { order: { status: string } }).order.status).toBe("pending");
+    const event = sessionEvent("checkout.session.completed", { id: order.sessionId, client_reference_id: order.orderId });
+    expect((await signedWebhook(env, event, { secret: "whsec_wrong" })).status).toBe(400);
     expect(orderRow(env, order.orderId)?.status).toBe("pending");
+    expect((await signedWebhook(makeEnv({ STRIPE_WEBHOOK_SECRET: "" }), event)).status).toBe(503);
+  });
+});
+
+describe("Stripe events", () => {
+  it("processes each event id once", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    const events = w.stripe.completeSession(order.sessionId, "authorize");
+    w.stripe.takeEvents();
+    await deliver(w, events);
+    const again = await deliver(w, events);
+    expect(await again[0].json()).toMatchObject({ duplicate: true });
+    expect(count(w.env, "SELECT COUNT(*) AS n FROM order_events WHERE order_id = ? AND to_status = 'awaiting_acceptance'", order.orderId)).toBe(1);
+    expect(w.telegram.messages()).toHaveLength(2); // still one alert per chat
   });
 
-  it("is closed when no webhook secret is configured", async () => {
-    const env = makeEnv({ STRIPE_WEBHOOK_SECRET: undefined });
-    const res = await call(env, makeDeps(fakeNetwork().fetch), "/api/stripe/webhook", { method: "POST", body: "{}" });
-    expect(res.status).toBe(503);
+  it("converges whatever the arrival order", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    const events = w.stripe.completeSession(order.sessionId, "authorize");
+    w.stripe.takeEvents();
+    await deliver(w, [...events].reverse());
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "awaiting_acceptance", payment_status: "authorized" });
+  });
+
+  it("asks Stripe to retry (500) when Stripe itself cannot be read, and succeeds on the retry", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    const events = w.stripe.completeSession(order.sessionId, "authorize");
+    w.stripe.takeEvents();
+    w.stripe.failNext({ method: "GET", path: /^\/v1\/payment_intents\//, status: 500 });
+    const [first] = await deliver(w, [events[0]]);
+    expect(first.status).toBe(500);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("pending");
+    const [retry] = await deliver(w, [events[0]]); // Stripe retries the same event id
+    expect(retry.status).toBe(200);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+  });
+
+  it("ignores events of the other mode (live vs test) and of unknown orders", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    await pay(w, order.sessionId);
+    const live = sessionEvent("checkout.session.expired", { id: order.sessionId, client_reference_id: order.orderId }, { livemode: true });
+    expect((await deliver(w, [live]))[0].status).toBe(200);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+    const unknown = sessionEvent("checkout.session.completed", { id: "cs_test_other", client_reference_id: "SH-261029-ZZZZZZ" });
+    expect(await (await deliver(w, [unknown]))[0].json()).toMatchObject({ received: true });
+  });
+
+  it("flags a session that is not the one created for the order", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    const forged = sessionEvent("checkout.session.completed", { id: "cs_test_forged", client_reference_id: order.orderId, payment_intent: "pi_x" });
+    await deliver(w, [forged]);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("needs_review");
+  });
+
+  it("records when the last webhook arrived (panel health)", async () => {
+    const w = world();
+    const order = await createOrder(w);
+    await pay(w, order.sessionId);
+    expect(count(w.env, "SELECT COUNT(*) AS n FROM system_state WHERE key = 'stripe.last_webhook'")).toBe(1);
   });
 });

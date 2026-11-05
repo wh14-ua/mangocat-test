@@ -1,31 +1,28 @@
-import type { OrderStatus } from "../../../src/lib/commerce/types";
 import { resolvePayments } from "./config";
 import {
+  attachStripeSession,
   claimStripeEvent,
   finishStripeEvent,
   getOrder,
-  recordNote,
-  transitionOrder,
-  updateStripeFields,
+  getOrderByPaymentIntent,
+  setState,
+  updateOrderIf,
   type OrderRow,
 } from "./db";
 import type { Deps, Env } from "./env";
 import { errorJson, json, readBodyLimited } from "./http";
 import { log } from "./log";
 import { verifyStripeSignature } from "./stripe";
+import { syncOrderPayment } from "./sync";
 
 /** Stripe events are small; 256 KB leaves plenty of headroom. */
 const MAX_WEBHOOK_BYTES = 256 * 1024;
 
-type CheckoutSessionObject = {
+type StripeObject = {
   object?: string;
   id?: string;
   client_reference_id?: string | null;
   metadata?: Record<string, string> | null;
-  payment_status?: "paid" | "unpaid" | "no_payment_required";
-  amount_total?: number | null;
-  currency?: string | null;
-  livemode?: boolean;
   payment_intent?: string | { id?: string } | null;
 };
 
@@ -33,15 +30,37 @@ type StripeEvent = {
   id?: string;
   type?: string;
   livemode?: boolean;
-  data?: { object?: CheckoutSessionObject };
+  data?: { object?: StripeObject };
 };
 
-const HANDLED = new Set([
+/**
+ * Events this endpoint listens to (configure the same list in the Stripe Dashboard).
+ * Whatever the event, the order is re-synced from the PaymentIntent fetched from Stripe,
+ * so the payload's content (beyond ids) is never trusted and arrival order does not matter.
+ */
+export const HANDLED_EVENTS = [
   "checkout.session.completed",
   "checkout.session.async_payment_succeeded",
   "checkout.session.async_payment_failed",
   "checkout.session.expired",
-]);
+  "payment_intent.amount_capturable_updated",
+  "payment_intent.succeeded",
+  "payment_intent.payment_failed",
+  "payment_intent.canceled",
+  "payment_intent.processing",
+  "charge.refunded",
+  "charge.expired",
+  "refund.created",
+  "refund.updated",
+  "refund.failed",
+] as const;
+
+const HANDLED = new Set<string>(HANDLED_EVENTS);
+
+function idOf(value: string | { id?: string } | null | undefined): string | null {
+  if (!value) return null;
+  return typeof value === "string" ? value : value.id ?? null;
+}
 
 /**
  * POST /api/stripe/webhook
@@ -70,18 +89,20 @@ export async function handleStripeWebhook(request: Request, env: Env, deps: Deps
   if (typeof event.id !== "string" || typeof event.type !== "string") {
     return errorJson("invalid-payload", 400);
   }
+  const now = deps.now().toISOString();
+  await setState(env.DB, "stripe.last_webhook", event.type, now);
   if (!HANDLED.has(event.type)) return json({ received: true, handled: false });
 
-  const now = deps.now().toISOString();
-  const claim = await claimStripeEvent(
-    env.DB,
-    { id: event.id, type: event.type, livemode: Boolean(event.livemode) },
-    now,
-  );
+  const claim = await claimStripeEvent(env.DB, { id: event.id, type: event.type, livemode: Boolean(event.livemode) }, now);
   if (claim === "duplicate") return json({ received: true, duplicate: true });
 
   try {
-    const result = await processSessionEvent(env, event as Required<Pick<StripeEvent, "id" | "type">> & StripeEvent, now);
+    const result = await processEvent(env, deps, event as StripeEvent & { id: string; type: string }, now);
+    if (result.retry) {
+      await finishStripeEvent(env.DB, event.id, "failed", result.orderId, now);
+      log("webhook.retry-later", { eventId: event.id, type: event.type, orderId: result.orderId });
+      return errorJson("stripe-unavailable", 500);
+    }
     await finishStripeEvent(env.DB, event.id, result.status, result.orderId, now);
     log("webhook.processed", { eventId: event.id, type: event.type, outcome: result.outcome, orderId: result.orderId });
     return json({ received: true });
@@ -93,103 +114,79 @@ export async function handleStripeWebhook(request: Request, env: Env, deps: Deps
   }
 }
 
-type ProcessResult = { status: "processed" | "ignored"; orderId: string | null; outcome: string };
+type ProcessResult = { status: "processed" | "ignored"; orderId: string | null; outcome: string; retry?: boolean };
 
-async function processSessionEvent(
-  env: Env,
-  event: StripeEvent & { id: string; type: string },
-  now: string,
-): Promise<ProcessResult> {
-  const session = event.data?.object;
-  if (!session || session.object !== "checkout.session" || typeof session.id !== "string") {
-    return { status: "ignored", orderId: null, outcome: "not-a-session" };
+async function findOrder(env: Env, object: StripeObject, kind: "session" | "intent" | "child"): Promise<OrderRow | null> {
+  const byMeta = object.metadata?.order_id ?? (kind === "session" ? object.client_reference_id ?? null : null);
+  if (byMeta) {
+    const order = await getOrder(env.DB, byMeta);
+    if (order) return order;
   }
-  const orderId = session.client_reference_id ?? session.metadata?.order_id ?? null;
-  const order = orderId ? await getOrder(env.DB, orderId) : null;
+  if (kind === "session" && object.id) {
+    return env.DB.prepare(`SELECT * FROM orders WHERE stripe_session_id = ?`).bind(object.id).first<OrderRow>();
+  }
+  const pi = kind === "intent" ? object.id ?? null : idOf(object.payment_intent);
+  return pi ? getOrderByPaymentIntent(env.DB, pi) : null;
+}
+
+async function processEvent(env: Env, deps: Deps, event: StripeEvent & { id: string; type: string }, now: string): Promise<ProcessResult> {
+  const object = event.data?.object;
+  if (!object || typeof object.id !== "string") return { status: "ignored", orderId: null, outcome: "no-object" };
+  const kind = object.object === "checkout.session" ? "session" : object.object === "payment_intent" ? "intent" : "child";
+  const order = await findOrder(env, object, kind);
   if (!order) return { status: "ignored", orderId: null, outcome: "unknown-order" };
 
-  const meta = { source: "stripe" as const, stripeEventId: event.id, now };
-  const paymentIntent =
-    typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
-
-  // The session must be the one we created for this order.
-  if (order.stripe_session_id && order.stripe_session_id !== session.id) {
-    await moveTo(env, order, "needs_review", { ...meta, note: "La sesión de Stripe no coincide con el pedido" });
-    return { status: "processed", orderId: order.id, outcome: "session-mismatch" };
+  // An event whose mode (test/live) differs from this deployment is never applied.
+  const deploymentLive = resolvePayments(env).mode === "stripe-live";
+  if (Boolean(event.livemode) !== deploymentLive || Boolean(event.livemode) !== (order.payments_mode === "stripe-live")) {
+    return { status: "ignored", orderId: order.id, outcome: "mode-mismatch" };
   }
 
-  await updateStripeFields(
-    env.DB,
-    order.id,
-    {
-      stripe_session_id: order.stripe_session_id ?? session.id,
-      stripe_payment_intent_id: paymentIntent ?? undefined,
-      stripe_payment_status: session.payment_status ?? undefined,
-      stripe_amount_total: typeof session.amount_total === "number" ? session.amount_total : undefined,
-      stripe_livemode: typeof session.livemode === "boolean" ? (session.livemode ? 1 : 0) : undefined,
-    },
-    now,
-  );
+  const meta = { source: "stripe" as const, stripeEventId: event.id };
+  let paymentIntentId: string | null = kind === "intent" ? object.id : idOf(object.payment_intent);
 
-  if (event.type === "checkout.session.expired") {
-    if (order.status === "pending" || order.status === "failed") {
-      await moveTo(env, order, "cancelled", { ...meta, note: "La sesión de pago caducó sin completarse" });
-      return { status: "processed", orderId: order.id, outcome: "cancelled" };
+  if (kind === "session") {
+    // The session must be the one we created for this order.
+    if (order.stripe_session_id && order.stripe_session_id !== object.id) {
+      await updateOrderIf(env.DB, order.id, order.status, order.status === "needs_review" ? null : "needs_review", { review_reason: "La sesión de Stripe no coincide con el pedido" }, {
+        ...meta,
+        note: "La sesión de Stripe no coincide con el pedido",
+        now,
+      });
+      return { status: "processed", orderId: order.id, outcome: "session-mismatch" };
     }
-    return { status: "processed", orderId: order.id, outcome: "expired-ignored" };
+    if (!order.stripe_session_id) await attachStripeSession(env.DB, order.id, object.id, now);
+    if (event.type === "checkout.session.expired" && !paymentIntentId) {
+      if (order.status === "pending" || order.status === "failed") {
+        await updateOrderIf(env.DB, order.id, order.status, "cancelled", {}, {
+          ...meta,
+          note: "La sesión de pago caducó sin completarse; no se ha cobrado nada",
+          now,
+        });
+        return { status: "processed", orderId: order.id, outcome: "cancelled" };
+      }
+      return { status: "processed", orderId: order.id, outcome: "expired-ignored" };
+    }
+  }
+  if (!paymentIntentId) paymentIntentId = order.stripe_payment_intent_id;
+  if (!paymentIntentId) return { status: "processed", orderId: order.id, outcome: "no-payment-intent" };
+
+  const synced = await syncOrderPayment(env, deps, order.id, meta, { paymentIntentId });
+  if (!synced.ok) {
+    if (synced.reason === "stripe-unavailable") return { status: "processed", orderId: order.id, outcome: "retry", retry: true };
+    return { status: "ignored", orderId: order.id, outcome: synced.reason };
   }
 
-  if (event.type === "checkout.session.async_payment_failed") {
-    await moveTo(env, order, "failed", { ...meta, note: "El pago asíncrono ha fallado" });
-    return { status: "processed", orderId: order.id, outcome: "failed" };
-  }
-
-  // completed / async_payment_succeeded: reconcile before marking anything as paid.
-  const mismatch = reconcile(order, session, event);
-  if (mismatch) {
-    await moveTo(env, order, "needs_review", { ...meta, note: mismatch });
-    return { status: "processed", orderId: order.id, outcome: "needs-review" };
-  }
-
-  if (event.type === "checkout.session.async_payment_succeeded" || session.payment_status === "paid") {
-    await moveTo(env, order, "paid", { ...meta, note: "Pago confirmado por Stripe" });
-    return { status: "processed", orderId: order.id, outcome: "paid" };
-  }
-
-  // completed with payment_status "unpaid": a delayed payment method is still processing.
-  await recordNote(env.DB, order.id, order.status, {
-    ...meta,
-    note: "Checkout completado; pago asíncrono en curso",
-  });
-  return { status: "processed", orderId: order.id, outcome: "awaiting-async-payment" };
-}
-
-function reconcile(order: OrderRow, session: CheckoutSessionObject, event: StripeEvent): string | null {
-  if (session.amount_total !== order.total_cents) {
-    return `Importe cobrado (${String(session.amount_total)}) distinto del total del pedido (${order.total_cents})`;
-  }
-  if ((session.currency ?? "").toLowerCase() !== "eur") return "Moneda distinta de EUR";
-  const expectedLive = order.payments_mode === "stripe-live";
-  if (Boolean(session.livemode ?? event.livemode) !== expectedLive) {
-    return "El modo (pruebas/real) del pago no coincide con el del pedido";
-  }
-  return null;
-}
-
-async function moveTo(
-  env: Env,
-  order: OrderRow,
-  to: OrderStatus,
-  meta: { source: "stripe"; stripeEventId: string; now: string; note: string },
-) {
-  const result = await transitionOrder(env.DB, order.id, to, meta);
-  if (!result.ok && result.reason !== "not-found") {
-    // Not an allowed transition (e.g. a late event for a completed order): keep a trace.
-    await recordNote(env.DB, order.id, result.from ?? order.status, {
+  // A session that expired after a failed payment attempt ends the order (nothing charged).
+  if (event.type === "checkout.session.expired" && (synced.order.status === "pending" || synced.order.status === "failed")) {
+    await updateOrderIf(env.DB, order.id, synced.order.status, "cancelled", {}, {
       ...meta,
-      note: `${meta.note} (sin cambio de estado: ${result.reason})`,
+      note: "La sesión de pago caducó sin completarse; no se ha cobrado nada",
+      now,
     });
+    return { status: "processed", orderId: order.id, outcome: "cancelled" };
   }
+  return { status: "processed", orderId: order.id, outcome: synced.changed ? `synced:${synced.order.status}` : "unchanged" };
 }
 
 /** Exposed for /api/config and /api/health. */

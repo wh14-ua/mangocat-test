@@ -1,11 +1,19 @@
 import { handleRequest } from "../src/index";
-import { base64UrlEncode, hmacSha256Hex } from "../src/crypto";
+import { base64UrlEncode, hmacSha256Hex, newOrderToken, sha256Hex } from "../src/crypto";
+import { runScheduled } from "../src/cron";
 import type { Deps, Env, RateLimiterLike } from "../src/env";
 import { createTestD1 } from "./d1-sqlite";
+// Shared with the local end-to-end stack (scripts/local-stack/).
+import { createFakeStripe } from "../../../scripts/local-stack/fake-stripe.mjs";
+import { createFakeTelegram } from "../../../scripts/local-stack/fake-telegram.mjs";
 
 export const TEST_SECRET_KEY = "sk_test_51FakeKeyForUnitTestsOnly";
 export const WEBHOOK_SECRET = "whsec_unit_test_secret";
+export const TELEGRAM_TOKEN = "123456789:AAFakeTokenForUnitTestsOnly_abcdef";
+export const STAFF_CHATS = ["111111111", "-1002222222222"];
 export const STOREFRONT_ORIGIN = "https://wh14-ua.github.io";
+export const WORKER_ORIGIN = "https://orders.example.workers.dev";
+export const PANEL = `${WORKER_ORIGIN}/admin`;
 export const NOW = new Date("2026-10-29T12:00:00Z");
 export const TEAM_DOMAIN = "mangocat.cloudflareaccess.com";
 export const ACCESS_AUD = "aud-shang-hai-orders-test";
@@ -19,46 +27,81 @@ export function makeEnv(overrides: Partial<Env> = {}): TestEnv {
     STRIPE_WEBHOOK_SECRET: WEBHOOK_SECRET,
     STRIPE_TEST_MODE: "true",
     CORS_ALLOWED_ORIGIN: `${STOREFRONT_ORIGIN},http://localhost:3000`,
+    TELEGRAM_BOT_TOKEN: TELEGRAM_TOKEN,
+    TELEGRAM_CHAT_IDS: STAFF_CHATS.join(","),
+    PANEL_URL: PANEL,
     ...overrides,
   } as TestEnv;
 }
 
-export type StripeCall = { url: string; headers: Headers; form: URLSearchParams };
+export type StripeCall = { url: string; method: string; headers: Headers; form: URLSearchParams };
 
-/** Session ids are unique across the whole run, like real Stripe ids. */
-let sessionSeq = 0;
+type FakeStripe = ReturnType<typeof createFakeStripe>;
+type FakeTelegram = ReturnType<typeof createFakeTelegram>;
 
-/** Fake network: a scripted Stripe API plus an optional Cloudflare Access JWKS endpoint. */
-export function fakeNetwork(options: { stripe?: "ok" | "error" | "bad-url"; jwks?: JsonWebKey[] } = {}) {
+/**
+ * Fake network: a stateful Stripe emulator, a Telegram recorder and an optional
+ * Cloudflare Access JWKS endpoint. Any other outbound request fails the test.
+ */
+export function fakeNetwork(
+  options: {
+    stripe?: "ok" | "error" | "bad-url";
+    jwks?: JsonWebKey[];
+    fakeStripe?: FakeStripe;
+    fakeTelegram?: FakeTelegram;
+  } = {},
+) {
+  const stripe: FakeStripe =
+    options.fakeStripe ??
+    createFakeStripe(options.stripe === "bad-url" ? { hostedBase: "https://evil.example/pay" } : {});
+  if (options.stripe === "error") stripe.failNext({ method: "POST", path: /^\/v1\/checkout\/sessions$/, status: 500, times: 99 });
+  const telegram: FakeTelegram = options.fakeTelegram ?? createFakeTelegram();
+  const stripeFetch = stripe.fetchFor();
+  const telegramFetch = telegram.fetchFor();
   const stripeCalls: StripeCall[] = [];
   let jwksRequests = 0;
   const fetchImpl: typeof fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    if (url.startsWith("https://api.stripe.com/")) {
-      stripeCalls.push({ url, headers: new Headers(init?.headers), form: new URLSearchParams(String(init?.body ?? "")) });
-      if (options.stripe === "error") {
-        return new Response(JSON.stringify({ error: { message: "Stripe is down" } }), { status: 500 });
-      }
-      sessionSeq += 1;
-      const id = `cs_test_fake${sessionSeq}`;
-      const hosted = options.stripe === "bad-url" ? "https://evil.example/pay" : `https://checkout.stripe.com/c/pay/${id}`;
-      return Response.json({ id, url: hosted, object: "checkout.session" });
+    if (url.startsWith("https://api.stripe.com/v1/")) {
+      const method = init?.method ?? "GET";
+      stripeCalls.push({
+        url,
+        method,
+        headers: new Headers(init?.headers),
+        form: method === "POST" ? new URLSearchParams(String(init?.body ?? "")) : new URL(url).searchParams,
+      });
+      return stripeFetch(url, init);
     }
+    if (url.startsWith("https://api.telegram.org/")) return telegramFetch(url, init);
     if (url === `https://${TEAM_DOMAIN}/cdn-cgi/access/certs`) {
       jwksRequests += 1;
       return Response.json({ keys: options.jwks ?? [] });
     }
     throw new Error(`Unexpected outbound request to ${url}`);
   };
-  return { fetch: fetchImpl, stripeCalls, jwksRequests: () => jwksRequests };
+  return { fetch: fetchImpl, stripeCalls, jwksRequests: () => jwksRequests, stripe, telegram };
 }
 
-export function makeDeps(fetchImpl: typeof fetch, now: Date = NOW): Deps {
-  return { fetch: fetchImpl, now: () => now, jwksCache: new Map() };
+export type TestDeps = Deps & { flush: () => Promise<void> };
+
+/** Deps whose waitUntil work can be awaited with flush() (notifications sent "in background"). */
+export function makeDeps(fetchImpl: typeof fetch, now: Date | (() => Date) = NOW): TestDeps {
+  const pending: Promise<unknown>[] = [];
+  return {
+    fetch: fetchImpl,
+    now: typeof now === "function" ? now : () => now,
+    jwksCache: new Map(),
+    waitUntil: (p) => {
+      pending.push(p.catch(() => undefined));
+    },
+    async flush() {
+      while (pending.length) await Promise.all(pending.splice(0, pending.length));
+    },
+  };
 }
 
 export function call(env: Env, deps: Deps, path: string, init: RequestInit = {}): Promise<Response> {
-  return handleRequest(new Request(`https://orders.example.workers.dev${path}`, init), env, deps);
+  return handleRequest(new Request(`${WORKER_ORIGIN}${path}`, init), env, deps);
 }
 
 export function validCheckout(overrides: Record<string, unknown> = {}) {
@@ -76,6 +119,8 @@ export function validCheckout(overrides: Record<string, unknown> = {}) {
   };
 }
 
+export const CHECKOUT_TOTAL = 2 * 1945 + 765;
+
 export function postJson(env: Env, deps: Deps, path: string, body: unknown, headers: Record<string, string> = {}) {
   return call(env, deps, path, {
     method: "POST",
@@ -84,14 +129,60 @@ export function postJson(env: Env, deps: Deps, path: string, body: unknown, head
   });
 }
 
-/** Creates a pending order through the real checkout endpoint. */
-export async function createOrder(env: TestEnv, overrides: Record<string, unknown> = {}) {
+/** A test world: env + one fake network shared by every call, with a movable clock. */
+export function world(envOverrides: Partial<Env> = {}, start: Date = NOW) {
+  const env = makeEnv(envOverrides);
   const net = fakeNetwork();
-  const res = await postJson(env, makeDeps(net.fetch), "/api/checkout", validCheckout(overrides));
+  let clock = start.getTime();
+  const deps = makeDeps(net.fetch, () => new Date(clock));
+  return {
+    env,
+    net,
+    deps,
+    stripe: net.stripe,
+    telegram: net.telegram,
+    advance(ms: number) {
+      clock += ms;
+    },
+    now: () => new Date(clock),
+  };
+}
+
+export type World = ReturnType<typeof world>;
+
+/** Creates a pending order through the real checkout endpoint. */
+export async function createOrder(target: TestEnv | World, overrides: Record<string, unknown> = {}) {
+  const w = "env" in target ? target : null;
+  const env = w ? w.env : (target as TestEnv);
+  const net = w ? w.net : fakeNetwork();
+  const deps = w ? w.deps : makeDeps(net.fetch);
+  const res = await postJson(env, deps, "/api/checkout", validCheckout(overrides));
   if (res.status !== 201) throw new Error(`checkout failed: ${res.status} ${await res.text()}`);
-  const body = (await res.json()) as { orderId: string; orderToken: string; checkoutUrl: string };
+  const body = (await res.json()) as { orderId: string; orderNumber: number; orderToken: string; checkoutUrl: string };
   const sessionId = /cs_test_[A-Za-z0-9]+/.exec(body.checkoutUrl)?.[0] ?? "";
   return { ...body, sessionId, stripeCalls: net.stripeCalls };
+}
+
+/** Delivers events to the webhook endpoint, signed like Stripe signs them. */
+export async function deliver(w: World, events: unknown[]) {
+  const responses: Response[] = [];
+  for (const event of events) responses.push(await signedWebhook(w.env, event, { now: w.now(), deps: w.deps }));
+  await w.deps.flush();
+  return responses;
+}
+
+/** Customer pays on Stripe's page ("authorize" by default) and Stripe sends its webhooks. */
+export async function pay(w: World, sessionId: string, outcome: "authorize" | "decline" | "capture" = "authorize") {
+  const events = w.stripe.completeSession(sessionId, outcome);
+  w.stripe.takeEvents();
+  return deliver(w, events);
+}
+
+/** An order that has reached the restaurant (payment authorised). */
+export async function placedOrder(w: World, overrides: Record<string, unknown> = {}, outcome: "authorize" | "capture" = "authorize") {
+  const order = await createOrder(w, overrides);
+  await pay(w, order.sessionId, outcome);
+  return order;
 }
 
 export function orderRow(env: TestEnv, id: string) {
@@ -100,6 +191,13 @@ export function orderRow(env: TestEnv, id: string) {
 
 export function count(env: TestEnv, sql: string, ...params: (string | number)[]) {
   return Number((env.DB.raw.prepare(sql).get(...params) as { n: number }).n);
+}
+
+export function runCron(w: World) {
+  return runScheduled(w.env, w.deps).then(async (report) => {
+    await w.deps.flush();
+    return report;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -126,17 +224,51 @@ export function sessionEvent(
 export async function signedWebhook(
   env: Env,
   payload: unknown,
-  options: { secret?: string; timestamp?: number; now?: Date } = {},
+  options: { secret?: string; timestamp?: number; now?: Date; deps?: Deps } = {},
 ) {
   const body = JSON.stringify(payload);
   const now = options.now ?? NOW;
   const t = options.timestamp ?? Math.floor(now.getTime() / 1000);
   const sig = await hmacSha256Hex(options.secret ?? WEBHOOK_SECRET, `${t}.${body}`);
-  return call(env, makeDeps(fakeNetwork().fetch, now), "/api/stripe/webhook", {
+  return call(env, options.deps ?? makeDeps(fakeNetwork().fetch, now), "/api/stripe/webhook", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Stripe-Signature": `t=${t},v1=${sig}` },
     body,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Staff
+// ---------------------------------------------------------------------------
+
+/** Opens a staff session directly in D1 (the sign-in flow itself is tested separately). */
+export async function staffCookie(env: TestEnv, label = "Móvil de cocina", now: Date = NOW): Promise<string> {
+  const token = newOrderToken();
+  const expires = new Date(now.getTime() + 30 * 86_400_000).toISOString();
+  env.DB.raw
+    .prepare(
+      `INSERT INTO staff_sessions (id, label, method, created_at, last_seen_at, expires_at) VALUES (?, ?, 'telegram-code', ?, ?, ?)`,
+    )
+    .run(await sha256Hex(token), label, now.toISOString(), now.toISOString(), expires);
+  return `__Host-shp_session=${token}`;
+}
+
+export function staffCall(w: World, cookie: string, path: string, init: RequestInit = {}) {
+  return call(w.env, w.deps, path, {
+    ...init,
+    headers: { Cookie: cookie, Origin: WORKER_ORIGIN, ...(init.body ? { "Content-Type": "application/json" } : {}), ...(init.headers ?? {}) },
+  });
+}
+
+export async function staffAction(w: World, cookie: string, id: string, action: string, body: unknown = {}) {
+  const res = await staffCall(w, cookie, `/api/admin/orders/${id}/${action}`, { method: "POST", body: JSON.stringify(body) });
+  await w.deps.flush();
+  return { status: res.status, body: (await res.json()) as Record<string, unknown> & { order?: Record<string, unknown> } };
+}
+
+export async function customerView(w: World, order: { orderId: string; orderToken: string }) {
+  const res = await call(w.env, w.deps, `/api/orders/${order.orderId}`, { headers: { Authorization: `Bearer ${order.orderToken}` } });
+  return ((await res.json()) as { order: Record<string, unknown> }).order;
 }
 
 // ---------------------------------------------------------------------------

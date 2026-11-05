@@ -1,5 +1,4 @@
 import type { OrderSummary, PricedLine } from "../../../src/lib/commerce/types";
-import { shangHaiOrdering } from "../../../src/lib/shang-hai/catalog";
 import { ORDER_ID_PATTERN, sha256Hex, timingSafeEqual } from "./crypto";
 import { getOrder, getOrderItems, type OrderItemRow, type OrderRow } from "./db";
 import type { Env } from "./env";
@@ -31,14 +30,28 @@ function safeSelections(raw: string): Record<string, string[]> {
   }
 }
 
-/** Customer-facing view of an order: no phone, email, notes, tokens or Stripe ids. */
+/**
+ * Customer-facing view of an order: status, payment state, the preparation time the
+ * restaurant set and the reason it chose to share. Never phone, email, notes, tokens,
+ * internal review notes or Stripe ids.
+ */
 export function toOrderSummary(order: OrderRow, items: OrderItemRow[]): OrderSummary {
-  const prep = shangHaiOrdering.pickup.prepTimeMinutes;
   return {
     id: order.id,
+    ...(order.number ? { number: order.number } : {}),
     status: order.status,
+    paymentStatus: order.payment_status,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
+    ...(order.accepted_at ? { acceptedAt: order.accepted_at } : {}),
+    ...(order.prep_minutes && order.accepted_at ? { prepMinutes: order.prep_minutes } : {}),
+    ...(order.ready_by && order.accepted_at ? { readyBy: order.ready_by } : {}),
+    ...(order.ready_at ? { readyAt: order.ready_at } : {}),
+    ...(order.completed_at ? { completedAt: order.completed_at } : {}),
+    ...(order.rejected_at ? { rejectedAt: order.rejected_at } : {}),
+    ...(order.rejection_reason && (order.status === "rejected" || order.status === "rejecting")
+      ? { rejectionReason: order.rejection_reason }
+      : {}),
     fulfillment: order.fulfillment,
     lines: toPricedLines(items),
     subtotalCents: order.subtotal_cents,
@@ -47,10 +60,6 @@ export function toOrderSummary(order: OrderRow, items: OrderItemRow[]): OrderSum
     currency: "EUR",
     customerName: order.customer_name,
     mode: order.payments_mode,
-    pickupNote:
-      prep === null
-        ? "El restaurante confirmará la hora de recogida."
-        : `Tiempo de preparación aproximado: ${prep} minutos.`,
   };
 }
 

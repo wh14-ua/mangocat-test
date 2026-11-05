@@ -1,30 +1,94 @@
 import type { PricedLine } from "../../../src/lib/commerce/types";
+import type { CaptureMode } from "./config";
 import { STRIPE_API_VERSION } from "./config";
 import { hmacSha256Hex, timingSafeEqual } from "./crypto";
-
-const STRIPE_API = "https://api.stripe.com/v1";
 
 /** Checkout sessions expire after 60 minutes (Stripe allows 30 min – 24 h). */
 export const SESSION_TTL_SECONDS = 60 * 60;
 
+/**
+ * Payment methods that support authorise-now-capture-later in Checkout
+ * (docs.stripe.com/payments/payment-methods/payment-method-support, "Manual capture").
+ * Used by STRIPE_CAPTURE_MODE=per-method; Apple Pay and Google Pay are cards.
+ */
+export const MANUAL_CAPTURE_METHODS = ["card", "link", "paypal", "revolut_pay", "amazon_pay", "klarna"] as const;
+
+export type StripeClient = { fetch: typeof fetch; secretKey: string; apiBase: string };
+
+export type StripeError = { type?: string; code?: string; message?: string; decline_code?: string };
+
+export type StripeResult<T> =
+  | { ok: true; status: number; body: T }
+  | { ok: false; status: number; error: StripeError | null; network: boolean };
+
+/** One form-encoded call to the Stripe API with the pinned version (and an idempotency key on POST). */
+export async function stripeRequest<T>(
+  client: StripeClient,
+  method: "GET" | "POST",
+  path: string,
+  options: { form?: URLSearchParams; idempotencyKey?: string; query?: URLSearchParams } = {},
+): Promise<StripeResult<T>> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${client.secretKey}`,
+    "Stripe-Version": STRIPE_API_VERSION,
+  };
+  if (method === "POST") {
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    if (options.idempotencyKey) headers["Idempotency-Key"] = options.idempotencyKey;
+  }
+  const query = options.query?.toString();
+  let res: Response;
+  try {
+    res = await client.fetch(`${client.apiBase}${path}${query ? `?${query}` : ""}`, {
+      method,
+      headers,
+      ...(method === "POST" ? { body: (options.form ?? new URLSearchParams()).toString() } : {}),
+    });
+  } catch {
+    return { ok: false, status: 0, error: null, network: true };
+  }
+  const body = (await res.json().catch(() => null)) as (T & { error?: StripeError }) | null;
+  if (!res.ok || !body) {
+    return { ok: false, status: res.status, error: body?.error ?? null, network: res.status >= 500 || res.status === 429 };
+  }
+  return { ok: true, status: res.status, body };
+}
+
+// ---------------------------------------------------------------------------
+// Checkout Session
+// ---------------------------------------------------------------------------
+
 export type CheckoutSessionInput = {
   orderId: string;
+  orderNumber: number;
   storefront: string;
   catalogVersion: string;
   customerEmail: string;
+  /** Line names already in the customer's language. */
   lines: PricedLine[];
   deliveryFeeCents: number;
   successUrl: string;
   cancelUrl: string;
   now: Date;
   fulfillment: "pickup" | "delivery";
+  locale: "es" | "en";
+  captureMode: CaptureMode;
 };
 
-/** Builds the form-encoded Checkout Session request. Every amount comes from the server quote. */
+/** Stripe Checkout locales (docs.stripe.com/api/checkout/sessions/create#locale). */
+const STRIPE_LOCALE: Record<"es" | "en", string> = { es: "es", en: "en-GB" };
+
+/**
+ * Builds the form-encoded Checkout Session request. Every amount comes from the server
+ * quote. Payment methods are NOT listed (the pinned API version rejects
+ * `payment_method_types`): Stripe offers what is enabled in the Dashboard — cards, Apple
+ * Pay, Google Pay and Link when the customer is eligible — and, with manual capture,
+ * automatically hides methods that cannot place a hold.
+ */
 export function buildCheckoutSessionForm(input: CheckoutSessionInput): URLSearchParams {
   const form = new URLSearchParams();
   form.set("mode", "payment");
-  form.set("locale", "es");
+  form.set("locale", STRIPE_LOCALE[input.locale]);
   form.set("client_reference_id", input.orderId);
   form.set("customer_email", input.customerEmail);
   form.set("success_url", input.successUrl);
@@ -32,6 +96,18 @@ export function buildCheckoutSessionForm(input: CheckoutSessionInput): URLSearch
   form.set("expires_at", String(Math.floor(input.now.getTime() / 1000) + SESSION_TTL_SECONDS));
   form.set("submit_type", "pay");
 
+  if (input.captureMode === "manual") {
+    // Authorise only. The restaurant's acceptance captures; a rejection releases the hold.
+    form.set("payment_intent_data[capture_method]", "manual");
+  } else {
+    // Methods that can hold funds are authorised; any other method is charged at once and
+    // refunded if the restaurant rejects the order.
+    for (const method of MANUAL_CAPTURE_METHODS) {
+      form.set(`payment_method_options[${method}][capture_method]`, "manual");
+    }
+  }
+
+  const english = input.locale === "en";
   input.lines.forEach((line, i) => {
     form.set(`line_items[${i}][quantity]`, String(line.quantity));
     form.set(`line_items[${i}][price_data][currency]`, "eur");
@@ -46,11 +122,12 @@ export function buildCheckoutSessionForm(input: CheckoutSessionInput): URLSearch
     form.set(`line_items[${i}][quantity]`, "1");
     form.set(`line_items[${i}][price_data][currency]`, "eur");
     form.set(`line_items[${i}][price_data][unit_amount]`, String(input.deliveryFeeCents));
-    form.set(`line_items[${i}][price_data][product_data][name]`, "Gastos de envío");
+    form.set(`line_items[${i}][price_data][product_data][name]`, english ? "Delivery" : "Gastos de envío");
   }
 
   const metadata = {
     order_id: input.orderId,
+    order_number: String(input.orderNumber),
     storefront: input.storefront,
     catalog_version: input.catalogVersion,
     fulfillment: input.fulfillment,
@@ -61,7 +138,7 @@ export function buildCheckoutSessionForm(input: CheckoutSessionInput): URLSearch
   }
   form.set(
     "payment_intent_data[description]",
-    `Pedido ${input.orderId} · SHANG HAI (${input.fulfillment === "pickup" ? "recogida" : "reparto"})`,
+    `Pedido #${input.orderNumber} (${input.orderId}) · SHANG HAI · ${input.fulfillment === "pickup" ? "recogida" : "reparto"}`,
   );
   return form;
 }
@@ -69,35 +146,111 @@ export function buildCheckoutSessionForm(input: CheckoutSessionInput): URLSearch
 export type CreatedSession = { id: string; url: string };
 
 export async function createCheckoutSession(
-  fetchImpl: typeof fetch,
-  secretKey: string,
+  client: StripeClient,
   form: URLSearchParams,
   idempotencyKey: string,
+  isAllowedUrl: (url: string) => boolean,
 ): Promise<{ ok: true; session: CreatedSession } | { ok: false; status: number }> {
-  let res: Response;
-  try {
-    res = await fetchImpl(`${STRIPE_API}/checkout/sessions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Stripe-Version": STRIPE_API_VERSION,
-        "Idempotency-Key": idempotencyKey,
-      },
-      body: form.toString(),
-    });
-  } catch {
-    return { ok: false, status: 0 };
-  }
+  const res = await stripeRequest<{ id?: unknown; url?: unknown }>(client, "POST", "/checkout/sessions", {
+    form,
+    idempotencyKey,
+  });
   if (!res.ok) return { ok: false, status: res.status };
-  const body = (await res.json().catch(() => null)) as { id?: unknown; url?: unknown } | null;
-  const id = typeof body?.id === "string" ? body.id : "";
-  const url = typeof body?.url === "string" ? body.url : "";
+  const id = typeof res.body.id === "string" ? res.body.id : "";
+  const url = typeof res.body.url === "string" ? res.body.url : "";
   // Only ever hand the customer a genuine Stripe-hosted Checkout URL.
-  if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(id) || !url.startsWith("https://checkout.stripe.com/")) {
-    return { ok: false, status: 502 };
-  }
+  if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(id) || !isAllowedUrl(url)) return { ok: false, status: 502 };
   return { ok: true, session: { id, url } };
+}
+
+// ---------------------------------------------------------------------------
+// PaymentIntents and refunds
+// ---------------------------------------------------------------------------
+
+export type StripeCharge = {
+  id?: string;
+  amount_refunded?: number;
+  refunded?: boolean;
+  captured?: boolean;
+  payment_method_details?: { type?: string; card?: { capture_before?: number | null } | null } | null;
+};
+
+export type StripePaymentIntent = {
+  id: string;
+  object?: string;
+  status:
+    | "requires_payment_method"
+    | "requires_confirmation"
+    | "requires_action"
+    | "processing"
+    | "requires_capture"
+    | "succeeded"
+    | "canceled";
+  amount: number;
+  amount_capturable?: number;
+  amount_received?: number;
+  currency: string;
+  livemode?: boolean;
+  metadata?: Record<string, string> | null;
+  cancellation_reason?: string | null;
+  last_payment_error?: { code?: string; message?: string } | null;
+  latest_charge?: string | StripeCharge | null;
+};
+
+export type StripeRefund = {
+  id: string;
+  object?: string;
+  status: "pending" | "requires_action" | "succeeded" | "failed" | "canceled";
+  amount: number;
+  payment_intent?: string | null;
+  failure_reason?: string | null;
+  metadata?: Record<string, string> | null;
+};
+
+export function retrievePaymentIntent(client: StripeClient, id: string) {
+  return stripeRequest<StripePaymentIntent>(client, "GET", `/payment_intents/${encodeURIComponent(id)}`, {
+    query: new URLSearchParams([["expand[]", "latest_charge"]]),
+  });
+}
+
+export function capturePaymentIntent(client: StripeClient, id: string, idempotencyKey: string) {
+  return stripeRequest<StripePaymentIntent>(client, "POST", `/payment_intents/${encodeURIComponent(id)}/capture`, {
+    idempotencyKey,
+    form: new URLSearchParams([["expand[]", "latest_charge"]]),
+  });
+}
+
+/** Releases an authorisation (only possible while it is `requires_capture`). No refund is created. */
+export function cancelPaymentIntent(client: StripeClient, id: string, idempotencyKey: string) {
+  return stripeRequest<StripePaymentIntent>(client, "POST", `/payment_intents/${encodeURIComponent(id)}/cancel`, {
+    idempotencyKey,
+    form: new URLSearchParams([["expand[]", "latest_charge"]]),
+  });
+}
+
+export function createRefund(
+  client: StripeClient,
+  paymentIntentId: string,
+  idempotencyKey: string,
+  metadata: Record<string, string>,
+) {
+  const form = new URLSearchParams();
+  form.set("payment_intent", paymentIntentId);
+  form.set("reason", "requested_by_customer");
+  for (const [k, v] of Object.entries(metadata)) form.set(`metadata[${k}]`, v);
+  return stripeRequest<StripeRefund>(client, "POST", "/refunds", { form, idempotencyKey });
+}
+
+export function retrieveRefund(client: StripeClient, id: string) {
+  return stripeRequest<StripeRefund>(client, "GET", `/refunds/${encodeURIComponent(id)}`);
+}
+
+export function retrieveCheckoutSession(client: StripeClient, id: string) {
+  return stripeRequest<{ id: string; status?: string; payment_intent?: string | { id?: string } | null; client_reference_id?: string | null }>(
+    client,
+    "GET",
+    `/checkout/sessions/${encodeURIComponent(id)}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
