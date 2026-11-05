@@ -1,76 +1,83 @@
-import type { OrderStatus } from "./types";
+import type { OrderStatus, PaymentStatus } from "./types";
+import { ORDER_STATUS_TEXT } from "./messages";
 
 /**
- * Allowed status transitions. Payment outcomes (paid/failed/cancelled from pending) are
- * set only by verified payment events; kitchen states are set only by authenticated
- * staff. Everything else is rejected.
+ * Allowed commercial status transitions.
+ *
+ * - Payment outcomes (pending -> awaiting_acceptance / failed / cancelled) come only from
+ *   verified Stripe data.
+ * - The restaurant decides: awaiting_acceptance -> accepting | rejecting (staff), and the
+ *   server finishes the job once Stripe confirms: accepting -> preparing (captured) and
+ *   rejecting -> rejected (authorisation released or refund requested).
+ * - accepting -> awaiting_acceptance happens when the capture could not even be attempted
+ *   (Stripe unreachable): the decision can be retried; nothing was charged.
+ * - Anything that does not add up goes to needs_review, which staff can resolve by
+ *   accepting, rejecting (refund / release) or closing it as cancelled.
  */
 const TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  pending: ["paid", "failed", "cancelled", "needs_review"],
-  failed: ["paid", "cancelled"],
-  needs_review: ["paid", "cancelled"],
-  paid: ["preparing", "cancelled"],
-  preparing: ["ready", "cancelled"],
-  ready: ["completed"],
-  cancelled: [],
+  pending: ["awaiting_acceptance", "failed", "cancelled", "needs_review"],
+  failed: ["awaiting_acceptance", "cancelled", "needs_review"],
+  awaiting_acceptance: ["accepting", "rejecting", "cancelled", "needs_review"],
+  accepting: ["preparing", "awaiting_acceptance", "cancelled", "needs_review"],
+  rejecting: ["rejected", "needs_review"],
+  preparing: ["ready", "rejecting", "needs_review"],
+  ready: ["completed", "rejecting", "needs_review"],
+  needs_review: ["accepting", "rejecting", "cancelled"],
+  rejected: ["needs_review"],
+  cancelled: ["needs_review"],
   completed: [],
 };
 
-/** Transitions that only staff may trigger (never the payment webhook). */
-export const STAFF_TRANSITIONS: readonly OrderStatus[] = ["preparing", "ready", "completed"];
-
 export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
-  return TRANSITIONS[from].includes(to);
+  return TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-export const ORDER_STATUS_COPY: Record<OrderStatus, { label: string; detail: string }> = {
-  pending: {
-    label: "Pendiente de pago",
-    detail: "Estamos esperando la confirmación del pago.",
-  },
-  paid: {
-    label: "Pagado",
-    detail: "Pago confirmado. El restaurante ha recibido el pedido.",
-  },
-  failed: {
-    label: "Pago no completado",
-    detail: "El pago no se ha completado. No se ha realizado ningún cargo.",
-  },
-  cancelled: {
-    label: "Cancelado",
-    detail: "El pedido se ha cancelado.",
-  },
-  preparing: {
-    label: "En preparación",
-    detail: "La cocina está preparando tu pedido.",
-  },
-  ready: {
-    label: "Listo para recoger",
-    detail: "Tu pedido está listo. Pasa a recogerlo.",
-  },
-  completed: {
-    label: "Entregado",
-    detail: "Pedido recogido. ¡Que aproveche!",
-  },
-  needs_review: {
-    label: "En revisión",
-    detail: "El restaurante está revisando el pago de este pedido.",
-  },
-};
+/** Statuses a staff member may request directly (the server completes the rest). */
+export const STAFF_TARGETS = ["accepting", "rejecting", "ready", "completed"] as const;
 
-/** The happy path shown as a progress timeline. */
-export const ORDER_PROGRESS: readonly OrderStatus[] = [
-  "pending",
-  "paid",
-  "preparing",
-  "ready",
-  "completed",
-];
+/** Orders waiting for a human decision in the panel. */
+export const DECISION_STATUSES: readonly OrderStatus[] = ["awaiting_acceptance", "needs_review"];
 
-export function progressIndex(status: OrderStatus): number {
-  return ORDER_PROGRESS.indexOf(status);
-}
+/** Short-lived locks while Stripe is called; a stale lock is resolved by reconciliation. */
+export const LOCK_STATUSES: readonly OrderStatus[] = ["accepting", "rejecting"];
 
+/** No further commercial changes are expected (the money may still settle: see isSettled). */
 export function isFinalStatus(status: OrderStatus): boolean {
-  return status === "completed" || status === "cancelled";
+  return status === "completed" || status === "rejected" || status === "cancelled";
 }
+
+/** Payment states that will still change by themselves (Stripe has not finished). */
+export function isPaymentInFlight(payment: PaymentStatus): boolean {
+  return payment === "processing" || payment === "refund_pending";
+}
+
+/** Nothing left to wait for: the customer's status page can stop polling. */
+export function isSettled(order: { status: OrderStatus; paymentStatus: PaymentStatus }): boolean {
+  return isFinalStatus(order.status) && !isPaymentInFlight(order.paymentStatus);
+}
+
+/**
+ * Orders stored before the acceptance flow (status "paid": charged immediately, waiting
+ * for the kitchen) become "awaiting_acceptance" with a captured payment, so they keep
+ * working: accepting needs no capture and rejecting refunds them.
+ */
+export function normalizeLegacyStatus(
+  status: string,
+  paymentStatus?: string | null,
+): { status: OrderStatus; paymentStatus: PaymentStatus } {
+  const known = status in TRANSITIONS ? (status as OrderStatus) : null;
+  const payment = (paymentStatus ?? null) as PaymentStatus | null;
+  if (status === "paid") return { status: "awaiting_acceptance", paymentStatus: payment ?? "captured" };
+  if (!known) return { status: "needs_review", paymentStatus: payment ?? "unpaid" };
+  if (payment) return { status: known, paymentStatus: payment };
+  const inferred: PaymentStatus =
+    known === "preparing" || known === "ready" || known === "completed"
+      ? "captured"
+      : known === "failed"
+        ? "failed"
+        : "unpaid";
+  return { status: known, paymentStatus: inferred };
+}
+
+/** Spanish labels (staff panel, logs). Customer-facing copy lives in messages.ts. */
+export const ORDER_STATUS_COPY = ORDER_STATUS_TEXT.es;

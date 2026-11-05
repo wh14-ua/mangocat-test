@@ -111,13 +111,20 @@ describe("prepareOrder (server-side checkout rules)", () => {
 
 describe("order lifecycle", () => {
   it("allows only legitimate transitions", () => {
-    expect(canTransition("pending", "paid")).toBe(true);
-    expect(canTransition("paid", "preparing")).toBe(true);
+    expect(canTransition("pending", "awaiting_acceptance")).toBe(true);
+    expect(canTransition("awaiting_acceptance", "accepting")).toBe(true);
+    expect(canTransition("accepting", "preparing")).toBe(true);
+    expect(canTransition("awaiting_acceptance", "rejecting")).toBe(true);
+    expect(canTransition("rejecting", "rejected")).toBe(true);
     expect(canTransition("preparing", "ready")).toBe(true);
     expect(canTransition("ready", "completed")).toBe(true);
+    // The kitchen never gets an order the restaurant has not accepted (and paid).
+    expect(canTransition("pending", "preparing")).toBe(false);
+    expect(canTransition("awaiting_acceptance", "preparing")).toBe(false);
     expect(canTransition("pending", "completed")).toBe(false);
     expect(canTransition("completed", "pending")).toBe(false);
-    expect(canTransition("cancelled", "paid")).toBe(false);
+    expect(canTransition("rejected", "preparing")).toBe(false);
+    expect(canTransition("cancelled", "awaiting_acceptance")).toBe(false);
   });
 
   it("knows the opening hours in the restaurant's time zone", () => {
@@ -162,12 +169,82 @@ describe("demo gateway", () => {
     expect(pending).toMatchObject({ ok: true, order: { status: "pending", totalCents: 3890, mode: "demo" } });
     expect(await gw.getOrder(created.orderId, "wrong-token")).toEqual({ ok: false, error: "not-found" });
 
+    // Paying only authorises: the restaurant still has to accept.
     const paid = await gw.simulatePayment(created.orderId, created.orderToken, "approve");
-    expect(paid).toMatchObject({ ok: true, order: { status: "paid" } });
-    for (const expected of ["preparing", "ready", "completed", "completed"]) {
-      const next = await gw.advanceDemoOrder(created.orderId, created.orderToken);
+    expect(paid).toMatchObject({ ok: true, order: { status: "awaiting_acceptance", paymentStatus: "authorized" } });
+
+    // The kitchen cannot skip acceptance.
+    const early = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: "ready" });
+    expect(early).toMatchObject({ ok: true, order: { status: "awaiting_acceptance" } });
+
+    const accepted = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: "accept", prepMinutes: 20 });
+    expect(accepted).toMatchObject({ ok: true, order: { status: "preparing", paymentStatus: "captured", prepMinutes: 20 } });
+    if (!accepted.ok) return;
+    expect(Date.parse(accepted.order.readyBy!) - Date.parse(accepted.order.acceptedAt!)).toBe(20 * 60_000);
+
+    for (const [action, expected] of [["ready", "ready"], ["complete", "completed"], ["complete", "completed"]] as const) {
+      const next = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: action });
       expect(next).toMatchObject({ ok: true, order: { status: expected } });
     }
+  });
+
+  it("rejects by releasing the authorisation (nothing charged) and keeps the reason", async () => {
+    const gw = createDemoGateway({ storageKey: "demo", prepare: ctx, paymentPath: () => "/", storage: memoryStorage(), latencyMs: 0 });
+    const created = await gw.createCheckout(request() as never);
+    if (!created.ok) throw new Error("expected ok");
+    await gw.simulatePayment(created.orderId, created.orderToken, "approve");
+    const rejected = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: "reject", reason: "Cocina cerrada" });
+    expect(rejected).toMatchObject({
+      ok: true,
+      order: { status: "rejected", paymentStatus: "canceled", rejectionReason: "Cocina cerrada" },
+    });
+    // A rejected order can no longer be accepted.
+    const late = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: "accept", prepMinutes: 15 });
+    expect(late).toMatchObject({ order: { status: "rejected" } });
+  });
+
+  it("refuses preparation times outside 5–180 minutes", async () => {
+    const gw = createDemoGateway({ storageKey: "demo", prepare: ctx, paymentPath: () => "/", storage: memoryStorage(), latencyMs: 0 });
+    const created = await gw.createCheckout(request() as never);
+    if (!created.ok) throw new Error("expected ok");
+    await gw.simulatePayment(created.orderId, created.orderToken, "approve");
+    for (const prepMinutes of [0, 4, 181, Number.NaN]) {
+      const res = await gw.simulateRestaurant(created.orderId, created.orderToken, { type: "accept", prepMinutes });
+      expect(res).toMatchObject({ order: { status: "awaiting_acceptance" } });
+    }
+  });
+
+  it("reads demo orders saved before the acceptance flow", async () => {
+    const storage = memoryStorage();
+    const legacy = {
+      "DEMO-OLD234": {
+        token: "tok",
+        order: {
+          id: "DEMO-OLD234",
+          status: "paid",
+          createdAt: "2026-10-29T10:00:00.000Z",
+          updatedAt: "2026-10-29T10:00:00.000Z",
+          fulfillment: "pickup",
+          lines: [],
+          subtotalCents: 100,
+          deliveryFeeCents: 0,
+          totalCents: 100,
+          currency: "EUR",
+          customerName: "Ana",
+          mode: "demo",
+        },
+      },
+    };
+    storage.setItem("demo", JSON.stringify(legacy));
+    const gw = createDemoGateway({ storageKey: "demo", prepare: ctx, paymentPath: () => "/", storage, latencyMs: 0 });
+    expect(await gw.getOrder("DEMO-OLD234", "tok")).toMatchObject({
+      ok: true,
+      order: { status: "awaiting_acceptance", paymentStatus: "captured" },
+    });
+    // Captured legacy orders are refunded when rejected.
+    expect(await gw.simulateRestaurant("DEMO-OLD234", "tok", { type: "reject" })).toMatchObject({
+      order: { status: "rejected", paymentStatus: "refunded" },
+    });
   });
 
   it("returns the same validation errors as the server", async () => {

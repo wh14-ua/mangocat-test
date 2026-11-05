@@ -1,5 +1,6 @@
 import type { MenuCatalog, MenuCategory, MenuItem } from "./types";
 import { normalizeText, tokenize } from "./text";
+import { NOT_ORDERABLE_TEXT } from "./messages";
 
 export type NotOrderableReason =
   | "unavailable"
@@ -29,12 +30,8 @@ export function getOrderability(item: MenuItem): Orderability {
   return { orderable: true };
 }
 
-export const NOT_ORDERABLE_COPY: Record<NotOrderableReason, string> = {
-  unavailable: "No disponible ahora",
-  "price-pending": "Precio pendiente de confirmar",
-  "price-conflict": "Precio pendiente de confirmar",
-  duplicate: "No disponible",
-};
+/** Spanish wording, kept for existing imports. Localized: NOT_ORDERABLE_TEXT in messages.ts. */
+export const NOT_ORDERABLE_COPY: Record<NotOrderableReason, string> = NOT_ORDERABLE_TEXT.es;
 
 export type CatalogIndex = {
   catalog: MenuCatalog;
@@ -46,9 +43,16 @@ export type CatalogIndex = {
   search: (query: string, limit?: number) => MenuItem[];
 };
 
-type SearchEntry = { item: MenuItem; name: string; haystack: string };
+type SearchEntry = { item: MenuItem; names: string[]; haystack: string };
 
-export function createCatalogIndex(catalog: MenuCatalog): CatalogIndex {
+export type CatalogIndexOptions = {
+  /** Extra searchable text per item, e.g. names and descriptions in other languages. */
+  searchText?: (item: MenuItem, category: MenuCategory | undefined) => (string | undefined)[];
+  /** Extra names that count as the item's name for ranking (prefix matches score higher). */
+  searchNames?: (item: MenuItem) => (string | undefined)[];
+};
+
+export function createCatalogIndex(catalog: MenuCatalog, options: CatalogIndexOptions = {}): CatalogIndex {
   const byId = new Map(catalog.items.map((i) => [i.id, i]));
   const categoryById = new Map(catalog.categories.map((c) => [c.id, c]));
   const sections = catalog.categories.map((category) => ({
@@ -61,11 +65,21 @@ export function createCatalogIndex(catalog: MenuCatalog): CatalogIndex {
 
   const entries: SearchEntry[] = visibleItems.map((item) => {
     const category = categoryById.get(item.categoryId);
+    const rawNames = [item.name, item.nameEn, ...(options.searchNames?.(item) ?? [])].filter(
+      (n): n is string => Boolean(n),
+    );
     return {
       item,
-      name: normalizeText(item.name),
+      names: [...new Set(rawNames.map(normalizeText))],
       haystack: normalizeText(
-        [item.name, item.nameEn, item.description, category?.name, category?.nameEn]
+        [
+          ...rawNames,
+          item.description,
+          item.descriptionEn,
+          category?.name,
+          category?.nameEn,
+          ...(options.searchText?.(item, category) ?? []),
+        ]
           .filter(Boolean)
           .join(" "),
       ),
@@ -81,8 +95,8 @@ export function createCatalogIndex(catalog: MenuCatalog): CatalogIndex {
       let score = 0;
       for (const token of tokens) {
         if (!entry.haystack.includes(token)) return; // every token must match
-        if (entry.name.startsWith(token)) score += 6;
-        else if (entry.name.split(" ").some((w) => w.startsWith(token))) score += 4;
+        if (entry.names.some((n) => n.startsWith(token))) score += 6;
+        else if (entry.names.some((n) => n.split(" ").some((w) => w.startsWith(token)))) score += 4;
         else if (words.some((w) => w.startsWith(token))) score += 2;
         else score += 1;
       }

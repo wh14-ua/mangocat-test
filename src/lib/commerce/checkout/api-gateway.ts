@@ -1,4 +1,5 @@
 import type { CheckoutRequest, OrderSummary } from "../types";
+import { normalizeLegacyStatus } from "../orders";
 import type {
   CheckoutFailure,
   CheckoutResult,
@@ -79,7 +80,13 @@ export function createApiGateway(baseUrl: string, fetchImpl: Fetch = fetch): Ord
       if (res.status === 404 || res.status === 401) return { ok: false, error: "not-found" };
       if (!res.ok) return { ok: false, error: "server" };
       const body = (await res.json().catch(() => null)) as { order?: OrderSummary } | null;
-      return body?.order ? { ok: true, order: body.order } : { ok: false, error: "server" };
+      if (!body?.order) return { ok: false, error: "server" };
+      const order = body.order;
+      // A Worker deployed before the acceptance flow sends no paymentStatus.
+      return {
+        ok: true,
+        order: order.paymentStatus ? order : { ...order, ...normalizeLegacyStatus(order.status) },
+      };
     },
   };
 }

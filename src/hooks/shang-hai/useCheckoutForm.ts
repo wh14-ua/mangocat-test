@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { validateCustomer, type FieldErrors } from "@/lib/commerce/validation";
 import type { CheckoutFailure } from "@/lib/commerce/checkout/gateway";
-import { CHECKOUT_ERROR_COPY } from "@/lib/commerce/checkout/gateway";
+import { CHECKOUT_ERROR_TEXT, VALIDATION_TEXT } from "@/lib/commerce/messages";
 import { getOrderGateway, lastOrderStorageKey } from "@/lib/shang-hai/checkout";
 import { shangHaiCatalog, shangHaiOrdering } from "@/lib/shang-hai/catalog";
 import { useCart } from "./useCart";
+import { useLocale } from "./useLocale";
 
 export type CheckoutValues = {
   name: string;
@@ -29,6 +30,7 @@ export const CHECKOUT_FIELDS = ["name", "phone", "email", "notes"] as const;
 export function useCheckoutForm() {
   const router = useRouter();
   const cart = useCart();
+  const { locale } = useLocale();
   const [values, setValues] = useState<CheckoutValues>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -43,13 +45,28 @@ export function useCheckoutForm() {
   const requiresAge = cart.quote.containsAgeRestricted;
 
   function validate(): FieldErrors {
-    const result = validateCustomer(values, shangHaiOrdering.limits);
+    const result = validateCustomer(values, shangHaiOrdering.limits, locale);
     const next: FieldErrors = result.ok ? {} : { ...result.errors };
     if (requiresAge && !values.ageConfirmed) {
-      next.ageConfirmed = "Confirma que eres mayor de 18 años para pedir bebidas alcohólicas.";
+      next.ageConfirmed = VALIDATION_TEXT[locale].ageConfirmation;
     }
     return next;
   }
+
+  // Switching language re-words the messages already on screen (same fields, new language).
+  const previousLocale = useRef(locale);
+  useEffect(() => {
+    if (previousLocale.current === locale) return;
+    previousLocale.current = locale;
+    setErrors((current) => {
+      const shown = Object.keys(current).filter((k) => current[k]);
+      if (!shown.length) return current;
+      const fresh = validate();
+      return Object.fromEntries(shown.map((k) => [k, fresh[k] ?? current[k]]));
+    });
+    // validate() reads the latest values; re-running only on a language change is intended.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   function focusFirstError(errs: FieldErrors) {
     const first = ["name", "phone", "email", "notes", "ageConfirmed"].find((k) => errs[k]);
@@ -91,6 +108,8 @@ export function useCheckoutForm() {
       },
       ageConfirmed: requiresAge ? values.ageConfirmed : undefined,
       expectedTotalCents: cart.quote.totalCents,
+      // Stripe Checkout, server messages and the return page follow the visitor's language.
+      locale,
     });
     if (!result.ok) {
       setSubmitting(false);
@@ -124,7 +143,7 @@ export function useCheckoutForm() {
     submit,
     submitting,
     failure,
-    failureMessage: failure ? CHECKOUT_ERROR_COPY[failure.error] : null,
+    failureMessage: failure ? CHECKOUT_ERROR_TEXT[locale][failure.error] : null,
     requiresAge,
     formRef,
     quote: cart.quote,

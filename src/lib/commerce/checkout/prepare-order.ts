@@ -3,6 +3,7 @@ import type { CatalogIndex } from "../catalog";
 import { quoteLines, type Quote } from "../pricing";
 import { parseCheckoutRequest } from "../validation";
 import { isOpenAt } from "../hours";
+import { VALIDATION_TEXT } from "../messages";
 import type { CheckoutFailure } from "./gateway";
 
 export type PrepareContext = {
@@ -28,7 +29,8 @@ export function prepareOrder(
   const request = parsed.value;
 
   if (request.catalogId !== ctx.index.catalog.catalogId) {
-    return { ok: false, error: "invalid", fieldErrors: { catalogId: "Catálogo no válido." } };
+    const locale = request.locale ?? "es";
+    return { ok: false, error: "invalid", fieldErrors: { catalogId: VALIDATION_TEXT[locale].catalogId } };
   }
   if (request.fulfillment === "pickup" && !ctx.ordering.pickup.enabled) {
     return { ok: false, error: "payments-disabled" };

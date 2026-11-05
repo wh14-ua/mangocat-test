@@ -161,18 +161,65 @@ export type OrderingConfig = {
 // Orders
 // ---------------------------------------------------------------------------
 
+/**
+ * Commercial status of an order: where it is in the restaurant's workflow. What happened
+ * with the money is a separate axis (PaymentStatus), so "accepted" never implies "charged"
+ * and "rejected" never implies "refunded".
+ *
+ *   pending              checkout open, waiting for the customer's payment
+ *   awaiting_acceptance  payment authorised (or captured): the restaurant must accept or reject
+ *   accepting            a staff member accepted; the payment is being captured (short lock)
+ *   rejecting            a staff member rejected; the authorisation is being released or refunded
+ *   preparing            accepted with payment captured: in the kitchen
+ *   ready                ready for pickup
+ *   completed            handed over to the customer
+ *   rejected             declined by the restaurant (see PaymentStatus for the money)
+ *   failed               the payment did not go through
+ *   cancelled            no payment completed (session expired, authorisation expired…)
+ *   needs_review         something does not add up (amounts, a failed refund…): staff must check
+ */
 export const ORDER_STATUSES = [
   "pending",
-  "paid",
-  "failed",
-  "cancelled",
+  "awaiting_acceptance",
+  "accepting",
+  "rejecting",
   "preparing",
   "ready",
   "completed",
+  "rejected",
+  "failed",
+  "cancelled",
   "needs_review",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+/**
+ * What Stripe says about the money, as last confirmed by Stripe itself (webhook + API).
+ *
+ *   unpaid          nothing paid yet
+ *   processing      submitted, Stripe still processing (delayed payment methods)
+ *   authorized      funds held on the card, NOT charged; charged only if the restaurant accepts
+ *   captured        charged
+ *   canceled        authorisation released: nothing was charged
+ *   failed          the payment attempt failed
+ *   refund_pending  refund requested, Stripe has not confirmed it yet
+ *   refunded        refund confirmed by Stripe
+ *   refund_failed   the refund failed: staff must act
+ */
+export const PAYMENT_STATUSES = [
+  "unpaid",
+  "processing",
+  "authorized",
+  "captured",
+  "canceled",
+  "failed",
+  "refund_pending",
+  "refunded",
+  "refund_failed",
+] as const;
+
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export type CustomerDetails = {
   name: string;
@@ -201,6 +248,8 @@ export type CheckoutRequest = {
   ageConfirmed?: boolean;
   /** The total the customer saw. Used only to detect price changes, never to charge. */
   expectedTotalCents?: number;
+  /** Customer's language ("es" | "en"): Stripe Checkout, messages and return URLs. */
+  locale?: "es" | "en";
 };
 
 export type PricedLine = {
@@ -218,9 +267,21 @@ export type PricedLine = {
 
 export type OrderSummary = {
   id: string;
+  /** Short number for the counter and the kitchen (#1042). Absent on demo/legacy orders. */
+  number?: number;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   createdAt: string;
   updatedAt: string;
+  /** Set by the restaurant when it accepts: minutes it expects to need, and the resulting time. */
+  acceptedAt?: string;
+  prepMinutes?: number;
+  readyBy?: string;
+  readyAt?: string;
+  completedAt?: string;
+  rejectedAt?: string;
+  /** Optional reason the restaurant chose to share with the customer. */
+  rejectionReason?: string;
   fulfillment: FulfillmentType;
   lines: PricedLine[];
   subtotalCents: number;
@@ -230,5 +291,6 @@ export type OrderSummary = {
   customerName: string;
   /** "demo" orders never reach the restaurant. */
   mode: "demo" | "stripe-test" | "stripe-live";
+  /** Legacy free text (pre-2026-11 orders). New UIs derive their copy from the fields above. */
   pickupNote?: string;
 };
