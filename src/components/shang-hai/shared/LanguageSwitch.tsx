@@ -8,8 +8,8 @@ import { LOCALES, LOCALE_NAMES, type Locale } from "@/lib/i18n/locale";
  * in its own identity through the class names and the data attributes it exposes
  * (`data-locale` on every button, `data-active="true"` on the current one).
  *
- * Every button is a real toggle (aria-pressed), labelled in its own language so a screen
- * reader pronounces "English" correctly even on the Spanish page.
+ * Every button is a real toggle (aria-pressed), named "ES · Español" / "EN · English" (the
+ * visible code first, then the language in its own language, with a matching `lang`).
  */
 export function LanguageSwitch({
   className,
@@ -45,7 +45,8 @@ export function LanguageSwitch({
               lang={code}
               className={buttonClassName}
               aria-pressed={active}
-              aria-label={LOCALE_NAMES[code].name}
+              // The accessible name must contain the visible code (WCAG 2.5.3), plus the language name.
+              aria-label={`${LOCALE_NAMES[code].short} · ${LOCALE_NAMES[code].name}`}
               data-locale={code}
               data-active={active ? "true" : undefined}
               data-testid={`language-${code}`}

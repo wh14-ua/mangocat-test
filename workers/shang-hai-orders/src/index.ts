@@ -70,7 +70,9 @@ function panelStatic(path: string): Response | null {
   headers.set("Content-Type", asset.contentType);
   headers.set("Cache-Control", asset.cacheControl);
   if (path.endsWith("/sw.js")) headers.set("Service-Worker-Allowed", "/admin/");
-  return new Response(asset.body, { status: 200, headers });
+  // Copy binary assets into a plain ArrayBuffer-backed view (valid BodyInit everywhere).
+  const body = typeof asset.body === "string" ? asset.body : new Uint8Array(asset.body);
+  return new Response(body, { status: 200, headers });
 }
 
 export async function handleRequest(request: Request, env: Env, deps: Deps): Promise<Response> {

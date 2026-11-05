@@ -2,7 +2,14 @@
 // end-to-end stack. Records every message (chat, text, button) and can be told to fail
 // like Telegram does: 429 with retry_after, 403 when a chat blocked the bot, or a network error.
 
+/**
+ * @typedef {{ message_id: number, chat_id: string, text: string, parse_mode: string | null,
+ *   button: { text: string, url: string } | null, at: string }} FakeTelegramMessage
+ * @typedef {{ status?: number, retryAfter?: number, network?: boolean }} FakeTelegramFailure
+ */
+
 export function createFakeTelegram() {
+  /** @type {{ messages: FakeTelegramMessage[], failures: FakeTelegramFailure[], calls: number }} */
   const state = { messages: [], failures: [], calls: 0 };
 
   function handle(path, body) {
