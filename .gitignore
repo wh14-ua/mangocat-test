@@ -65,3 +65,7 @@ node_modules/
 # Playwright output
 /test-results/
 /playwright-report/
+
+# local end-to-end stack (scripts/local-stack)
+/out-local/
+/.local-stack/

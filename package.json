@@ -15,7 +15,9 @@
     "menu:check": "node scripts/import-shang-hai-menu.mjs --check",
     "check": "npm run typecheck && npm run lint:shang-hai && npm run test && npm run menu:check",
     "lint:shang-hai": "eslint src/lib src/hooks src/components/shang-hai src/app/showcase/shang-hai src/data scripts tests workers",
-    "previews:shang-hai": "node scripts/capture-shang-hai-previews.mjs"
+    "previews:shang-hai": "node scripts/capture-shang-hai-previews.mjs",
+    "demo:local": "node scripts/local-stack/run.mjs",
+    "test:e2e:ordering": "playwright test --config playwright.ordering.config.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
