@@ -2,19 +2,31 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useCart } from "@/hooks/shang-hai/useCart";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { useMenuSearch } from "@/hooks/shang-hai/useMenuSearch";
 import type { MenuItem } from "@/lib/commerce/types";
+import type { Locale } from "@/lib/i18n/locale";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
 import { ShPhoto } from "@/components/shang-hai/shared/ShPhoto";
 import { useInkUI } from "./InkUI";
 import { InkRow, type RowCartState } from "./InkRow";
-import { CHAPTER_BY_CATEGORY, CHAPTERS, PARTS, platosLabel, VISIBLE_DISH_COUNT } from "./chapters";
+import {
+  CHAPTER_BY_CATEGORY,
+  CHAPTERS,
+  PARTS,
+  VISIBLE_DISH_COUNT,
+  chapterAltTitle,
+  chapterTitle,
+  partOrdinal,
+  partTitle,
+} from "./chapters";
 import { goToAnchor } from "./InkHeader";
 import { inkPhotos } from "./ink-photos";
 
 const EMPTY: RowCartState = { quantity: 0, lineKey: null };
 
 /** Photographic plates placed before two chapters, like plates bound into a book. */
-const PLATES: Record<string, { number: number; photo: keyof typeof inkPhotos }> = {
+const PLATES: Record<string, { number: number; photo: "dimsum" | "sushi" }> = {
   "dim-sum": { number: 1, photo: "dimsum" },
   nigiris: { number: 2, photo: "sushi" },
 };
@@ -23,10 +35,12 @@ export function InkCarta() {
   const cart = useCart();
   const ui = useInkUI();
   const search = useMenuSearch();
+  const { locale } = useLocale();
+  const t = INK_TEXT[locale];
   const [active, setActive] = useState(CHAPTERS[0].id);
 
   // One subscription for the whole carta; rows are memoized and only re-render when
-  // their own quantity changes.
+  // their own quantity (or the language) changes.
   const cartByItem = useMemo(() => {
     const map = new Map<string, RowCartState>();
     for (const line of cart.lines) {
@@ -73,11 +87,11 @@ export function InkCarta() {
   return (
     <section id="carta" className="ink-carta" aria-labelledby="ink-carta-title">
       <div className="ink-carta__body">
-        <nav className="ink-index" aria-label="Índice de la carta">
-          <p className="ink-index__title">Índice</p>
+        <nav className="ink-index" aria-label={t.carta.indexLabel}>
+          <p className="ink-index__title">{t.carta.indexTitle}</p>
           {PARTS.map((part) => (
             <div key={part.id} className="ink-index__part">
-              <p className="ink-index__part-title">{part.title}</p>
+              <p className="ink-index__part-title">{partTitle(part, locale)}</p>
               <ol className="ink-index__list">
                 {part.chapters.map((c) => (
                   <li key={c.id}>
@@ -91,7 +105,7 @@ export function InkCarta() {
                       }}
                     >
                       <span className="ink-num">{c.number}</span>
-                      <span className="ink-index__name">{c.title}</span>
+                      <span className="ink-index__name">{chapterTitle(c, locale)}</span>
                     </a>
                   </li>
                 ))}
@@ -103,15 +117,12 @@ export function InkCarta() {
         <div className="ink-chapters">
           <div className="ink-carta__head">
             <h2 id="ink-carta-title" className="ink-carta__title" tabIndex={-1} data-anchor-focus>
-              La carta
+              {t.carta.title}
             </h2>
-            <p className="ink-carta__intro">
-              {CHAPTERS.length} capítulos y {VISIBLE_DISH_COUNT} platos, en el orden de la casa. Los
-              pedidos online son para recoger en el local.
-            </p>
+            <p className="ink-carta__intro">{t.carta.intro(CHAPTERS.length, VISIBLE_DISH_COUNT)}</p>
             <div className="ink-search" role="search">
               <label htmlFor="ink-search" className="ink-search__label">
-                Buscar en la carta
+                {t.carta.searchLabel}
               </label>
               <div className="ink-search__field">
                 <input
@@ -119,7 +130,7 @@ export function InkCarta() {
                   type="search"
                   data-testid="menu-search"
                   className="ink-search__input"
-                  placeholder="Pato, gyozas, maki de salmón…"
+                  placeholder={t.carta.searchPlaceholder}
                   autoComplete="off"
                   enterKeyHint="search"
                   value={search.query}
@@ -127,7 +138,7 @@ export function InkCarta() {
                 />
                 {search.active && (
                   <button type="button" className="ink-search__clear" onClick={() => search.setQuery("")}>
-                    Borrar
+                    {t.carta.clearSearch}
                   </button>
                 )}
               </div>
@@ -138,6 +149,7 @@ export function InkCarta() {
               query={search.query}
               results={search.results}
               cartByItem={cartByItem}
+              locale={locale}
               onBrowse={() => {
                 search.setQuery("");
                 goToAnchor("carta");
@@ -148,25 +160,24 @@ export function InkCarta() {
             PARTS.map((part) => (
               <div key={part.id} className="ink-part">
                 <div className="ink-part__head">
-                  <p className="ink-part__ordinal">{part.ordinal}</p>
-                  <p className="ink-part__title">{part.title}</p>
+                  <p className="ink-part__ordinal">{partOrdinal(part, locale)}</p>
+                  <p className="ink-part__title">{partTitle(part, locale)}</p>
                 </div>
                 {part.chapters.map((chapter) => {
                   const plate = PLATES[chapter.id];
-                  const plateNumber = plate?.number;
                   const photo = plate ? inkPhotos[plate.photo] : undefined;
+                  const altTitle = chapterAltTitle(chapter, locale);
                   return (
                     <Fragment key={chapter.id}>
                       {plate && photo && (
                         <figure className="ink-plate">
                           <ShPhoto
                             photo={photo}
+                            alt={t.photoAlt[plate.photo]}
                             sizes="(min-width: 900px) 52vw, 92vw"
                             className="ink-plate__img ink-photo"
                           />
-                          <figcaption className="ink-caption">
-                            Lámina {plateNumber}. Imagen ilustrativa.
-                          </figcaption>
+                          <figcaption className="ink-caption">{t.carta.plate(plate.number)}</figcaption>
                         </figure>
                       )}
                       <section
@@ -185,14 +196,14 @@ export function InkCarta() {
                             tabIndex={-1}
                             data-anchor-focus
                           >
-                            {chapter.title}
+                            {chapterTitle(chapter, locale)}
                           </h3>
-                          {chapter.titleEn && (
-                            <span className="ink-chapter__en" lang="en">
-                              {chapter.titleEn}
+                          {altTitle && (
+                            <span className="ink-chapter__en" lang={locale === "es" ? "en" : "es"}>
+                              {altTitle}
                             </span>
                           )}
-                          <span className="ink-chapter__count">{platosLabel(chapter.items.length)}</span>
+                          <span className="ink-chapter__count">{t.carta.dishes(chapter.items.length)}</span>
                         </header>
                         <ul className="ink-rows">
                           {chapter.items.map((item) => (
@@ -221,6 +232,7 @@ function SearchResults({
   query,
   results,
   cartByItem,
+  locale,
   onBrowse,
   onAdd,
   onIncrement,
@@ -229,24 +241,24 @@ function SearchResults({
   query: string;
   results: MenuItem[];
   cartByItem: Map<string, RowCartState>;
+  locale: Locale;
   onBrowse: () => void;
   onAdd: (item: MenuItem) => void;
   onIncrement: (key: string) => void;
   onDecrement: (key: string) => void;
 }) {
+  const t = INK_TEXT[locale].carta;
   const q = query.trim();
   return (
     <section className="ink-results" aria-labelledby="ink-results-title">
       <h3 id="ink-results-title" className="ink-results__title" aria-live="polite">
-        {results.length === 0
-          ? `Sin resultados para «${q}»`
-          : `${results.length} ${results.length === 1 ? "resultado" : "resultados"} para «${q}»`}
+        {results.length === 0 ? t.noResults(q) : t.results(results.length, q)}
       </h3>
       {results.length === 0 ? (
         <div className="ink-results__empty">
-          <p>Prueba con otra palabra, como «pollo», «nigiri» o «tallarines», o recorre la carta por capítulos.</p>
+          <p>{t.noResultsHint}</p>
           <button type="button" className="ink-button ink-button--quiet" onClick={onBrowse}>
-            Ver todos los capítulos
+            {t.browseAll}
           </button>
         </div>
       ) : (
@@ -258,7 +270,7 @@ function SearchResults({
                 key={item.id}
                 item={item}
                 cart={cartByItem.get(item.id) ?? EMPTY}
-                chapter={chapter ? { number: chapter.number, title: chapter.title } : undefined}
+                chapter={chapter}
                 onAdd={onAdd}
                 onIncrement={onIncrement}
                 onDecrement={onDecrement}

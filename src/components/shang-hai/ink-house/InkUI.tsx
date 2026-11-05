@@ -3,8 +3,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/hooks/shang-hai/useCart";
-import { NOT_ORDERABLE_COPY, type NotOrderableReason } from "@/lib/commerce/catalog";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import type { NotOrderableReason } from "@/lib/commerce/catalog";
+import { NOT_ORDERABLE_TEXT } from "@/lib/commerce/messages";
 import type { MenuItem, OptionSelections } from "@/lib/commerce/types";
+import type { Locale } from "@/lib/i18n/locale";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
+import { itemName } from "@/lib/shang-hai/menu-i18n";
 
 type AddError =
   | NotOrderableReason
@@ -15,15 +20,10 @@ type AddError =
   | "order-limit"
   | "invalid-quantity";
 
-const ADD_ERROR_COPY: Record<AddError, string> = {
-  ...NOT_ORDERABLE_COPY,
-  "unknown-item": "Este plato ya no está en la carta.",
-  "invalid-options": "Elige una opción antes de añadirlo.",
-  "line-limit": "Has llegado al máximo de productos distintos en un pedido online.",
-  "quantity-limit": "Has llegado al máximo de unidades de este plato.",
-  "order-limit": "Has llegado al máximo de unidades de un pedido online.",
-  "invalid-quantity": "Revisa la cantidad.",
-};
+function addErrorText(error: AddError, locale: Locale): string {
+  const own = INK_TEXT[locale].addErrors;
+  return error in own ? own[error as keyof typeof own] : NOT_ORDERABLE_TEXT[locale][error as NotOrderableReason];
+}
 
 type InkUIValue = {
   cartOpen: boolean;
@@ -50,8 +50,11 @@ export function useInkUI(): InkUIValue {
 export function InkUIProvider({ children }: { children: React.ReactNode }) {
   const cart = useCart();
   const cartRef = useRef(cart);
+  const { locale } = useLocale();
+  const localeRef = useRef(locale);
   useEffect(() => {
     cartRef.current = cart;
+    localeRef.current = locale;
   });
 
   const [cartOpen, setCartOpen] = useState(false);
@@ -82,16 +85,15 @@ export function InkUIProvider({ children }: { children: React.ReactNode }) {
         setOptionItem(item);
         return false;
       }
+      const lang = localeRef.current;
       const result = cartRef.current.add(item, selections);
       if (result.ok) {
         const count = result.state.lines.reduce((n, l) => n + l.quantity, 0);
         setStamp((s) => s + 1);
-        announce(
-          `Añadido: ${item.name}. Tu pedido tiene ${count} ${count === 1 ? "producto" : "productos"}.`,
-        );
+        announce(INK_TEXT[lang].added(itemName(item, lang), count));
         return true;
       }
-      announce(ADD_ERROR_COPY[result.error]);
+      announce(addErrorText(result.error, lang));
       return false;
     },
     [announce],

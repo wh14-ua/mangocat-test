@@ -376,18 +376,81 @@ html:has(.ink-root) body {
       display: inline;
     }
   }
-  /* Very narrow phones: the seal alone carries the brand in the bar (the hero
-     right below sets SHANG HAI at full size). */
-  @media (max-width: 379px) {
-    .ink-header__inner {
-      gap: 0.75rem;
-    }
+  /* Phones: the seal alone carries the brand in the bar (the hero right below sets
+     SHANG HAI at full size), which leaves the room for ES | EN next to the order. */
+  @media (max-width: 519px) {
     .ink-brand__word {
       display: none;
     }
     .ink-brand__seal {
       width: 1.15rem;
     }
+  }
+  /* Very narrow phones: the bar's controls close up so nothing ever scrolls sideways. */
+  @media (max-width: 379px) {
+    .ink-header__inner {
+      gap: 0.5rem;
+    }
+    .ink-header__actions {
+      gap: 0;
+    }
+    .ink-header[data-variant="compact"] .ink-header__actions {
+      margin-left: 0.25rem;
+    }
+    .ink-cart-trigger,
+    .ink-index-trigger {
+      padding: 0 0.25rem;
+    }
+  }
+
+  /* ---------- Language switch: ES | EN, set like a running head ---------- */
+  .ink-lang {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+  }
+  .ink-lang__btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    /* The tracking adds space after the last letter: balance it on the left. */
+    padding: 0 0.15rem 0 calc(0.15rem + 0.1em);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    color: var(--ink-stone-text);
+    transition: color 0.2s;
+  }
+  .ink-lang__btn::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0.6rem;
+    width: 1.1rem;
+    height: 1.5px;
+    margin-left: -0.55rem;
+    background: var(--ink-lacquer);
+    transform: scaleX(0);
+    transition: transform 0.35s var(--ink-ease);
+  }
+  .ink-lang__btn:hover {
+    color: var(--ink-ink);
+  }
+  .ink-lang__btn[data-active="true"] {
+    color: var(--ink-ink);
+    cursor: default;
+  }
+  .ink-lang__btn[data-active="true"]::after {
+    transform: scaleX(1);
+  }
+  .ink-lang__rule {
+    flex: none;
+    width: 1px;
+    height: 0.95rem;
+    background: var(--ink-hair-strong);
   }
 
   @media (min-width: 900px) {
@@ -427,6 +490,11 @@ html:has(.ink-root) body {
   .ink-index-dialog__title {
     font-family: var(--ink-display);
     font-size: 1.5rem;
+  }
+  .ink-index-dialog__tools {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
   .ink-index-dialog__main {
     list-style: none;
@@ -945,6 +1013,40 @@ html:has(.ink-root) body {
     text-decoration-color: var(--ink-lacquer);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.3em;
+  }
+
+  /* Dish photos (?fotos=1): a small plate tipped in at the start of the row, mounted
+     with a hairline and printed into the paper. Rows without a photo keep the printed
+     two-column line exactly as it was. */
+  .ink-row[data-photo] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .ink-row__plate {
+    width: 5.25rem;
+    margin-top: 0.3rem;
+  }
+  .ink-row__plate-img {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    padding: 3px;
+    border: 1px solid var(--ink-hair-strong);
+    object-fit: cover;
+    mix-blend-mode: multiply;
+  }
+  .ink-row__plate-label {
+    margin-top: 0.45rem;
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+    color: var(--ink-stone-text);
+  }
+  @media (min-width: 640px) {
+    .ink-row__plate {
+      width: 7.5rem;
+    }
   }
 
   .ink-add {
@@ -1653,6 +1755,15 @@ html:has(.ink-root) body {
     border-left: 3px solid var(--ink-lacquer);
     font-size: 0.9375rem;
   }
+  /* The payment hold, said before the button like a note in the margin. */
+  .ink-hold {
+    max-width: 52ch;
+    padding-left: 0.95rem;
+    border-left: 2px solid var(--ink-lacquer);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--ink-ink-soft);
+  }
   .ink-button--pay {
     width: 100%;
     min-height: 3.5rem;
@@ -1804,12 +1915,59 @@ html:has(.ink-root) body {
     line-height: 1.1;
   }
   .ink-receipt__status[data-status="failed"] .ink-receipt__status-label,
-  .ink-receipt__status[data-status="cancelled"] .ink-receipt__status-label {
+  .ink-receipt__status[data-status="cancelled"] .ink-receipt__status-label,
+  .ink-receipt__status[data-tone="negative"] .ink-receipt__status-label,
+  .ink-receipt__status[data-tone="attention"] .ink-receipt__status-label {
     color: var(--ink-lacquer);
   }
   .ink-receipt__status-detail {
     margin-top: 0.3rem;
     color: var(--ink-ink-soft);
+  }
+  .ink-receipt__number .ink-receipt__short {
+    font-size: 1.0625rem;
+  }
+  .ink-receipt__number .ink-receipt__id {
+    font-weight: 400;
+    color: var(--ink-stone-text);
+    overflow-wrap: anywhere;
+  }
+  .ink-receipt__reason,
+  .ink-receipt__eta {
+    margin-top: 0.9rem;
+  }
+  .ink-receipt__reason .ink-receipt__h,
+  .ink-receipt__eta .ink-receipt__h {
+    display: block;
+  }
+  .ink-receipt__eta-clock {
+    display: block;
+    font-family: var(--ink-display);
+    font-size: 2.25rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .ink-receipt__eta .ink-receipt__muted {
+    display: block;
+    margin-top: 0.4rem;
+  }
+  .ink-receipt__payment-label {
+    font-weight: 600;
+  }
+  .ink-receipt__payment[data-tone="negative"] .ink-receipt__payment-label,
+  .ink-receipt__payment[data-tone="attention"] .ink-receipt__payment-label {
+    color: var(--ink-lacquer);
+  }
+  .ink-receipt__payment .ink-receipt__muted {
+    max-width: 52ch;
+    margin-top: 0.15rem;
+  }
+  .ink-receipt__fresh {
+    font-size: 0.8125rem;
+    color: var(--ink-stone-text);
+  }
+  .ink-receipt__offline {
+    margin-top: 0;
   }
   .ink-receipt__off-path:empty {
     display: none;
@@ -1837,9 +1995,6 @@ html:has(.ink-root) body {
   .ink-receipt__lead {
     max-width: 46ch;
     color: var(--ink-ink-soft);
-  }
-  .ink-receipt > [data-testid="demo-advance"] {
-    justify-self: start;
   }
 
   .ink-timeline {
