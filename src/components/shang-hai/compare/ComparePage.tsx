@@ -186,6 +186,29 @@ export function ComparePage() {
                 >
                   Abrir la propuesta {s.number}
                 </Link>
+                <p className="mt-5 text-[14px]" style={{ color: a.muted }}>
+                  <span className="mr-2">Carta:</span>
+                  <Link
+                    href={`${routes.home}?fotos=0`}
+                    prefetch={false}
+                    data-testid={`compare-${s.id}-sin-fotos`}
+                    className="font-semibold underline underline-offset-4"
+                    style={{ color: a.fg }}
+                  >
+                    sin fotos
+                  </Link>
+                  <span aria-hidden="true"> · </span>
+                  <Link
+                    href={`${routes.home}?fotos=1`}
+                    prefetch={false}
+                    data-testid={`compare-${s.id}-con-fotos`}
+                    className="font-semibold underline underline-offset-4"
+                    style={{ color: a.fg }}
+                  >
+                    con fotos de los platos
+                  </Link>
+                  <span className="block text-[13px]">Fotos ilustrativas generadas con IA en 20 platos.</span>
+                </p>
               </div>
               <div className="md:col-span-7">
                 <Screens id={s.id} name={s.name} />
@@ -216,15 +239,23 @@ export function ComparePage() {
             <li>
               <strong className="block text-[17px]">Pedido para recoger con pago online.</strong>
               <span className="text-[#4d4a43]">
-                En esta demostración el pago es simulado y no se cobra nada. La conexión con
-                Stripe está preparada en modo de pruebas y el servidor recalcula cada importe.
+                Al pagar, el importe solo se reserva en la tarjeta; se cobra cuando aceptáis el
+                pedido y, si lo rechazáis, la reserva se anula. En esta demostración el pago es
+                simulado; la conexión con Stripe está preparada en modo de pruebas.
               </span>
             </li>
             <li>
-              <strong className="block text-[17px]">Pedidos en un panel propio.</strong>
+              <strong className="block text-[17px]">Los pedidos llegan a vuestro móvil.</strong>
               <span className="text-[#4d4a43]">
-                Los pedidos pagados llegan a un panel interno, protegido con acceso autenticado,
-                para marcarlos en preparación, listos y entregados.
+                Aviso inmediato por Telegram y un panel privado en el móvil para aceptar (con el
+                tiempo de preparación) o rechazar cada pedido, y marcarlo como listo y entregado.
+                El cliente ve cada cambio en su pantalla.
+              </span>
+            </li>
+            <li>
+              <strong className="block text-[17px]">En español y en inglés.</strong>
+              <span className="text-[#4d4a43]">
+                Las tres propuestas, la carta completa y el pago funcionan en los dos idiomas.
               </span>
             </li>
             <li>
