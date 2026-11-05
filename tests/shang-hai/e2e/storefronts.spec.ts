@@ -8,7 +8,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  *   go-to-menu, menu-search, add-<itemId>, cart-open, cart-panel,
  *   cart-line-<itemId> > qty-inc | qty-dec | line-remove | line-qty, cart-total,
  *   checkout-start, checkout form inputs name="name|phone|email|notes",
- *   checkout-pay, order-status[data-status], order-number, demo-advance.
+ *   checkout-pay, order-status[data-status][data-payment-status], order-number,
+ *   language-es | language-en, demo-accept-<min> | demo-ready | demo-reject (demo only).
  */
 
 const STOREFRONTS = ["ink-house", "wok-after-dark", "bento-club"] as const;
@@ -95,13 +96,20 @@ for (const storefront of STOREFRONTS) {
       await expect(page.getByText("Demostración — no se realizará ningún cargo")).toBeVisible();
       await page.getByTestId("demo-pay-approve").click();
 
-      // 12. Confirmation reflects the (simulated) backend state
+      // 12. Confirmation reflects the (simulated) backend state: authorised, not charged
       await expect(page).toHaveURL(new RegExp(`${storefront}/pedido/estado/`));
       const status = visible(page.getByTestId("order-status"));
-      await expect(status).toHaveAttribute("data-status", "paid");
+      await expect(status).toHaveAttribute("data-status", "awaiting_acceptance");
+      await expect(status).toHaveAttribute("data-payment-status", "authorized");
       await expect(visible(page.getByTestId("order-number"))).toContainText("DEMO-");
-      await visible(page.getByTestId("demo-advance")).click();
+
+      // 13. The simulated restaurant accepts with 20 minutes, then marks it ready
+      await visible(page.getByTestId("demo-accept-20")).click();
       await expect(status).toHaveAttribute("data-status", "preparing");
+      await expect(status).toHaveAttribute("data-payment-status", "captured");
+      await expect(page.getByText(/listo hacia las \d{2}:\d{2}/i).first()).toBeVisible();
+      await visible(page.getByTestId("demo-ready")).click();
+      await expect(status).toHaveAttribute("data-status", "ready");
       await expectNoHorizontalOverflow(page);
 
       // The paid order empties the cart
@@ -133,6 +141,69 @@ for (const storefront of STOREFRONTS) {
       await expect(page.getByText(/precio pendiente de confirmar/i).first()).toBeVisible();
     });
 
+    test("a rejected demo order says nothing was charged and shows the reason", async ({ page }) => {
+      await visible(page.getByTestId("go-to-menu")).click();
+      await search(page, "combo a");
+      await visible(page.getByTestId("add-combo-a")).click();
+      const panel = await openCart(page);
+      await visible(panel.getByTestId("checkout-start")).click();
+      await page.locator('[name="name"]').fill("Lucía Martínez");
+      await page.locator('[name="phone"]').fill("612 345 678");
+      await page.locator('[name="email"]').fill("lucia@example.es");
+      await visible(page.getByTestId("checkout-pay")).click();
+      await page.getByTestId("demo-pay-approve").click();
+      await visible(page.getByTestId("demo-reject")).click();
+      await page.locator("#demo-reject-reason").fill("Cocina cerrada");
+      await page.getByTestId("demo-reject-confirm").click();
+      const status = visible(page.getByTestId("order-status"));
+      await expect(status).toHaveAttribute("data-status", "rejected");
+      await expect(status).toHaveAttribute("data-payment-status", "canceled");
+      await expect(page.getByText("Cocina cerrada").first()).toBeVisible();
+      await expect(page.getByText(/no se te ha cobrado nada/i).first()).toBeVisible();
+    });
+
+    test("ES | EN: the language persists while navigating and never empties the cart", async ({ page }) => {
+      await visible(page.getByTestId("go-to-menu")).click();
+      await search(page, "combo a");
+      await visible(page.getByTestId("add-combo-a")).click();
+      await visible(page.getByTestId("language-en")).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await expect(visible(page.getByTestId("language-en"))).toHaveAttribute("aria-pressed", "true");
+      const panel = await openCart(page);
+      await expect(panel.getByTestId("cart-line-combo-a")).toBeVisible();
+      await expect(panel.getByTestId("cart-total")).toContainText("€19.45");
+      await visible(panel.getByTestId("checkout-start")).click();
+      await expect(page).toHaveURL(/\/pedido\/$/);
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await visible(page.getByTestId("checkout-pay")).click();
+      await expect(page.getByText("Please enter your name so we can identify the order.").first()).toBeVisible();
+      // Back to Spanish on another page, and the choice survives a reload.
+      await visible(page.getByTestId("language-es")).click();
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("lang", "es");
+      await expect(page.getByText("Escribe tu nombre para que podamos identificar el pedido.")).toHaveCount(0);
+    });
+
+    test("?lang=en opens the English menu with English dish names", async ({ page }) => {
+      await page.goto(`showcase/shang-hai/${storefront}/?lang=en`);
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await visible(page.getByTestId("go-to-menu")).click();
+      await search(page, "peking duck");
+      await expect(page.getByText("Peking duck with pancake").first()).toBeVisible();
+    });
+
+    test("?fotos=1 shows illustrative dish photos; the default shows none", async ({ page }) => {
+      await expect(page.locator("[data-dish-photo]")).toHaveCount(0);
+      await page.goto(`showcase/shang-hai/${storefront}/?fotos=1`);
+      await visible(page.getByTestId("go-to-menu")).click();
+      await search(page, "maki salmon");
+      const photo = page.locator('[data-dish-photo="maki-salmon"]').filter({ visible: true }).first();
+      await expect(photo).toBeVisible();
+      await expect(photo.getByTestId("dish-photo-label")).toHaveText("Imagen ilustrativa");
+      await expect(photo.locator("img")).toHaveAttribute("loading", "lazy");
+      await expectNoHorizontalOverflow(page);
+    });
+
     test("cancelled payment returns to the order with a notice", async ({ page }) => {
       await page.goto(`showcase/shang-hai/${storefront}/pedido/?cancelado=1`);
       await expect(page.getByText(/pago cancelado/i).first()).toBeVisible();
@@ -140,11 +211,13 @@ for (const storefront of STOREFRONTS) {
   });
 }
 
-test("comparison page links to the three proposals", async ({ page }) => {
+test("comparison page links to the three proposals, with and without dish photos", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("showcase/shang-hai/");
   for (const s of STOREFRONTS) {
     await expect(page.locator(`a[href$="/showcase/shang-hai/${s}/"]`).first()).toBeVisible();
+    await expect(page.getByTestId(`compare-${s}-con-fotos`)).toHaveAttribute("href", new RegExp(`/${s}/\\?fotos=1$`));
+    await expect(page.getByTestId(`compare-${s}-sin-fotos`)).toHaveAttribute("href", new RegExp(`/${s}/\\?fotos=0$`));
   }
   await expectNoHorizontalOverflow(page);
   expect(errors).toEqual([]);
