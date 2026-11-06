@@ -177,6 +177,8 @@ export async function handleBoard(env: Env, deps: Deps): Promise<Response> {
     health: {
       lastWebhookAt: states["stripe.last_webhook"]?.updatedAt ?? null,
       lastCronAt: states["cron.last_run"]?.updatedAt ?? null,
+      lastCronErrorAt: states["cron.step_failed"]?.updatedAt ?? null,
+      lastCronError: states["cron.step_failed"]?.value ?? null,
       telegram: {
         configured: Boolean(telegramConfig(env)),
         lastSuccessAt: states["telegram.last_success"]?.updatedAt ?? null,

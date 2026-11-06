@@ -97,6 +97,8 @@ export type OrderDetail = Card & {
 export type Health = {
   lastWebhookAt: string | null;
   lastCronAt: string | null;
+  lastCronErrorAt?: string | null;
+  lastCronError?: string | null;
   telegram: {
     configured: boolean;
     lastSuccessAt: string | null;

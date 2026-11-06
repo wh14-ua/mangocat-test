@@ -40,7 +40,10 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
     try {
       await fn();
     } catch (error) {
-      log("cron.step-failed", { step: name, message: error instanceof Error ? error.message : "unknown" });
+      const message = error instanceof Error ? error.message : "unknown";
+      log("cron.step-failed", { step: name, message });
+      // Shown in the panel's «Estado del sistema»: a step failing every minute must not be silent.
+      await setState(env.DB, "cron.step_failed", `${name}: ${message}`.slice(0, 300), now.toISOString()).catch(() => undefined);
     }
   };
 

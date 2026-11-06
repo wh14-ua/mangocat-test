@@ -59,15 +59,28 @@ existing order, line and event (`paid` → `awaiting_acceptance` + `captured`).
   every event triggers a fresh `GET /v1/payment_intents/:id`, so duplicates and out-of-order
   events converge on Stripe's real state. Amount, currency, mode and order id are reconciled
   (mismatch → `needs_review`). Each event id is processed once (`stripe_events`).
-- **Concurrency**: accept/reject take a lock with a conditional UPDATE; Stripe calls use
-  idempotency keys (`capture-<id>`, `cancel-<id>`, `refund-<id>-<n>`); an unknown outcome is
-  resolved from Stripe by the cron (`STALE_LOCK_MS`), never guessed.
+- **Concurrency**: accept/reject take a lock with a conditional UPDATE that records an owner
+  and an expiry (`lock_token`, `lock_expires_at`, migration 0003). Only the owner may finish or
+  undo it; recovery (cron, REINTENTAR) may only take over an expired lock, atomically. The TTL is
+  never shorter than four Stripe timeouts plus margin (`LOCK_STALE_SECONDS`, `STRIPE_TIMEOUT_MS`).
+  Actions carry the status the phone showed (`expectedStatus`): a changed order answers 409.
+- **Stripe outcomes**: every call has a timeout. Before repeating any financial operation the
+  Worker reads the PaymentIntent (and the refund list) — nothing is repeated blindly. Each
+  attempt has its own idempotency key (`capture-<id>-<n>`, `cancel-<id>-<n>`, `refund-<id>-<n>`):
+  Stripe replays a stored 500 for a reused key. 404 → `needs_review` at once; no answer / 409 /
+  429 / 5xx → lock kept and retried, `needs_review` after `LOCK_REVIEW_SECONDS` (default 300).
+  Refunds are read from Stripe's list (lost answers, Dashboard and partial refunds).
+- **Schema guard**: the Worker checks the tables/columns it needs (`src/schema.generated.ts`,
+  generated from the migrations) once per isolate and answers 503 `schema-outdated` otherwise.
+  Migrations are hash-locked (`migrations.lock.json`): never edit one that was applied.
 - **Staff**: Telegram one-time codes (10 min, single use, 5 tries, rate limited, only hashes
   stored) → `__Host-` HttpOnly Secure SameSite=Strict session; or a Cloudflare Access JWT
   (RS256, aud, iss, exp, nbf) from the header or the `CF_Authorization` cookie. Without either
   configured, staff routes answer 503. Mutations are same-origin JSON only (CSRF).
-- **Notifications**: outbox rows unique per order/recipient/kind; no personal data in
-  messages; failures recorded and retried; never the source of truth.
+- **Notifications**: outbox rows unique per order/recipient/kind; a new EN REVISIÓN incident
+  re-arms its row; the cron recreates missing alerts and reminds hourly while an incident is
+  unattended; no personal data in messages; failures recorded and retried; never the source of
+  truth.
 - **Acceptance timeout** (`ACCEPTANCE_TIMEOUT_MINUTES`, default 30, `0` = off — policy to be
   confirmed by the owner): counts only from when the restaurant was demonstrably informed (alert
   delivered or order shown on the panel). Orders nobody could see are never declined automatically.

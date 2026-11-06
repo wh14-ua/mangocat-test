@@ -39,14 +39,19 @@ autorizado (sin cobrar)»                                   ├─ ACEPTAR  ─�
 |---|---|---|---|---|
 | Tres webs en ES/EN (selector, carta, checkout, estados, fotos opcionales) | Sí | Sí: 90 E2E a 390/768/1440 px + axe | — | No (rama, sin publicar) |
 | Checkout → Stripe Checkout (autorización, idioma del cliente) | Sí | Sí: Worker real (workerd) + Stripe simulado | **No: faltan claves de prueba** | No |
-| Webhooks, conciliación, idempotencia, cron | Sí | Sí: 186 tests unitarios/integración | **No** | No |
+| Webhooks, conciliación, idempotencia, cron | Sí | Sí: 308 pruebas unitarias/del Worker/de propiedades + 23 de integración con el Worker real (reinicios, migraciones, concurrencia) | **No** | No |
 | Aceptar (captura) / rechazar (anulación o reembolso) / listo / entregado | Sí | Sí: API y panel, recorridos completos E2E | **No** | No |
 | Panel móvil SHANG HAI — PEDIDOS (PWA, acceso con código) | Sí | Sí: E2E desde un móvil del personal + axe | **No** | No |
 | Avisos Telegram, reintentos, recordatorio, rechazo automático seguro | Sí | Sí: Telegram simulado (incl. fallos) | **No: falta el bot** | No |
 | Cloudflare Access (opcional) | Sí (JWT verificado) | Sí (JWT firmados en tests) | **No** | No |
 | Pagos reales | **Desactivados a propósito** | — | — | — |
 
-Recorridos E2E sobre la pila local (12, todos en verde): móvil del cliente → Stripe → aviso →
+Informe completo de QA, fallos encontrados y cómo repetir todas las pruebas:
+[`docs/qa/SHANG_HAI_QA_REPORT.md`](docs/qa/SHANG_HAI_QA_REPORT.md) — en resumen, `npm run qa:full`.
+
+Recorridos E2E sobre la pila local (18, todos en verde): los 6 recorridos completos de 20 pasos
+(carrito, recarga, pago, aviso, ACEPTAR, LISTO, ENTREGADO, comprobados en Stripe y en D1) en los
+tres diseños y en español e inglés; y además: móvil del cliente → Stripe → aviso →
 panel: ACEPTAR 20 min → LISTO → ENTREGADO (el móvil del cliente sigue cada paso) en Bento Club,
 Ink House y Wok After Dark; RECHAZAR con motivo desde el panel; cliente en inglés rechazado;
 tarjeta rechazada y reintento; pago cancelado; dos ACEPTAR a la vez (un solo cobro); Telegram

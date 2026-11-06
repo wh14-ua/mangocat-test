@@ -56,6 +56,9 @@ function healthList(): HTMLElement {
     ["Pagos", h("span", { class: `badge ${board.paymentsMode === "stripe-live" ? "badge--ok" : board.paymentsMode === "disabled" ? "badge--danger" : "badge--test"}`, text: MODE_TEXT[board.paymentsMode] })],
     ["Último aviso de Stripe", when(health.lastWebhookAt, now)],
     ["Última revisión automática", when(health.lastCronAt, now), cronLate ? "is-bad" : undefined],
+    ...(health.lastCronErrorAt && now - Date.parse(health.lastCronErrorAt) < 86_400_000
+      ? [["Último fallo de la revisión automática", `${stamp(health.lastCronErrorAt, now)}${health.lastCronError ? `: ${health.lastCronError}` : ""}`, "is-bad"] as [string, string, string]]
+      : []),
     ["Telegram", tg.configured ? "Configurado" : "No configurado: los avisos solo llegan a este panel", tg.configured ? undefined : "is-bad"],
   ];
   if (tg.configured) {

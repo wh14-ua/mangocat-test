@@ -257,3 +257,21 @@ describe("customer order lookup", () => {
     for (const secret of ["612345678", "lucia@example.es", "Sin cebolla", "cs_test_", "pi_test_"]) expect(text).not.toContain(secret);
   });
 });
+
+describe("system status shows a failing cron step", () => {
+  it("a step that throws is reported on the board's health (not only in the logs)", async () => {
+    const { runScheduled } = await import("../src/cron");
+    const w = world();
+    const realPrepare = w.env.DB.prepare.bind(w.env.DB);
+    w.env.DB.prepare = ((sql: string) => {
+      if (sql.includes("FROM orders WHERE status IN ('accepting', 'rejecting')")) throw new Error("D1_ERROR: no such column: lock_expires_at");
+      return realPrepare(sql);
+    }) as typeof w.env.DB.prepare;
+    await runScheduled(w.env, w.deps);
+    w.env.DB.prepare = realPrepare;
+    const cookie = await staffCookie(w.env, "Móvil", w.now());
+    const board = (await (await staffCall(w, cookie, "/api/admin/board")).json()) as { health: { lastCronError: string | null; lastCronErrorAt: string | null } };
+    expect(board.health.lastCronError).toMatch(/^locks: D1_ERROR: no such column/);
+    expect(board.health.lastCronErrorAt).toBe(w.now().toISOString());
+  });
+});
