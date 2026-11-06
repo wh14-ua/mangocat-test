@@ -101,6 +101,7 @@ function goToOrder(id: string): void {
 
 function signedOut(notice: string, login?: LoginMethod[]): void {
   stopPolling();
+  closeDetail(); // also stops its refresh timer (it kept firing against a removed view)
   for (const dialog of document.querySelectorAll("dialog")) dialog.close();
   const methods = login ?? state.session?.loginMethods ?? ["telegram"];
   state.session = null;

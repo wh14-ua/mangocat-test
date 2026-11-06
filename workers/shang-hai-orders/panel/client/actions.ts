@@ -97,7 +97,9 @@ async function run(card: Card, action: StaffAction, body: Record<string, unknown
     emit("board");
   }
   if (res.status === 422) return { kind: "invalid", message };
-  toast(res.status === 409 ? "warn" : "error", `Pedido ${ref}`, message);
+  // Safety-critical answers ("NO prepares…", "…EN REVISIÓN") stay on screen until dismissed.
+  const critical = /NO prepares|EN REVISIÓN|no se ha cobrado/i.test(message);
+  toast(res.status === 409 && !critical ? "warn" : "error", `Pedido ${ref}`, message);
   requestRefresh();
   return { kind: res.status === 409 ? "conflict" : "failed", message };
 }
@@ -350,7 +352,10 @@ export function handleAction(card: Card, action: StaffAction): void {
   if (state.pending.has(card.id)) return;
   if (action === "accept") return openAcceptSheet(card);
   if (action === "reject") return openRejectSheet(card);
-  void run(card, action, {});
+  // LISTO / ENTREGADO / REINTENTAR have no sheet to show the outcome: a failure must not be silent.
+  void run(card, action, {}).then((outcome) => {
+    if (outcome.kind === "network" || outcome.kind === "invalid") toast("error", `Pedido ${orderRef(card)}`, outcome.message);
+  });
 }
 
 export function installActionHandler(): void {

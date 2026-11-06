@@ -158,6 +158,13 @@ function statusNote(card: Card, kind: Kind, mode: TicketMode): HTMLElement | nul
           "div",
           null,
           h("p", { class: "note__title", text: accepting ? "Aceptando: cobrando el pago en Stripe" : "Rechazando: anulando el pago en Stripe" }),
+          // Since when (the moment the button was pressed), so a long wait is never mistaken for a fresh one.
+          h(
+            "p",
+            { class: "note__text" },
+            `Desde las ${clock(card.updatedAt)} · `,
+            h("span", { attrs: { "data-ago": card.updatedAt }, text: ago(card.updatedAt, Date.now() + state.offset) }),
+          ),
           h("p", {
             class: "note__text",
             text: stale
