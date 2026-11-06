@@ -38,10 +38,12 @@ ejecuta las comprobaciones rápidas, la integración y las E2E en cada pull requ
 
 ## 3. Última ejecución completa
 
-**Ejecución más reciente (con WhatsApp), 2026-11-06 15:50 UTC: `npm run qa:full` → los 16 pasos en
-verde, 473 pruebas:** 336 unitarias, del Worker y de propiedades · 27 de integración con el Worker
-real (reinicios, migraciones, concurrencia, WhatsApp) · 90 E2E del modo demo · 20 E2E del sistema
-real (incluidos el aviso de WhatsApp → «Ver pedido» → panel → ACEPTAR y WhatsApp caído).
+**Ejecución más reciente (con WhatsApp y los turnos por destinatario), 2026-11-06 17:17 UTC:
+`npm run qa:full` → los 16 pasos en verde, 478 pruebas:** 341 unitarias, del Worker y de
+propiedades · 27 de integración con el Worker real (reinicios, migraciones, concurrencia,
+WhatsApp) · 90 E2E del modo demo · 20 E2E del sistema real (incluidos el aviso de WhatsApp →
+«Ver pedido» → panel → ACEPTAR y WhatsApp caído). Antes, la integración completa se repitió
+3 veces seguidas sobre el mismo código (27/27 cada vez) para descartar la intermitencia CI-1.
 
 Ejecución anterior (antes de WhatsApp), para referencia:
 
