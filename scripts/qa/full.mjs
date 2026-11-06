@@ -3,7 +3,8 @@
 //
 //   npm run qa:full            everything: static checks, unit + property tests (300 runs each),
 //                              integration on the real Worker + local D1 (restarts, migrations,
-//                              concurrency), the 90 demo browser tests and the ordering E2E
+//                              concurrency, WhatsApp), the 90 demo browser tests and the ordering
+//                              E2E (incl. the WhatsApp alert → panel → accept journey)
 //   npm run qa:quick           static checks + unit/property tests only (a minute or two)
 //   npm run qa:full -- --no-e2e    everything but the browser suites
 //
@@ -38,7 +39,7 @@ const steps = [
   ...(integration
     ? [
         ["Worker bundles for Cloudflare (dry run)", "npm", ["--prefix", "workers/shang-hai-orders", "run", "--silent", "build:dry-run"]],
-        ["Integration: restarts, migrations, concurrency (real Worker + D1)", "npx", ["vitest", "run", "--config", "vitest.integration.config.mts"]],
+        ["Integration: restarts, migrations, concurrency, WhatsApp (real Worker + D1)", "npx", ["vitest", "run", "--config", "vitest.integration.config.mts"]],
       ]
     : []),
   ...(e2e
@@ -46,7 +47,7 @@ const steps = [
         ["Build: storefronts in demo mode", "npx", ["next", "build"], { NEXT_PUBLIC_ORDER_API_BASE_URL: "" }],
         ["E2E: storefronts, demo mode (390/768/1440, a11y)", "npx", ["playwright", "test"]],
         ["Build: storefronts against the local Worker", "node", ["scripts/local-stack/run.mjs", "--build-only"]],
-        ["E2E: real ordering system (Worker + D1 + fake Stripe/Telegram)", "npx", ["playwright", "test", "--config", "playwright.ordering.config.ts"]],
+        ["E2E: real ordering system (Worker + D1 + fake Stripe/WhatsApp/Telegram)", "npx", ["playwright", "test", "--config", "playwright.ordering.config.ts"]],
       ]
     : []),
 ];

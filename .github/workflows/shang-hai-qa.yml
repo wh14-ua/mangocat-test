@@ -2,7 +2,7 @@ name: Shang Hai QA
 
 # Quality gate for the ordering system (storefronts, order Worker, staff panel).
 # Runs on every pull request and on pushes to the ordering branch; can be run by hand.
-# Everything is local to the runner: fake Stripe and fake Telegram, no secrets, no real money.
+# Everything is local to the runner: fake Stripe, WhatsApp and Telegram; no secrets, no real money.
 on:
   pull_request:
   push:
@@ -55,7 +55,7 @@ jobs:
       - run: npm ci --prefix workers/shang-hai-orders
       - name: Worker bundle (wrangler dry run)
         run: npm --prefix workers/shang-hai-orders run build:dry-run
-      - name: Restarts, migrations and concurrency
+      - name: Restarts, migrations, concurrency and WhatsApp (real Worker + D1)
         run: npm run test:integration
 
   e2e:
@@ -77,7 +77,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Storefronts in demo mode (90 tests)
         run: npm run test:e2e:demo
-      - name: Real ordering flow (Worker + D1 + fake Stripe/Telegram)
+      - name: Real ordering flow (Worker + D1 + fake Stripe/WhatsApp/Telegram)
         run: npm run test:e2e:ordering
       - name: Keep traces of failures
         if: failure()

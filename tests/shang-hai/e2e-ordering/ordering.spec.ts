@@ -33,8 +33,15 @@ async function cloudState() {
   const res = await fetch(`${CLOUD}/__control/state`);
   return (await res.json()) as {
     telegram: { chat_id: string; text: string; button: { text: string; url: string } | null }[];
+    whatsapp: { id: string; to: string; template: string; params: string[]; text: string; button: { text: string; url: string | null; copy: string | null } | null }[];
     intents: { id: string; status: string; order: string }[];
   };
+}
+
+/** The latest sign-in code, as received on the owner's WhatsApp (the product's channel). */
+async function latestWhatsAppCode(): Promise<string> {
+  const message = (await cloudState()).whatsapp.filter((m) => m.template === "codigo_acceso").at(-1);
+  return message?.params[0] ?? "";
 }
 
 async function control(path: string, body: unknown) {
@@ -126,6 +133,8 @@ async function staffPhone(browser: Browser): Promise<Page> {
     staffContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     const phone = await staffContext.newPage();
     await phone.goto(`${WORKER}/admin`);
+    // Only a code sent for THIS request counts (an older one in the chat has been replaced).
+    const codesBefore = (await cloudState()).whatsapp.filter((m) => m.template === "codigo_acceso").length;
     await phone.getByRole("button", { name: /Enviar código/i }).click();
     const codeShown = await phone
       .locator("#code")
@@ -137,8 +146,13 @@ async function staffPhone(browser: Browser): Promise<Page> {
       await phone.getByRole("button", { name: /Enviar código/i }).click();
     }
     await expect(phone.locator("#code")).toBeVisible();
-    const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
-    await phone.locator("#code").fill(/\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "");
+    // The code arrives by WhatsApp (authentication template with a copy-code button). If the server
+    // answered "a code was sent moments ago" (429), that latest code is the valid one.
+    await expect
+      .poll(async () => (await cloudState()).whatsapp.filter((m) => m.template === "codigo_acceso").length, { timeout: 10_000 })
+      .toBeGreaterThan(codesBefore)
+      .catch(() => undefined);
+    await phone.locator("#code").fill(await latestWhatsAppCode());
     await phone.locator("#device").fill("Móvil de cocina");
     await phone.getByRole("button", { name: "Entrar", exact: true }).click();
     await expect(phone.getByRole("tab", { name: /Nuevos/ })).toBeVisible();
@@ -154,7 +168,7 @@ async function staffPhone(browser: Browser): Promise<Page> {
   return phone;
 }
 
-test("panel: the staff phone signs in with the code sent by Telegram", async ({ browser }) => {
+test("panel: the staff phone signs in with the code sent by WhatsApp", async ({ browser }) => {
   const phone = await staffPhone(browser);
   await expect(phone.getByRole("tab", { name: /Nuevos/ })).toBeVisible();
   await phone.close();
@@ -293,7 +307,8 @@ test("two ACEPTAR taps at the same time: only one capture", async ({ page }) => 
   await expect(visible(page.getByTestId("order-status"))).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
 });
 
-test("Telegram fails: the order is still on the panel and is never declined automatically", async ({ page }) => {
+test("every alert channel fails (WhatsApp and Telegram): the order is still on the panel and is never declined automatically", async ({ page }) => {
+  await control("/__control/whatsapp/fail", { status: 400, code: 131026 }); // the owner's number cannot receive WhatsApp
   await control("/__control/telegram/fail", { status: 403 });
   await control("/__control/telegram/fail", { status: 403 });
   await orderOneDish(page, "ink-house");
@@ -465,3 +480,71 @@ for (const storefront of ["ink-house", "wok-after-dark", "bento-club"] as const)
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// WhatsApp (Cloud API): the restaurant owner's phone
+// ---------------------------------------------------------------------------
+
+test("WhatsApp: the owner's phone gets the alert, VER PEDIDO opens the panel, ACEPTAR charges and the customer sees it", async ({ page, browser }) => {
+  const errors = trackErrors(page);
+  await orderOneDish(page, "wok-after-dark");
+  await fillCheckout(page);
+  const orderId = await authorise(page);
+
+  // The owner's WhatsApp (fake Cloud API phone page): number, total, dish, pickup, payment — no personal data.
+  const owner = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await owner.goto(`${CLOUD}/whatsapp`);
+  // THIS order's alert: its button opens this order (earlier test orders have the same dish).
+  const alert = owner.locator('[data-testid="whatsapp-message"][data-template="pedido_nuevo"]').filter({ has: owner.locator(`a[href$="pedido=${orderId}"]`) });
+  await expect(alert).toBeVisible({ timeout: 15_000 });
+  await expect(alert).toContainText("Recogida en el local");
+  await expect(alert).toContainText("autorizado, se cobra al aceptar");
+  for (const secret of ["Pedro", "612", "pedro@example.es", "Sin cebolla"]) await expect(alert).not.toContainText(secret);
+  const link = await alert.getByTestId("whatsapp-button").getAttribute("href");
+  expect(link).toBe(`${WORKER}/admin?pedido=${orderId}`);
+  await owner.close();
+
+  // Tapping VER PEDIDO on the restaurant's phone opens that order in the panel.
+  const phone = await staffPhone(browser);
+  await phone.goto(link!);
+  const detail = phone.locator("#detail");
+  await expect(detail).toBeVisible({ timeout: 15_000 });
+  await expect(detail).toContainText("Sin cebolla"); // the panel (signed in) shows what WhatsApp never carries
+  await detail.getByRole("button", { name: /Aceptar pedido/i }).click();
+  await phone.locator("label.prep__opt", { hasText: "20 min" }).click();
+  await phone.getByRole("button", { name: /Aceptar · listo en 20 min/ }).click();
+
+  const status = visible(page.getByTestId("order-status"));
+  await expect(status).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
+  await expect(status).toHaveAttribute("data-payment-status", "captured");
+  expect((await cloudState()).intents.find((i) => i.order === orderId)?.status).toBe("succeeded");
+
+  // D1: WhatsApp confirmed the delivery (and the read, when the owner opened the chat).
+  const staff = await staffSession();
+  const res = await staff.api.get(`/api/admin/orders/${orderId}`, { headers: { Cookie: staff.cookie } });
+  const order = ((await res.json()) as { order: { notifications: { channel: string; kind: string; deliveredAt: string | null; readAt: string | null }[] } }).order;
+  const whatsappAlert = order.notifications.find((n) => n.channel === "whatsapp" && n.kind === "new_order");
+  expect(whatsappAlert?.deliveredAt).toBeTruthy();
+  await expect.poll(async () => {
+    const again = await staff.api.get(`/api/admin/orders/${orderId}`, { headers: { Cookie: staff.cookie } });
+    return ((await again.json()) as { order: { notifications: { channel: string; kind: string; readAt: string | null }[] } }).order.notifications.find((n) => n.channel === "whatsapp" && n.kind === "new_order")?.readAt;
+  }, { timeout: 10_000 }).toBeTruthy();
+  await phone.close();
+  expect(errors).toEqual([]);
+});
+
+test("WhatsApp down (expired token): the order is still on the panel and the panel says what to fix", async ({ page, browser }) => {
+  await control("/__control/whatsapp/token", { expired: true });
+  try {
+    await orderOneDish(page, "bento-club");
+    await fillCheckout(page);
+    const orderId = await authorise(page);
+    const phone = await staffPhone(browser);
+    await expect(phone.locator(`article[data-id="${orderId}"]`).first()).toBeVisible({ timeout: 15_000 });
+    await phone.locator("#menu").click(); // «Ajustes y estado del sistema»
+    await expect(phone.getByText(/Credenciales de WhatsApp caducadas/)).toBeVisible({ timeout: 10_000 });
+    await phone.close();
+  } finally {
+    await control("/__control/whatsapp/token", { expired: false });
+  }
+});

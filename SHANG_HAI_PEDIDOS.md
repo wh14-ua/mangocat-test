@@ -42,7 +42,8 @@ autorizado (sin cobrar)»                                   ├─ ACEPTAR  ─�
 | Webhooks, conciliación, idempotencia, cron | Sí | Sí: 308 pruebas unitarias/del Worker/de propiedades + 23 de integración con el Worker real (reinicios, migraciones, concurrencia) | **No** | No |
 | Aceptar (captura) / rechazar (anulación o reembolso) / listo / entregado | Sí | Sí: API y panel, recorridos completos E2E | **No** | No |
 | Panel móvil SHANG HAI — PEDIDOS (PWA, acceso con código) | Sí | Sí: E2E desde un móvil del personal + axe | **No** | No |
-| Avisos Telegram, reintentos, recordatorio, rechazo automático seguro | Sí | Sí: Telegram simulado (incl. fallos) | **No: falta el bot** | No |
+| Avisos por **WhatsApp** (Cloud API: plantillas, recibos de entrega, reintentos, límites, credenciales caducadas) y código de acceso por WhatsApp | Sí | Sí: WhatsApp simulado según la documentación de Meta (unitarias, fallos del proveedor, Worker real, E2E) | **No: faltan los datos de Meta** (ver `SHANG_HAI_WHATSAPP.md`) | No |
+| Avisos Telegram (alternativa), recordatorio, rechazo automático seguro | Sí | Sí: Telegram simulado (incl. fallos) | **No: falta el bot** | No |
 | Cloudflare Access (opcional) | Sí (JWT verificado) | Sí (JWT firmados en tests) | **No** | No |
 | Pagos reales | **Desactivados a propósito** | — | — | — |
 
@@ -65,8 +66,9 @@ Cloudflare) y GitHub Pages sigue sirviendo la versión anterior.
 |---|---|---|
 | Clave secreta de Stripe **de prueba** (`sk_test_…`) | Stripe Dashboard → modo de prueba → Desarrolladores → Claves API | `wrangler secret put STRIPE_SECRET_KEY` |
 | Secreto del webhook de Stripe (`whsec_…`) | Lo crea `scripts/setup/stripe-webhook.mjs` | `wrangler secret put STRIPE_WEBHOOK_SECRET` (el script lo hace con `--save`) |
-| Token del bot de Telegram | @BotFather → `/newbot` | `wrangler secret put TELEGRAM_BOT_TOKEN` |
-| Ids de los chats del personal | `scripts/setup/telegram-chat-ids.mjs` | `wrangler.jsonc` → `TELEGRAM_CHAT_IDS` (no es secreto) |
+| **WhatsApp (canal principal)**: token de usuario de sistema, secreto de la app, id del número emisor, id de la cuenta (WABA), WhatsApp del propietario | Meta Business / developers.facebook.com — pasos en [`SHANG_HAI_WHATSAPP.md`](SHANG_HAI_WHATSAPP.md) | `wrangler secret put WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_APP_SECRET` / `WHATSAPP_WEBHOOK_VERIFY_TOKEN`; `wrangler.jsonc` → `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_RECIPIENTS` |
+| Token del bot de Telegram (alternativa, opcional) | @BotFather → `/newbot` | `wrangler secret put TELEGRAM_BOT_TOKEN` |
+| Ids de los chats de Telegram (opcional) | `scripts/setup/telegram-chat-ids.mjs` | `wrangler.jsonc` → `TELEGRAM_CHAT_IDS` (no es secreto) |
 | Cuenta de Cloudflare (ya tienes sesión de `wrangler`) | — | — |
 
 Nada de esto va en archivos del repositorio. Opcional: Cloudflare Access (`ACCESS_TEAM_DOMAIN`,
@@ -124,13 +126,14 @@ npm run demo:local
 ```
 
 Arranca el Worker real (wrangler dev, base de datos D1 local), un Stripe simulado con su página
-de pago y webhooks firmados, un Telegram simulado («móvil del personal») y las tres webs:
+de pago y webhooks firmados, un WhatsApp simulado («móvil del propietario»: http://localhost:8790/whatsapp),
+un Telegram simulado (alternativa) y las tres webs:
 
 - Webs: http://localhost:4174/mangocat-test/showcase/shang-hai/
 - Panel: http://localhost:8787/admin (el código de acceso aparece en el móvil simulado)
 - Móvil del personal: http://localhost:8790/telegram
 
-**Estado entre reinicios.** La base D1 local, el Stripe simulado y el Telegram simulado
+**Estado entre reinicios.** La base D1 local, el Stripe simulado, el WhatsApp y el Telegram simulados
 guardan su estado juntos en `.local-stack/`, como harían los servicios reales: reiniciar la
 demo conserva pedidos, pagos y mensajes, y todo sigue siendo coherente. El Worker y las webs
 no guardan nada. Para empezar de cero: `npm run demo:local -- --fresh` (borra solo
@@ -148,7 +151,7 @@ no guardan nada. Para empezar de cero: `npm run demo:local -- --fresh` (borra so
 
 - URL: `https://<worker>/admin`. En el iPhone: Compartir → «Añadir a pantalla de inicio»; en
   Android: menú → «Instalar aplicación». Se abre como una app.
-- Acceso: código de 6 cifras enviado por Telegram solo a los chats autorizados; caduca en
+- Acceso: código de 6 cifras enviado por WhatsApp (y/o Telegram) solo a los números autorizados; caduca en
   10 min, un solo uso, 5 intentos. Sesión de 30 días por móvil (cookie HttpOnly, nada en
   `localStorage`). «Cerrar sesión en todos los móviles» desde el propio panel.
 - Por qué no solo Cloudflare Access: en iPhone, las apps de pantalla de inicio tienen cookies
@@ -186,14 +189,14 @@ no guardan nada. Para empezar de cero: `npm run demo:local -- --fresh` (borra so
 
 | Situación | Qué pasa |
 |---|---|
-| Telegram no entrega | El pedido está igualmente en el panel; reintentos con espera creciente; el fallo se ve en «Estado del sistema»; no corre el plazo de rechazo automático hasta que alguien lo ve en el panel |
+| WhatsApp o Telegram no entregan | El pedido está igualmente en el panel; reintentos según el error (detalle en `SHANG_HAI_WHATSAPP.md`); el fallo se ve en «Estado del sistema»; no corre el plazo de rechazo automático hasta que WhatsApp confirma la entrega o alguien lo ve en el panel |
 | Stripe no responde al aceptar | El pedido queda «Procesando…» (con la hora en que se pulsó) y no se prepara. Cuando caduca el bloqueo, el sistema lee el estado real en Stripe: si se cobró, pasa a EN PREPARACIÓN; si no, pasa a **EN REVISIÓN** («no llegó a cobrarse; pulsa ACEPTAR de nuevo»). Si Stripe sigue sin responder 5 min, EN REVISIÓN con el pago a comprobar. Nunca se queda bloqueado |
 | Stripe no conoce el pago (404) | EN REVISIÓN al momento, con el id del pago y qué comprobar (clave/modo de Stripe; en la demo, datos de una demo anterior) |
 | Stripe devuelve un error 500 | No se ha cobrado nada; ACEPTAR/RECHAZAR se pueden repetir (cada intento usa su propia clave de idempotencia) |
 | Se pulsa ACEPTAR justo al caducar el plazo | El rechazo automático espera 10 min tras cualquier decisión del personal |
 | La autorización caducó | ACEPTAR responde «NO prepares este pedido; no se ha cobrado nada» y el pedido se cancela |
 | Falla un reembolso | El pedido queda **EN REVISIÓN** (rojo) con el motivo y un aviso por Telegram; RECHAZAR de nuevo lo reintenta. Si vuelve a fallar días después, avisa otra vez |
-| Una incidencia EN REVISIÓN sin atender | Se recuerda por Telegram cada hora hasta que alguien actúa |
+| Una incidencia EN REVISIÓN sin atender | Se recuerda por WhatsApp (y Telegram, si está activo) cada hora hasta que alguien actúa |
 | Falla el registro de un aviso | El cron lo vuelve a crear (pedidos nuevos y EN REVISIÓN nunca se quedan sin aviso) |
 | Se quita un móvil de `TELEGRAM_CHAT_IDS` | Deja de recibir avisos, también los reintentos pendientes |
 | La base de datos no tiene el esquema esperado | El Worker responde «schema-outdated» (503) y lo registra; Stripe reintenta los webhooks; `npm run db:check` dice qué falta |

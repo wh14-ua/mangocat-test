@@ -190,3 +190,30 @@ reales (no activada).
 `npm run demo:local -- --fresh` borra solo `.local-stack/`. Al arrancar, la demo comprueba el
 esquema (y lo repara sin perder datos, con copia previa) y la coherencia entre D1 y el Stripe
 simulado.
+
+## 10. WhatsApp Business Cloud API (canal principal de avisos)
+
+Implementado sobre la misma cola de avisos (Telegram queda como alternativa). Guía:
+[`SHANG_HAI_WHATSAPP.md`](../../SHANG_HAI_WHATSAPP.md).
+
+| Qué se comprueba | Dónde | Resultado |
+|---|---|---|
+| Plantilla `pedido_nuevo` al WhatsApp del propietario: número, importe, platos, entrega, pago, botón al panel; sin datos personales | `whatsapp.test.ts`, E2E | ✅ |
+| «Entregado» solo con el recibo de WhatsApp; recibos repetidos, desordenados o tardíos no deshacen nada | `whatsapp.test.ts`, `integration/whatsapp.test.ts` | ✅ |
+| Webhook: firma `X-Hub-Signature-256` obligatoria, verificación de suscripción, mensajes ajenos ignorados | `whatsapp.test.ts` | ✅ |
+| Token caducado (190), plantilla no aprobada (132001), número no permitido (131030), emisor = destinatario (131021), sin WhatsApp (131026), caudal (130429), caídas (5xx/131000/2), límite por destinatario (131056) | `whatsapp.test.ts`, integración, E2E | ✅ cada uno con su política de reintento y su aviso en el panel |
+| Respuesta perdida: el recibo con `biz_opaque_callback_data` evita el duplicado; sin recibo, reintento a los 90 s | `whatsapp.test.ts` | ✅ |
+| Ritmo por destinatario (≈1 mensaje cada 6 s, también tras un código de acceso) | `whatsapp.test.ts` (encontró un fallo real durante el desarrollo, corregido) | ✅ |
+| Rechazo automático: solo cuenta un aviso de WhatsApp **entregado** | `whatsapp.test.ts` | ✅ |
+| Código de acceso al panel por WhatsApp (plantilla de autenticación con «Copiar código»), solo a números autorizados | `whatsapp.test.ts`, E2E | ✅ |
+| Migración 0004 (reconstrucción de avisos y sesiones sin perder datos ni ids) | `migration.test.ts`, migraciones con wrangler | ✅ |
+| Recorrido en navegador: aviso en el WhatsApp del propietario → «Ver pedido» → panel → ACEPTAR → Stripe cobra → el cliente lo ve; recibos de entrega y lectura en D1 | E2E del sistema real | ✅ |
+| WhatsApp caído (token caducado): el pedido sigue en el panel y «Estado del sistema» dice qué arreglar | E2E del sistema real | ✅ |
+| **Entrega real en un teléfono con WhatsApp real** | — | **Pendiente: faltan los datos de Meta** |
+
+Datos de Meta necesarios para la prueba real: id de la cuenta de WhatsApp Business (WABA), id del
+número emisor (el número de prueba de Meta basta), token de usuario de sistema con
+`whatsapp_business_messaging` y `whatsapp_business_management`, secreto de la app, y el número de
+WhatsApp que recibirá los avisos (añadido como destinatario permitido si se usa el número de prueba).
+El webhook de Meta necesita una URL pública del Worker (despliegue de prueba o túnel), que requiere
+autorización.

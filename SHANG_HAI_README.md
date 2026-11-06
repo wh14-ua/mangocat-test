@@ -192,3 +192,5 @@ shared pages with axe-core (WCAG 2.1 A/AA) and fails on serious or critical viol
 6. Whether to sell wine and beer online (age confirmation is already in the checkout).
 7. Their own photography, logo/brand assets and preferred proposal.
 8. Their Stripe account (only when they decide to accept real payments).
+
+- Avisos por WhatsApp (Cloud API), configuración en Meta, coexistencia con el número actual y costes: [`SHANG_HAI_WHATSAPP.md`](SHANG_HAI_WHATSAPP.md).

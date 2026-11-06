@@ -4,7 +4,16 @@ STRIPE_SECRET_KEY=sk_test_replace_me
 # Printed by `stripe listen --forward-to localhost:8787/api/stripe/webhook`
 # (or the signing secret of the test webhook endpoint in the Stripe Dashboard).
 STRIPE_WEBHOOK_SECRET=whsec_replace_me
-# Telegram bot token from @BotFather (alerts + panel sign-in codes). Optional locally.
+# WhatsApp Cloud API (primary alert + sign-in channel). Token: a System User token with
+# whatsapp_business_messaging (Business settings > System users). App secret: App settings > Basic.
+# Verify token: any random string, the same one you type in the app's webhook configuration.
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_APP_SECRET=
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+# The owner's WhatsApp number(s), international format. Never the sender number itself.
+WHATSAPP_RECIPIENTS=
+# Telegram bot token from @BotFather (alternative channel). Optional.
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_IDS=
 
