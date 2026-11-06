@@ -154,7 +154,7 @@ async function routePublic(request: Request, env: Env, deps: Deps, path: string,
 
 async function routeStaff(request: Request, env: Env, deps: Deps, path: string, method: string): Promise<Response> {
   // Sign-in endpoints are reachable without a session (they are how one gets a session).
-  if (path === "/api/admin/auth/code" && method === "POST") return handleLoginCode(request, env, deps);
+  if (path === "/api/admin/auth/code" && method === "POST") return handleLoginCode(request, env, deps, env.LOGIN_LIMITER);
   if (path === "/api/admin/auth/verify" && method === "POST") return handleLoginVerify(request, env, deps, env.LOGIN_LIMITER);
 
   const auth = await authorizeStaff(request, env, deps);

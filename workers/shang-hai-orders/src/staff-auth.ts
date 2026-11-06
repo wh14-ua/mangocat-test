@@ -87,10 +87,13 @@ export async function authorizeStaff(request: Request, env: Env, deps: Deps): Pr
   return { ok: false, response: json({ error: "unauthorized", login: methods }, 401) };
 }
 
-/** Mutations must come from the panel itself: same origin, JSON body (CSRF). */
+/**
+ * Mutations must come from the panel itself: same origin, JSON body (CSRF). Browsers always
+ * send Origin on POST, so a request without one is not the panel and is refused too.
+ */
 export function sameOriginJson(request: Request): Response | null {
   const origin = request.headers.get("Origin");
-  if (origin !== null && origin !== new URL(request.url).origin) return errorJson("forbidden-origin", 403);
+  if (origin !== new URL(request.url).origin) return errorJson("forbidden-origin", 403);
   if (!isJsonRequest(request)) return errorJson("unsupported-media-type", 415);
   return null;
 }
@@ -109,36 +112,42 @@ async function codeHash(env: Env, code: string): Promise<string> {
   return hmacSha256Hex(telegram?.token ?? "", `staff-login:${code}`);
 }
 
+const RATE_LIMITED = () =>
+  json({ error: "rate-limited", message: "Ya se ha enviado un código hace muy poco. Revisa Telegram o espera un momento." }, 429, {
+    "Retry-After": "30",
+  });
+
 /** POST /api/admin/auth/code — sends a sign-in code to the authorised Telegram chats. */
-export async function handleLoginCode(request: Request, env: Env, deps: Deps): Promise<Response> {
+export async function handleLoginCode(request: Request, env: Env, deps: Deps, limiter?: RateLimiterLike): Promise<Response> {
   const bad = sameOriginJson(request);
   if (bad) return bad;
   const telegram = telegramConfig(env);
   if (!telegram) return errorJson("login-unavailable", 503);
+  if (!(await allow(limiter, `login-code:${clientIp(request)}`))) return RATE_LIMITED();
   const now = deps.now();
-  const hourAgo = new Date(now.getTime() - 3_600_000).toISOString();
-  const recent = await env.DB.prepare(
-    `SELECT COUNT(*) AS n, MAX(created_at) AS last FROM staff_login_codes WHERE created_at >= ?`,
-  )
-    .bind(hourAgo)
-    .first<{ n: number; last: string | null }>();
-  if (recent && (Number(recent.n) >= CODES_PER_HOUR || (recent.last && now.getTime() - Date.parse(recent.last) < CODE_MIN_INTERVAL_MS))) {
-    return json({ error: "rate-limited", message: "Ya se ha enviado un código hace muy poco. Revisa Telegram o espera un momento." }, 429, {
-      "Retry-After": "30",
-    });
-  }
   const code = sixDigits();
   const created = now.toISOString();
   const expires = new Date(now.getTime() + CODE_TTL_MS).toISOString();
-  // A new code replaces any previous one.
-  await env.DB.batch([
-    env.DB.prepare(`UPDATE staff_login_codes SET used_at = ? WHERE used_at IS NULL`).bind(created),
-    env.DB.prepare(`INSERT INTO staff_login_codes (code_hash, created_at, expires_at) VALUES (?, ?, ?)`).bind(
+  // One statement decides and inserts (no check-then-act race: concurrent requests cannot all
+  // pass the "one code every 30 s / N per hour" rule); only then is the previous code retired.
+  const [inserted] = await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO staff_login_codes (code_hash, created_at, expires_at)
+       SELECT ?, ?, ?
+        WHERE (SELECT COUNT(*) FROM staff_login_codes WHERE created_at >= ?) < ?
+          AND NOT EXISTS (SELECT 1 FROM staff_login_codes WHERE created_at > ?)`,
+    ).bind(
       await codeHash(env, code),
       created,
       expires,
+      new Date(now.getTime() - 3_600_000).toISOString(),
+      CODES_PER_HOUR,
+      new Date(now.getTime() - CODE_MIN_INTERVAL_MS).toISOString(),
     ),
+    // A new code replaces any previous one.
+    env.DB.prepare(`UPDATE staff_login_codes SET used_at = ? WHERE used_at IS NULL AND id <> last_insert_rowid() AND changes() > 0`).bind(created),
   ]);
+  if (!inserted.meta.changes) return RATE_LIMITED();
   let sent = 0;
   for (const chatId of telegram.chatIds) {
     const res = await sendTelegramMessage(deps.fetch, {
@@ -183,11 +192,14 @@ export async function handleLoginVerify(request: Request, env: Env, deps: Deps, 
     .first<{ id: number; code_hash: string; attempts: number }>();
   if (!active) return json({ error: "invalid-code", message: "El código no es válido o ha caducado. Pide uno nuevo." }, 401);
 
+  // Every guess spends one attempt atomically BEFORE it is compared, so concurrent guesses
+  // cannot exceed the limit (each must win this conditional update).
+  const charged = await env.DB.prepare(`UPDATE staff_login_codes SET attempts = attempts + 1 WHERE id = ? AND attempts < ?`)
+    .bind(active.id, CODE_MAX_ATTEMPTS)
+    .run();
+  if (!charged.meta.changes) return json({ error: "invalid-code", message: "Demasiados intentos con este código. Pide uno nuevo." }, 401);
   const matches = timingSafeEqual(await codeHash(env, code), active.code_hash);
-  if (!matches) {
-    await env.DB.prepare(`UPDATE staff_login_codes SET attempts = attempts + 1 WHERE id = ?`).bind(active.id).run();
-    return json({ error: "invalid-code", message: "Código incorrecto." }, 401);
-  }
+  if (!matches) return json({ error: "invalid-code", message: "Código incorrecto." }, 401);
   // Single use: only the request that flips used_at wins.
   const used = await env.DB.prepare(`UPDATE staff_login_codes SET used_at = ? WHERE id = ? AND used_at IS NULL`)
     .bind(nowIso, active.id)
