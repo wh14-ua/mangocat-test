@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ensureSchema, migrate } from "../../../scripts/local-stack/run.mjs";
-import { accept, checkout, cloudState, customerView, d1, eventually, orderRow, payOnPage, reject, staffSignIn, suiteStack, type Placed, type Stack } from "./stack-client";
+import { accept, checkout, cloudState, customerView, d1, eventually, orderRow, payOnPage, reject, staff, staffSignIn, suiteStack, type Placed, type Stack } from "./stack-client";
 
 /**
  * Many customers and two phones at once, against the real Worker and its local D1 (bounded,
@@ -79,9 +79,22 @@ describe("many customers at once", () => {
       const alerts = (await cloudState(stack)).telegram.filter((m) => m.text.includes("NUEVO PEDIDO"));
       return alerts.length >= 60 ? alerts : null;
     }, "60 new-order alerts", 60_000);
-    const perOrder = d1(stack, "SELECT order_id, COUNT(*) AS n FROM notifications WHERE kind = 'new_order' AND status = 'sent' GROUP BY order_id");
-    expect(perOrder).toHaveLength(30);
-    expect(perOrder.every((r) => r.n === 2)).toBe(true); // two chats, never twice to the same one
+    // Per order and per channel, read through the panel's API (not the database file, which the
+    // Worker keeps writing while the WhatsApp alerts go out one by one).
+    for (const o of placed) {
+      const detail = (await staff(stack, cookie, `/api/admin/orders/${o.orderId}`)).body.order as unknown as {
+        notifications: { channel: string; kind: string; status: string; errorCode?: string | null; lastError: string | null }[];
+      };
+      const alerts = detail.notifications.filter((n) => n.kind === "new_order");
+      expect(alerts.filter((n) => n.channel === "telegram" && n.status === "sent"), o.orderId).toHaveLength(2); // two chats, once each
+      const whatsapp = alerts.filter((n) => n.channel === "whatsapp");
+      expect(whatsapp, o.orderId).toHaveLength(1); // one alert to the owner's WhatsApp, never twice
+      expect(whatsapp[0].lastError ?? "", o.orderId).not.toMatch(/131056/); // paced, never refused by the pair rate limit
+    }
+    // The owner's WhatsApp receives them one by one (Meta: ~1 message every 6 s to the same number), never twice.
+    const messages = (await cloudState(stack)).whatsapp.filter((m) => m.template === "pedido_nuevo");
+    expect(messages.length).toBeGreaterThan(0);
+    expect(new Set(messages.map((m) => m.button?.url)).size).toBe(messages.length);
     const views = await Promise.all(placed.map((o, i) => customerView(stack, o, `198.51.100.${i + 1}`)));
     expect(views.every((v) => v.status === "awaiting_acceptance" && v.paymentStatus === "authorized")).toBe(true);
   }, 120_000);
