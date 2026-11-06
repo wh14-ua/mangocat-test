@@ -1,0 +1,7 @@
+{
+  "_comment": "SHA-256 of every migration (LF line endings). Never edit a migration listed here: databases that applied it would not get the change. Add a new migration and run `npm run db:lock`.",
+  "migrations": {
+    "0001_init.sql": "77a81fb7c1e5cc4e451781280adfaaadf3f5be623342832144c81876479f70d7",
+    "0002_acceptance_flow.sql": "a85b9a17a214db1b32ae44de0bad58c938aee0c4f8bc3990f8febcc7e5c87524"
+  }
+}

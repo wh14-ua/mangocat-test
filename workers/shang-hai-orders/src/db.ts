@@ -335,13 +335,14 @@ export async function updateOrderIf(
   to: OrderStatus | null,
   patch: OrderPatch,
   meta: EventMeta | null,
+  now?: string,
 ): Promise<UpdateResult> {
   const entries = Object.entries(patch).filter(([k, v]) => PATCH_COLUMNS.has(k) && v !== undefined) as [
     string,
     string | number | null,
   ][];
   const sets = [...(to ? ["status = ?"] : []), ...entries.map(([k]) => `${k} = ?`), "updated_at = ?"];
-  const values: (string | number | null)[] = [...(to ? [to] : []), ...entries.map(([, v]) => v), meta?.now ?? new Date().toISOString()];
+  const values: (string | number | null)[] = [...(to ? [to] : []), ...entries.map(([, v]) => v), meta?.now ?? now ?? new Date().toISOString()];
   const update = db
     .prepare(`UPDATE orders SET ${sets.join(", ")} WHERE id = ? AND status = ?`)
     .bind(...values, id, from);
@@ -358,6 +359,21 @@ export async function updateOrderIf(
     .bind(id, from, to ?? from, meta.source, meta.actor ?? null, meta.stripeEventId ?? null, meta.note ?? null, meta.now);
   const [res] = await db.batch([update, event]);
   return res.meta.changes ? { ok: true, changed: true } : { ok: false, reason: "conflict" };
+}
+
+/**
+ * The accept/reject lock an order is in: how many times one was taken (each attempt gets its
+ * own Stripe idempotency key) and when the current one was taken (for the review deadline).
+ */
+export async function lockInfo(db: D1Like, orderId: string, status: "accepting" | "rejecting"): Promise<{ attempts: number; since: string | null }> {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS n, MAX(created_at) AS since FROM order_events
+        WHERE order_id = ? AND to_status = ? AND from_status IS NOT NULL AND from_status <> to_status`,
+    )
+    .bind(orderId, status)
+    .first<{ n: number; since: string | null }>();
+  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null };
 }
 
 export type TransitionResult =

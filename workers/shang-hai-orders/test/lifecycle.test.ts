@@ -56,7 +56,7 @@ describe("authorise → restaurant decides → capture", () => {
     expect(w.stripe.intent(pi).status).toBe("succeeded");
     const captures = w.net.stripeCalls.filter((c) => c.url.endsWith("/capture"));
     expect(captures).toHaveLength(1);
-    expect(captures[0].headers.get("Idempotency-Key")).toBe(`capture-${order.orderId}`);
+    expect(captures[0].headers.get("Idempotency-Key")).toBe(`capture-${order.orderId}-1`);
 
     const view = await customerView(w, order);
     expect(view).toMatchObject({ status: "preparing", paymentStatus: "captured", prepMinutes: 20 });

@@ -137,6 +137,12 @@ function localOverride(env: Env, value: string | undefined): string | null {
   return v && isTestMode(env) && isLocalUrl(v) ? v : null;
 }
 
+/** STRIPE_TIMEOUT_MS (default 15 s), bounded so a typo can neither disable nor stall it. */
+export function stripeTimeoutMs(env: Env): number {
+  const n = Number(env.STRIPE_TIMEOUT_MS);
+  return Number.isFinite(n) && n > 0 ? Math.min(Math.max(Math.round(n), 10), 60_000) : 15_000;
+}
+
 export function stripeApiBase(env: Env): string {
   return localOverride(env, env.STRIPE_API_BASE) ?? "https://api.stripe.com/v1";
 }

@@ -5,9 +5,19 @@
 // state changes, and signed webhook events. Failures can be injected per endpoint.
 //
 // It is NOT Stripe: no card data, no real money, test ids only.
+//
+// Persistence (local demo): with `persistPath`, the whole Stripe-side state is written to a
+// JSON file after every change and loaded on start, so restarting the demo keeps Stripe and
+// the local D1 consistent — like the real Stripe, which never forgets a PaymentIntent. Without
+// it (unit tests), state lives in memory. Injected failures and the call log are never saved.
 import { createHmac } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 let seq = 0;
+
+/** Failures Stripe stores under the idempotency key (the request reached the API). */
+const STORED_FAILURES = new Set([500]);
 const nextId = (prefix) => `${prefix}_test_fake${(++seq).toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 /** Form keys like a[b][c] -> nested objects; keys ending in [] (e.g. "expand[]") -> arrays. */
@@ -31,6 +41,9 @@ export function parseForm(params) {
   return out;
 }
 
+const PERSISTED_MAPS = ["sessions", "intents", "charges", "refunds", "idempotency"];
+const STATE_VERSION = 1;
+
 export function createFakeStripe(options = {}) {
   const state = {
     sessions: new Map(),
@@ -45,6 +58,35 @@ export function createFakeStripe(options = {}) {
   };
   const hostedBase = options.hostedBase ?? "https://checkout.stripe.com/c/pay";
   const now = () => Math.floor((options.now?.() ?? Date.now()) / 1000);
+  const persistPath = options.persistPath ?? null;
+
+  if (persistPath && existsSync(persistPath)) {
+    const saved = JSON.parse(readFileSync(persistPath, "utf8"));
+    if (saved.version !== STATE_VERSION) throw new Error(`${persistPath}: unsupported fake Stripe state version ${saved.version}`);
+    for (const name of PERSISTED_MAPS) state[name] = new Map(saved[name] ?? []);
+    state.refundOutcome = saved.refundOutcome ?? "succeeded";
+    state.events = saved.events ?? [];
+    seq = Math.max(seq, saved.seq ?? 0);
+  }
+
+  /** Writes the state atomically (temp file + rename): a crash never leaves half a file. */
+  function save() {
+    if (!persistPath) return;
+    const snapshot = { version: STATE_VERSION, savedAt: new Date().toISOString(), seq, refundOutcome: state.refundOutcome, events: state.events };
+    for (const name of PERSISTED_MAPS) snapshot[name] = [...state[name].entries()];
+    mkdirSync(dirname(persistPath), { recursive: true });
+    const tmp = `${persistPath}.tmp-${process.pid}`;
+    writeFileSync(tmp, JSON.stringify(snapshot));
+    renameSync(tmp, persistPath);
+  }
+  /** Runs a state change and persists it. */
+  const persisted =
+    (fn) =>
+    (...args) => {
+      const result = fn(...args);
+      save();
+      return result;
+    };
 
   function error(status, code, message) {
     return { status, body: { error: { type: "invalid_request_error", code, message } } };
@@ -198,25 +240,46 @@ export function createFakeStripe(options = {}) {
     return failure;
   }
 
-  /** Core request handler: (method, path, params, headers) -> { status, body } or { network: true }. */
+  /**
+   * Core request handler: (method, path, params, headers) -> { status, body } or { network: true }.
+   *
+   * Idempotency follows Stripe's documented rules (docs.stripe.com/api/idempotent_requests):
+   * the first result for a key is stored and replayed for later requests with that key —
+   * INCLUDING a 500 from a request that reached the API. Requests that never started executing
+   * (rate limited 429, gateway 502/503/504, dropped before arrival) store nothing and can be
+   * retried. Reusing a key with different parameters is a 400 idempotency_error.
+   */
   function handle(method, path, params, headers = {}) {
     const form = parseForm(params);
     state.calls.push({ method, path, form, headers });
     const failure = injected(method, path);
-    if (failure?.afterExecute) {
-      // Stripe did the work but the answer never arrived (timeout / dropped connection).
-      route(method, path, form);
-      return { network: true };
-    }
-    if (failure?.network) return { network: true };
-    if (failure) return error(failure.status ?? 500, failure.code ?? "api_error", failure.message ?? "Injected failure");
+    if (failure?.network && !failure.afterExecute) return { network: true }; // never reached Stripe
 
     const key = headers["idempotency-key"];
     const cacheKey = key ? `${method} ${path} ${key}` : null;
-    if (cacheKey && state.idempotency.has(cacheKey)) return structuredClone(state.idempotency.get(cacheKey));
-    const result = route(method, path, form);
-    if (cacheKey && result.status < 500) state.idempotency.set(cacheKey, structuredClone(result));
-    return result;
+    const fingerprint = JSON.stringify(form);
+    const stored = cacheKey ? state.idempotency.get(cacheKey) : undefined;
+    if (stored) {
+      if (stored.fingerprint !== fingerprint) {
+        return error(400, "idempotency_error", "Keys for idempotent requests can only be used with the same parameters they were first used with.");
+      }
+      if (failure?.afterExecute) return { network: true };
+      return structuredClone(stored.result);
+    }
+    const remember = (result) => {
+      if (cacheKey) state.idempotency.set(cacheKey, { fingerprint, result: structuredClone(result) });
+      return result;
+    };
+    if (failure?.afterExecute) {
+      // Stripe did the work (and stored the answer under the key) but the answer never arrived.
+      remember(route(method, path, form));
+      return { network: true };
+    }
+    if (failure) {
+      const result = error(failure.status ?? 500, failure.code ?? "api_error", failure.message ?? "Injected failure");
+      return STORED_FAILURES.has(result.status) ? remember(result) : result;
+    }
+    return remember(route(method, path, form));
   }
 
   function route(method, path, form) {
@@ -285,6 +348,11 @@ export function createFakeStripe(options = {}) {
       if (outcome !== "failed") event("charge.refunded", charge);
       return { status: 200, body: structuredClone(refund) };
     }
+    if (method === "GET" && path === "/v1/refunds") {
+      // Newest first, like Stripe's list endpoints.
+      const data = [...state.refunds.values()].filter((r) => !form.payment_intent || r.payment_intent === form.payment_intent).reverse();
+      return { status: 200, body: { object: "list", data: structuredClone(data.slice(0, Number(form.limit ?? 10))), has_more: false, url: "/v1/refunds" } };
+    }
     if (method === "GET" && (m = /^\/v1\/refunds\/([^/]+)$/.exec(path))) {
       const r = state.refunds.get(m[1]);
       return r ? { status: 200, body: structuredClone(r) } : error(404, "resource_missing", "No such refund");
@@ -300,6 +368,7 @@ export function createFakeStripe(options = {}) {
       const headers = Object.fromEntries(new Headers(init.headers).entries());
       const params = init.method === "POST" ? new URLSearchParams(String(init.body ?? "")) : url.searchParams;
       const res = handle(init.method ?? "GET", path, params, headers);
+      save();
       if (res.network) throw new TypeError("fetch failed (injected network error)");
       return new Response(JSON.stringify(res.body), { status: res.status, headers: { "Content-Type": "application/json" } });
     };
@@ -307,25 +376,33 @@ export function createFakeStripe(options = {}) {
 
   return {
     state,
-    handle,
+    handle: persisted(handle),
     fetchFor,
-    completeSession,
-    expireSession,
-    expireAuthorization,
-    settleRefund,
-    event,
+    completeSession: persisted(completeSession),
+    expireSession: persisted(expireSession),
+    expireAuthorization: persisted(expireAuthorization),
+    settleRefund: persisted(settleRefund),
+    event: persisted(event),
+    save,
+    persistPath,
     /** Next matching call fails: { method, path: RegExp, status?, code?, network?, afterExecute?, times? } */
     failNext(failure) {
       state.failures.push({ times: 1, ...failure });
     },
-    setRefundOutcome(outcome) {
-      state.refundOutcome = outcome;
+    clearFailures() {
+      state.failures.length = 0;
     },
+    setRefundOutcome: persisted((outcome) => {
+      state.refundOutcome = outcome;
+    }),
     session: (id) => state.sessions.get(id),
     intent: (id) => state.intents.get(id),
-    takeEvents() {
-      return state.events.splice(0, state.events.length);
-    },
+    /** Takes the queued webhook events (persisted: undelivered events survive a restart). */
+    takeEvents: persisted(() => state.events.splice(0, state.events.length)),
+    /** Puts events back at the front of the queue (delivery failed; Stripe retries them). */
+    requeueEvents: persisted((events) => {
+      state.events.unshift(...events);
+    }),
   };
 }
 

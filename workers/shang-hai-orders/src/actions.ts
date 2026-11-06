@@ -1,21 +1,24 @@
 import type { OrderStatus } from "../../../src/lib/commerce/types";
 import { cleanText } from "../../../src/lib/commerce/validation";
+import { formatClock } from "../../../src/lib/i18n/format";
 import { PREP_MINUTES_MAX, PREP_MINUTES_MIN } from "./config";
-import { getOrder, updateOrderIf, type EventSource, type OrderPatch, type OrderRow } from "./db";
+import { getOrder, lockInfo, updateOrderIf, type EventSource, type OrderPatch, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
 import { notifySoon } from "./notifications";
-import { factsFromIntent } from "./payments";
+import { factsFromIntent, summarizeRefunds, type RefundSummary } from "./payments";
 import {
   cancelPaymentIntent,
   capturePaymentIntent,
   createRefund,
+  describeFailure,
+  failureKind,
+  listRefunds,
   retrievePaymentIntent,
-  retrieveRefund,
   type StripeClient,
-  type StripeRefund,
+  type StripeResult,
 } from "./stripe";
-import { stripeClient, stripePatch, syncOrderPayment } from "./sync";
+import { missingPaymentNote, stripeClient, stripePatch, syncOrderPayment } from "./sync";
 
 /**
  * What staff can do from the panel. Each action:
@@ -23,10 +26,15 @@ import { stripeClient, stripePatch, syncOrderPayment } from "./sync";
  * 2. takes a short lock with a conditional UPDATE (awaiting_acceptance -> accepting /
  *    rejecting): if two phones tap at the same time, exactly one wins and the other gets
  *    "ya gestionado";
- * 3. talks to Stripe with an idempotency key (a retried request never charges twice);
+ * 3. talks to Stripe with an idempotency key per attempt (Stripe replays a stored answer —
+ *    even a 500 — for a reused key; a PaymentIntent can only be captured or cancelled once,
+ *    and a refund can never exceed what was charged, so a new attempt cannot double anything);
  * 4. finishes with another conditional UPDATE, writing who did what in order_events.
- * If the outcome at Stripe is unknown (timeout), the lock stays and the cron resolves it
- * from Stripe's real state a minute later; the kitchen never sees an unpaid order.
+ * If the outcome at Stripe is unknown (timeout, 5xx), the lock stays and the cron resolves it
+ * from Stripe's real state; if Stripe still cannot tell after LOCK_REVIEW_AFTER_MS, or does
+ * not know the payment at all (404), the order goes to EN REVISIÓN with what a person needs
+ * to act, and the staff are alerted. The kitchen never sees an unpaid order, and no order
+ * stays locked indefinitely.
  */
 
 export type Actor = { label: string; source: EventSource };
@@ -144,23 +152,16 @@ async function captureAndFinish(env: Env, deps: Deps, order: OrderRow, actor: Ac
   const piId = order.stripe_payment_intent_id;
   if (!stripe || !piId) return toReview(env, deps, order, "accepting", actor, "No hay un pago de Stripe asociado a este pedido");
 
-  const capture = await capturePaymentIntent(stripe, piId, `capture-${order.id}`);
+  const { attempts } = await lockInfo(env.DB, order.id, "accepting");
+  const capture = await capturePaymentIntent(stripe, piId, `capture-${order.id}-${Math.max(attempts, 1)}`);
   if (capture.ok && capture.body.status === "succeeded") {
     return finishAccept(env, deps, order, actor, stripePatch(order, factsFromIntent(capture.body), "captured", deps.now().toISOString()));
   }
+  if (!capture.ok) log("order.capture-failed", { orderId: order.id, stripe: describeFailure(capture) });
 
   // The capture failed or its outcome is unknown: decide from Stripe's real state.
   const fresh = await retrievePaymentIntent(stripe, piId);
-  if (!fresh.ok) {
-    log("order.accept-unknown", { orderId: order.id, status: capture.ok ? capture.status : capture.status });
-    return {
-      ok: true,
-      pending: true,
-      order: await reload(env, order.id, order),
-      message:
-        "Stripe no responde. Comprobaremos el cobro automáticamente en un minuto. No prepares el pedido hasta que aparezca en EN PREPARACIÓN.",
-    };
-  }
+  if (!fresh.ok) return lockUnresolved(env, deps, order, actor, fresh, "accepting");
   const facts = factsFromIntent(fresh.body);
   const now = deps.now().toISOString();
   switch (fresh.body.status) {
@@ -238,22 +239,77 @@ async function finishReject(env: Env, deps: Deps, order: OrderRow, actor: Actor,
 
 async function toReview(env: Env, deps: Deps, order: OrderRow, from: OrderStatus, actor: Actor, reason: string, patch: OrderPatch = {}): Promise<ActionResult> {
   const now = deps.now().toISOString();
-  await updateOrderIf(env.DB, order.id, from, "needs_review", { ...patch, review_reason: reason }, {
+  const res = await updateOrderIf(env.DB, order.id, from, "needs_review", { ...patch, review_reason: reason }, {
     source: "system",
     actor: actor.label,
     note: reason,
     now,
   });
+  const updated = await reload(env, order.id, order);
+  if (!res.ok) return alreadyHandled(updated); // someone (or the cron) finished it meanwhile
   notifySoon(env, deps, order.id, "needs_review");
   log("order.needs-review", { orderId: order.id, from });
-  return fail(502, "needs-review", `${reason}. El pedido queda EN REVISIÓN.`, await reload(env, order.id, order));
+  return fail(502, "needs-review", `${reason}. El pedido queda EN REVISIÓN.`, updated);
 }
 
-function refundPatch(refund: StripeRefund): OrderPatch {
+/** A lock Stripe has not let us resolve for this long goes to review (and the staff are alerted). */
+export const LOCK_REVIEW_AFTER_MS = 5 * 60_000;
+
+/**
+ * A Stripe call that could not tell what happened, while holding the accept/reject lock:
+ * - 404: Stripe does not know the payment — nothing can be done to it from here: review now;
+ * - other 4xx (bad key, permissions…): a configuration problem a person must fix: review now;
+ * - no answer / 429 / 5xx: keep the lock (the cron re-reads Stripe every minute) until the
+ *   deadline, then review with the facts: what was being done, since when, which payment.
+ */
+async function lockUnresolved(
+  env: Env,
+  deps: Deps,
+  order: OrderRow,
+  actor: Actor,
+  failure: Extract<StripeResult<unknown>, { ok: false }>,
+  from: "accepting" | "rejecting",
+): Promise<ActionResult> {
+  const piId = order.stripe_payment_intent_id ?? "(sin id)";
+  const accepting = from === "accepting";
+  const kind = failureKind(failure);
+  log(accepting ? "order.accept-unresolved" : "order.reject-unresolved", { orderId: order.id, stripe: describeFailure(failure), kind });
+  if (kind === "missing") {
+    return toReview(env, deps, order, from, actor, missingPaymentNote(piId, accepting ? "no se ha cobrado nada" : "no se ha anulado ni devuelto nada"));
+  }
+  if (kind === "refused") {
+    return toReview(env, deps, order, from, actor, `Stripe rechaza la consulta del pago ${piId} (${describeFailure(failure)}): revisa la configuración de Stripe`);
+  }
+  const since = (await lockInfo(env.DB, order.id, from)).since ?? order.updated_at;
+  if (deps.now().getTime() - Date.parse(since) >= LOCK_REVIEW_AFTER_MS) {
+    const at = formatClock(since, "es");
+    return toReview(
+      env,
+      deps,
+      order,
+      from,
+      actor,
+      accepting
+        ? `Stripe no responde desde las ${at}: no se sabe si se ha cobrado el pago ${piId}. No prepares el pedido hasta confirmarlo (Dashboard de Stripe o REINTENTAR)`
+        : `Stripe no responde desde las ${at}: no se sabe si se ha anulado o devuelto el pago ${piId}. Compruébalo en el Dashboard de Stripe o pulsa REINTENTAR`,
+    );
+  }
+  return {
+    ok: true,
+    pending: true,
+    order: await reload(env, order.id, order),
+    message: accepting
+      ? "Stripe no responde. Comprobaremos el cobro automáticamente en un minuto. No prepares el pedido hasta que aparezca en EN PREPARACIÓN."
+      : "Stripe no responde. Terminaremos la anulación automáticamente en un minuto.",
+  };
+}
+
+function refundPatch(refund: RefundSummary): OrderPatch {
   return { stripe_refund_id: refund.id, stripe_refund_status: refund.status };
 }
 
-async function finishFromRefund(env: Env, deps: Deps, order: OrderRow, actor: Actor, r: StripeRefund): Promise<ActionResult> {
+/** Finishes a rejection from what Stripe's refunds of the payment say (covering the full charge). */
+async function finishFromRefund(env: Env, deps: Deps, order: OrderRow, actor: Actor, r: RefundSummary): Promise<ActionResult> {
   switch (r.status) {
     case "succeeded":
       return finishReject(env, deps, order, actor, { ...refundPatch(r), payment_status: "refunded" }, "Pedido rechazado. Stripe ha confirmado el reembolso.");
@@ -275,35 +331,56 @@ async function finishFromRefund(env: Env, deps: Deps, order: OrderRow, actor: Ac
   }
 }
 
+/**
+ * Returns the money of a charged payment. Stripe's list of refunds for the payment is the
+ * truth (a refund whose answer was lost, or one made from the Dashboard, is followed instead
+ * of repeated); only the part not yet covered is requested, with a new key per attempt.
+ */
 async function refundAndFinish(env: Env, deps: Deps, stripe: StripeClient, order: OrderRow, actor: Actor): Promise<ActionResult> {
   const piId = order.stripe_payment_intent_id as string;
-  // A refund already requested for this order (still pending or done) is followed, not repeated.
-  if (order.stripe_refund_id) {
-    const existing = await retrieveRefund(stripe, order.stripe_refund_id);
-    if (existing.ok && existing.body.status !== "failed" && existing.body.status !== "canceled") {
-      return finishFromRefund(env, deps, order, actor, existing.body);
-    }
+  const pi = await retrievePaymentIntent(stripe, piId);
+  if (!pi.ok) return lockUnresolved(env, deps, order, actor, pi, "rejecting");
+  const received = pi.body.amount_received ?? 0;
+  const before = await listRefunds(stripe, piId);
+  if (!before.ok) return lockUnresolved(env, deps, order, actor, before, "rejecting");
+  const existing = summarizeRefunds(before.body.data ?? [], received);
+  if (existing && existing.status !== "failed" && existing.status !== "canceled" && !existing.partial) {
+    return finishFromRefund(env, deps, order, actor, existing);
   }
+
   const attempt = order.refund_attempts + 1;
-  await updateOrderIf(env.DB, order.id, "rejecting", null, { refund_attempts: attempt }, null);
+  const now = deps.now().toISOString();
+  await updateOrderIf(env.DB, order.id, "rejecting", null, { refund_attempts: attempt }, null, now);
+  const remaining = received - (existing && existing.status !== "failed" && existing.status !== "canceled" ? existing.amount : 0);
   const refund = await createRefund(stripe, piId, `refund-${order.id}-${attempt}`, {
     order_id: order.id,
     order_number: String(order.number ?? ""),
-  });
-  if (!refund.ok) {
-    // Already fully refunded (e.g. a previous attempt succeeded but we lost the answer)?
-    const fresh = await retrievePaymentIntent(stripe, piId);
-    if (fresh.ok) {
-      const facts = factsFromIntent(fresh.body);
-      if (facts.amountReceived > 0 && facts.chargeRefunded >= facts.amountReceived) {
-        return finishReject(env, deps, order, actor, { payment_status: "refunded" }, "Pedido rechazado. Pago ya reembolsado en Stripe.");
-      }
-    }
-    return toReview(env, deps, order, "rejecting", actor, "No se pudo pedir la devolución a Stripe; pulsa RECHAZAR de nuevo para reintentarla", {
-      payment_status: "captured",
-    });
+  }, existing?.partial ? remaining : undefined);
+  if (refund.ok) {
+    const all = summarizeRefunds([refund.body, ...(before.body.data ?? [])], received);
+    return finishFromRefund(env, deps, order, actor, all ?? { ...refund.body, amount: refund.body.amount, partial: false, failure_reason: refund.body.failure_reason ?? null });
   }
-  return finishFromRefund(env, deps, order, actor, refund.body);
+
+  // Unknown or refused: Stripe's list says whether the refund was created after all.
+  log("order.refund-failed", { orderId: order.id, stripe: describeFailure(refund) });
+  const after = await listRefunds(stripe, piId);
+  const settled = after.ok ? summarizeRefunds(after.body.data ?? [], received) : null;
+  if (settled && settled.status !== "failed" && settled.status !== "canceled" && !settled.partial) {
+    return finishFromRefund(env, deps, order, actor, settled);
+  }
+  if (failureKind(refund) === "unknown") return lockUnresolved(env, deps, order, actor, refund, "rejecting");
+  if (failureKind(refund) === "missing") {
+    return toReview(env, deps, order, "rejecting", actor, missingPaymentNote(piId, "no se ha devuelto nada"), { payment_status: "captured" });
+  }
+  return toReview(
+    env,
+    deps,
+    order,
+    "rejecting",
+    actor,
+    `Stripe no ha aceptado la devolución (${describeFailure(refund)}${refund.error?.message ? `: ${refund.error.message}` : ""}); el dinero sigue cobrado: pulsa RECHAZAR de nuevo para reintentarla`,
+    { payment_status: "captured" },
+  );
 }
 
 async function releaseAndFinish(env: Env, deps: Deps, order: OrderRow, actor: Actor): Promise<ActionResult> {
@@ -315,7 +392,8 @@ async function releaseAndFinish(env: Env, deps: Deps, order: OrderRow, actor: Ac
   if (!stripe || !piId) return toReview(env, deps, order, "rejecting", actor, "No hay un pago de Stripe asociado a este pedido");
   if (order.payment_status !== "authorized") return refundAndFinish(env, deps, stripe, order, actor);
 
-  const cancel = await cancelPaymentIntent(stripe, piId, `cancel-${order.id}`);
+  const { attempts } = await lockInfo(env.DB, order.id, "rejecting");
+  const cancel = await cancelPaymentIntent(stripe, piId, `cancel-${order.id}-${Math.max(attempts, 1)}`);
   if (cancel.ok && cancel.body.status === "canceled") {
     return finishReject(
       env,
@@ -326,15 +404,9 @@ async function releaseAndFinish(env: Env, deps: Deps, order: OrderRow, actor: Ac
       "Pedido rechazado. Autorización anulada: no se ha cobrado nada al cliente.",
     );
   }
+  if (!cancel.ok) log("order.cancel-failed", { orderId: order.id, stripe: describeFailure(cancel) });
   const fresh = await retrievePaymentIntent(stripe, piId);
-  if (!fresh.ok) {
-    return {
-      ok: true,
-      pending: true,
-      order: await reload(env, order.id, order),
-      message: "Stripe no responde. Anularemos el pago automáticamente en un minuto.",
-    };
-  }
+  if (!fresh.ok) return lockUnresolved(env, deps, order, actor, fresh, "rejecting");
   const facts = factsFromIntent(fresh.body);
   const now = deps.now().toISOString();
   if (fresh.body.status === "canceled") {
@@ -401,7 +473,7 @@ export async function resolveLock(env: Env, deps: Deps, order: OrderRow, actor: 
     return toReview(env, deps, order, "accepting", actor, "No hay un pago de Stripe asociado a este pedido");
   }
   const fresh = await retrievePaymentIntent(stripe, order.stripe_payment_intent_id);
-  if (!fresh.ok) return { ok: true, pending: true, order, message: "Stripe sigue sin responder; se reintentará." };
+  if (!fresh.ok) return lockUnresolved(env, deps, order, actor, fresh, "accepting");
   const now = deps.now().toISOString();
   const facts = factsFromIntent(fresh.body);
   if (fresh.body.status === "succeeded") return finishAccept(env, deps, order, actor, stripePatch(order, facts, "captured", now));
@@ -432,6 +504,9 @@ export async function retryOrder(env: Env, deps: Deps, id: string, actor: Actor)
   const synced = await syncOrderPayment(env, deps, id, { source: actor.source, actor: actor.label });
   if (!synced.ok) {
     return fail(502, synced.reason, synced.reason === "payments-disabled" ? "Los pagos no están configurados." : "Stripe no responde. Inténtalo en un minuto.", order);
+  }
+  if (synced.missing) {
+    return fail(502, "payment-missing", `${missingPaymentNote(synced.missing, "no se puede confirmar el dinero")}.`, synced.order);
   }
   return { ok: true, order: synced.order, message: synced.changed ? "Estado actualizado desde Stripe." : "Todo está al día con Stripe." };
 }

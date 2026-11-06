@@ -26,11 +26,33 @@ export type PaymentFacts = {
   chargeRefunded: number;
   /** Card authorisations must be captured before this time (ISO), when Stripe reports it. */
   captureBefore: string | null;
-  /** The refund this system created for the order, if any. */
-  refund: Pick<StripeRefund, "id" | "status" | "amount" | "failure_reason"> | null;
+  /** The refunds of this payment (ours, lost answers and Dashboard ones), summarised. */
+  refund: RefundSummary | null;
 };
 
-export function factsFromIntent(pi: StripePaymentIntent, refund?: StripeRefund | null): PaymentFacts {
+export type RefundSummary = Pick<StripeRefund, "id" | "status" | "failure_reason"> & {
+  /** Amount covered by refunds that have not failed (pending ones included). */
+  amount: number;
+  /** Those refunds cover less than what was charged (e.g. a partial refund from the Dashboard). */
+  partial: boolean;
+};
+
+/**
+ * One status for all the refunds of a payment: "succeeded" only when every live refund has
+ * succeeded AND together they cover what was charged; "pending" while any is unconfirmed;
+ * failed/canceled only when no live refund is left. Stripe lists newest first.
+ */
+export function summarizeRefunds(refunds: readonly StripeRefund[], received: number): RefundSummary | null {
+  if (!refunds.length) return null;
+  const alive = refunds.filter((r) => r.status !== "failed" && r.status !== "canceled");
+  const latest = alive[0] ?? refunds[0];
+  if (!alive.length) return { id: latest.id, status: latest.status, amount: 0, failure_reason: latest.failure_reason ?? null, partial: false };
+  const amount = alive.reduce((n, r) => n + (r.amount ?? 0), 0);
+  const unconfirmed = alive.some((r) => r.status !== "succeeded");
+  return { id: latest.id, status: unconfirmed ? "pending" : "succeeded", amount, failure_reason: null, partial: received > 0 && amount < received };
+}
+
+export function factsFromIntent(pi: StripePaymentIntent, refunds?: readonly StripeRefund[] | StripeRefund | null): PaymentFacts {
   const charge: StripeCharge | null = typeof pi.latest_charge === "object" && pi.latest_charge ? pi.latest_charge : null;
   const captureBefore = charge?.payment_method_details?.card?.capture_before;
   return {
@@ -46,7 +68,7 @@ export function factsFromIntent(pi: StripePaymentIntent, refund?: StripeRefund |
     failedAttempt: Boolean(pi.last_payment_error),
     chargeRefunded: charge?.amount_refunded ?? 0,
     captureBefore: typeof captureBefore === "number" ? new Date(captureBefore * 1000).toISOString() : null,
-    refund: refund ? { id: refund.id, status: refund.status, amount: refund.amount, failure_reason: refund.failure_reason ?? null } : null,
+    refund: summarizeRefunds(refunds ? (Array.isArray(refunds) ? refunds : [refunds as StripeRefund]) : [], pi.amount_received ?? 0),
   };
 }
 
@@ -60,11 +82,13 @@ export function derivePaymentStatus(f: PaymentFacts): PaymentStatus {
       return "canceled";
     case "succeeded":
       if (f.refund) {
-        if (f.refund.status === "succeeded") return "refunded";
         if (f.refund.status === "failed" || f.refund.status === "canceled") return "refund_failed";
+        if (f.refund.partial) return "captured"; // partly refunded: most of the money is still charged
+        if (f.refund.status === "succeeded") return "refunded";
         return "refund_pending"; // pending / requires_action: not confirmed yet
       }
-      if (f.amountReceived > 0 && f.chargeRefunded >= f.amountReceived) return "refunded"; // refunded from the Dashboard
+      // Refunded according to the charge, but no refund object confirms it: not "refunded" yet.
+      if (f.amountReceived > 0 && f.chargeRefunded >= f.amountReceived) return "refund_pending";
       return "captured";
     case "requires_payment_method":
       return f.failedAttempt ? "failed" : "unpaid";

@@ -46,6 +46,8 @@ export interface Env {
    *  "per-method": card/Link/wallets are authorised; methods without manual capture are
    *  charged at once and refunded if the restaurant rejects. */
   STRIPE_CAPTURE_MODE?: string;
+  /** Per-request timeout for Stripe API calls in ms (default 15000). */
+  STRIPE_TIMEOUT_MS?: string;
   CORS_ALLOWED_ORIGIN?: string;
   STRIPE_SUCCESS_URL?: string;
   STRIPE_CANCEL_URL?: string;

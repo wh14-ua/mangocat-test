@@ -27,6 +27,7 @@ import { defaultDeps, type Deps, type Env } from "./env";
 import { errorJson, json, preflight, securityHeaders, withCors } from "./http";
 import { log } from "./log";
 import { handleOrderLookup } from "./orders";
+import { verifySchema } from "./schema";
 import { authorizeStaff, handleLoginCode, handleLoginVerify, handleLogout } from "./staff-auth";
 import { handleStripeWebhook, paymentsModeFor } from "./webhook";
 
@@ -87,13 +88,16 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
     // Public storefront API (CORS-enabled for the configured origins only)
     if (servesApi && PUBLIC_API.test(path)) {
       if (method === "OPTIONS") return preflight(env, request);
+      const outdated = await schemaOutdated(env, path);
+      if (outdated) return withCors(outdated, env, request);
       const response = await routePublic(request, env, deps, path, method);
       return withCors(response, env, request);
     }
 
     if (servesApi && path === "/api/stripe/webhook") {
       if (method !== "POST") return errorJson("method-not-allowed", 405);
-      return await handleStripeWebhook(request, env, deps);
+      // 503 makes Stripe retry later (for up to three days): no event is lost meanwhile.
+      return (await schemaOutdated(env, path)) ?? (await handleStripeWebhook(request, env, deps));
     }
 
     if (servesPanel && (path === "/admin" || path.startsWith("/admin/"))) {
@@ -102,7 +106,9 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
       return panelStatic(url.pathname) ?? errorJson("not-found", 404);
     }
 
-    if (servesPanel && path.startsWith("/api/admin")) return await routeStaff(request, env, deps, path, method);
+    if (servesPanel && path.startsWith("/api/admin")) {
+      return (await schemaOutdated(env, path)) ?? (await routeStaff(request, env, deps, path, method));
+    }
 
     if (path === "/") {
       const headers = securityHeaders();
@@ -115,6 +121,20 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
     const response = errorJson("server", 500);
     return PUBLIC_API.test(path) ? withCors(response, env, request) : response;
   }
+}
+
+/**
+ * 503 when the database lacks part of the schema this code needs (migrations not applied, or
+ * a migration edited after it was applied). What is missing goes to the logs, not the response.
+ */
+async function schemaOutdated(env: Env, path: string): Promise<Response | null> {
+  if (path === "/api/config") return null; // needs no database
+  const schema = await verifySchema(env.DB);
+  if (schema.ok) return null;
+  if (path === "/api/health") return json({ ok: false, schema: "outdated" }, 503);
+  return errorJson("schema-outdated", 503, {
+    message: "La base de datos del servidor no está actualizada (faltan migraciones). Aviso al responsable técnico: npm run db:check.",
+  });
 }
 
 async function routePublic(request: Request, env: Env, deps: Deps, path: string, method: string) {
@@ -160,6 +180,7 @@ const worker = {
   },
   async scheduled(_controller: unknown, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<void> {
     if (workerRole(env) === "panel") return;
+    if (!(await verifySchema(env.DB)).ok) return; // logged by verifySchema; nothing runs on a broken schema
     const deps = defaultDeps(ctx);
     const report = await runScheduled(env, deps);
     log("cron.done", report);

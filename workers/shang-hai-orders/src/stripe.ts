@@ -13,13 +13,39 @@ export const SESSION_TTL_SECONDS = 60 * 60;
  */
 export const MANUAL_CAPTURE_METHODS = ["card", "link", "paypal", "revolut_pay", "amazon_pay", "klarna"] as const;
 
-export type StripeClient = { fetch: typeof fetch; secretKey: string; apiBase: string };
+export type StripeClient = { fetch: typeof fetch; secretKey: string; apiBase: string; timeoutMs?: number };
 
 export type StripeError = { type?: string; code?: string; message?: string; decline_code?: string };
 
 export type StripeResult<T> =
   | { ok: true; status: number; body: T }
-  | { ok: false; status: number; error: StripeError | null; network: boolean };
+  | { ok: false; status: number; error: StripeError | null; network: boolean; timeout?: boolean };
+
+/** No Stripe call may hold a request (or the cron) indefinitely. */
+export const DEFAULT_STRIPE_TIMEOUT_MS = 15_000;
+
+/**
+ * How certain a failed call's outcome is:
+ * - "unknown": no answer (network, timeout) or an answer that does not tell (429, 5xx). The
+ *   operation may or may not have happened at Stripe: re-read before deciding, never assume.
+ * - "missing": 404 — Stripe does not know that object (deleted test data, another account or
+ *   mode, a local stand-in that lost its state). Nothing can have happened to it from here.
+ * - "refused": any other 4xx — Stripe answered and did not do it.
+ */
+export type FailureKind = "unknown" | "missing" | "refused";
+
+export function failureKind(result: { status: number; network: boolean }): FailureKind {
+  if (result.network || result.status === 0 || result.status === 429 || result.status >= 500) return "unknown";
+  if (result.status === 404) return "missing";
+  return "refused";
+}
+
+/** "404 resource_missing", "timeout", "500 api_error"… for logs and review notes. */
+export function describeFailure(result: { status: number; network: boolean; timeout?: boolean; error: StripeError | null }): string {
+  if (result.timeout) return "sin respuesta (tiempo agotado)";
+  if (result.status === 0) return "sin conexión";
+  return [String(result.status), result.error?.code].filter(Boolean).join(" ");
+}
 
 /** One form-encoded call to the Stripe API with the pinned version (and an idempotency key on POST). */
 export async function stripeRequest<T>(
@@ -37,17 +63,20 @@ export async function stripeRequest<T>(
     if (options.idempotencyKey) headers["Idempotency-Key"] = options.idempotencyKey;
   }
   const query = options.query?.toString();
+  const signal = AbortSignal.timeout(client.timeoutMs ?? DEFAULT_STRIPE_TIMEOUT_MS);
   let res: Response;
+  let body: (T & { error?: StripeError }) | null;
   try {
     res = await client.fetch(`${client.apiBase}${path}${query ? `?${query}` : ""}`, {
       method,
       headers,
+      signal,
       ...(method === "POST" ? { body: (options.form ?? new URLSearchParams()).toString() } : {}),
     });
+    body = (await res.json().catch(() => null)) as (T & { error?: StripeError }) | null;
   } catch {
-    return { ok: false, status: 0, error: null, network: true };
+    return { ok: false, status: 0, error: null, network: true, timeout: signal.aborted };
   }
-  const body = (await res.json().catch(() => null)) as (T & { error?: StripeError }) | null;
   if (!res.ok || !body) {
     return { ok: false, status: res.status, error: body?.error ?? null, network: res.status >= 500 || res.status === 429 };
   }
@@ -228,14 +257,17 @@ export function cancelPaymentIntent(client: StripeClient, id: string, idempotenc
   });
 }
 
+/** Refunds the payment (everything still refundable, or `amount` cents when given). */
 export function createRefund(
   client: StripeClient,
   paymentIntentId: string,
   idempotencyKey: string,
   metadata: Record<string, string>,
+  amount?: number,
 ) {
   const form = new URLSearchParams();
   form.set("payment_intent", paymentIntentId);
+  if (amount !== undefined) form.set("amount", String(amount));
   form.set("reason", "requested_by_customer");
   for (const [k, v] of Object.entries(metadata)) form.set(`metadata[${k}]`, v);
   return stripeRequest<StripeRefund>(client, "POST", "/refunds", { form, idempotencyKey });
@@ -243,6 +275,16 @@ export function createRefund(
 
 export function retrieveRefund(client: StripeClient, id: string) {
   return stripeRequest<StripeRefund>(client, "GET", `/refunds/${encodeURIComponent(id)}`);
+}
+
+/** Every refund of a PaymentIntent (newest first): the truth when an earlier answer was lost. */
+export function listRefunds(client: StripeClient, paymentIntentId: string) {
+  return stripeRequest<{ data: StripeRefund[] }>(client, "GET", "/refunds", {
+    query: new URLSearchParams([
+      ["payment_intent", paymentIntentId],
+      ["limit", "20"],
+    ]),
+  });
 }
 
 export function retrieveCheckoutSession(client: StripeClient, id: string) {
