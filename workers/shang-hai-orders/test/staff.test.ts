@@ -57,7 +57,7 @@ describe("staff sign-in with a Telegram code", () => {
     expect(cookie).toMatch(/^__Host-shp_session=[A-Za-z0-9_-]{43}; Path=\/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000$/);
     const session = cookie.split(";")[0];
     const me = await staffCall(w, session, "/api/admin/session");
-    expect(await me.json()).toMatchObject({ authenticated: true, method: "telegram-code", label: "Móvil de Pedro" });
+    expect(await me.json()).toMatchObject({ authenticated: true, method: "code", label: "Móvil de Pedro" });
     // Single use.
     expect((await verify(w, code)).status).toBe(401);
     // Only hashes are stored.
@@ -164,7 +164,7 @@ describe("staff board", () => {
     expect(card.customer).toMatchObject({ name: "Lucía García", phoneDisplay: "612 345 678" });
     expect(card.notes).toBe("Sin cebolla");
     expect(card.lines).toHaveLength(2);
-    expect(card.alert).toBe("sent");
+    expect(card.alert).toBe("delivered"); // Telegram: in the chat as soon as the API accepts it
     expect(board.columns.preparing[0].actions).toEqual(["ready", "reject"]);
     expect(board.prepOptions).toEqual([15, 20, 30, 45]);
     expect(board.health.telegram.configured).toBe(true);

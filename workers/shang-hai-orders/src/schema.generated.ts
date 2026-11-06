@@ -13,10 +13,13 @@ export const REQUIRED_SCHEMA = {
       "attempts",
       "next_attempt_at",
       "last_error",
+      "error_code",
       "provider_message_id",
       "created_at",
       "updated_at",
-      "sent_at"
+      "sent_at",
+      "delivered_at",
+      "read_at"
     ],
     "order_events": [
       "id",
@@ -126,6 +129,7 @@ export const REQUIRED_SCHEMA = {
   "indexes": [
     "idx_notifications_due",
     "idx_notifications_order",
+    "idx_notifications_provider",
     "idx_order_events_order",
     "idx_orders_created",
     "idx_orders_payment_intent",

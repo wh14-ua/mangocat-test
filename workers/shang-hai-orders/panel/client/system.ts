@@ -1,6 +1,6 @@
 /**
  * "Ajustes y estado": alerts on this phone (sound, browser notifications, keep the screen
- * on), the health of the system (payments mode, Stripe, automatic checks, Telegram) and the
+ * on), the health of the system (payments mode, Stripe, automatic checks, WhatsApp, Telegram) and the
  * session (device name, sign out here or on every phone).
  */
 import {
@@ -45,6 +45,12 @@ function when(iso: string | null, now: number): string {
   return `${agoSeconds(ms, now)} (${stamp(iso, now)})`;
 }
 
+const PROBLEM_TEXT: Record<string, string> = {
+  credentials: "Credenciales de WhatsApp caducadas o no válidas: renueva el token",
+  template: "Plantilla de WhatsApp no aprobada o pausada",
+  configuration: "Configuración de WhatsApp a revisar",
+};
+
 function healthList(): HTMLElement {
   const board = state.board;
   const now = serverNow();
@@ -59,12 +65,23 @@ function healthList(): HTMLElement {
     ...(health.lastCronErrorAt && now - Date.parse(health.lastCronErrorAt) < 86_400_000
       ? [["Último fallo de la revisión automática", `${stamp(health.lastCronErrorAt, now)}${health.lastCronError ? `: ${health.lastCronError}` : ""}`, "is-bad"] as [string, string, string]]
       : []),
-    ["Telegram", tg.configured ? "Configurado" : "No configurado: los avisos solo llegan a este panel", tg.configured ? undefined : "is-bad"],
   ];
+  const wa = health.whatsapp;
+  const anyChannel = Boolean(wa?.configured || tg.configured);
+  if (wa) {
+    rows.push(["WhatsApp", wa.configured ? "Configurado" : "No configurado", wa.configured ? undefined : anyChannel ? undefined : "is-bad"]);
+    if (wa.configured) {
+      if (wa.problem) rows.push(["Requiere acción", `${PROBLEM_TEXT[wa.problem.kind] ?? "Problema de configuración"} (${stamp(wa.problem.at, now)}): ${wa.problem.error}`, "is-bad"]);
+      rows.push(["Último aviso entregado", when(wa.lastDeliveredAt, now)]);
+      if (wa.lastErrorAt) rows.push(["Último error de WhatsApp", `${stamp(wa.lastErrorAt, now)}${wa.lastError ? `: ${wa.lastError}` : ""}`, "is-bad"]);
+      rows.push(["Avisos de WhatsApp fallidos (24 h)", String(wa.failedLast24h), wa.failedLast24h > 0 ? "is-bad" : undefined]);
+    }
+  }
+  rows.push(["Telegram", tg.configured ? "Configurado" : anyChannel ? "No configurado (alternativa)" : "No configurado: los avisos solo llegan a este panel", tg.configured || anyChannel ? undefined : "is-bad"]);
   if (tg.configured) {
-    rows.push(["Último envío correcto", when(tg.lastSuccessAt, now)]);
-    if (tg.lastErrorAt) rows.push(["Último error", `${stamp(tg.lastErrorAt, now)}${tg.lastError ? `: ${tg.lastError}` : ""}`, "is-bad"]);
-    rows.push(["Avisos fallidos (24 h)", String(tg.failedLast24h), tg.failedLast24h > 0 ? "is-bad" : undefined]);
+    rows.push(["Último envío correcto de Telegram", when(tg.lastSuccessAt, now)]);
+    if (tg.lastErrorAt) rows.push(["Último error de Telegram", `${stamp(tg.lastErrorAt, now)}${tg.lastError ? `: ${tg.lastError}` : ""}`, "is-bad"]);
+    rows.push(["Avisos de Telegram fallidos (24 h)", String(tg.failedLast24h), tg.failedLast24h > 0 ? "is-bad" : undefined]);
   }
   return h(
     "dl",
@@ -105,7 +122,7 @@ export function openSystemSheet(onSignedOut: SignedOut): void {
       const permission = notificationPermission();
       const notifyHint =
         permission === "unsupported"
-          ? "Este navegador no muestra avisos desde la página. Los avisos de Telegram siguen llegando."
+          ? "Este navegador no muestra avisos desde la página. Los avisos de WhatsApp o Telegram siguen llegando."
           : permission === "denied"
             ? "Bloqueados en el navegador: actívalos en los ajustes del sitio."
             : "Un aviso del sistema cuando entra un pedido con el panel en segundo plano.";
@@ -126,7 +143,7 @@ export function openSystemSheet(onSignedOut: SignedOut): void {
           toast(
             "warn",
             "No se han podido activar los avisos",
-            result === "denied" ? "El navegador los tiene bloqueados para esta página." : "Este navegador solo permite avisos de apps instaladas con servicio en segundo plano. Usa los avisos de Telegram.",
+            result === "denied" ? "El navegador los tiene bloqueados para esta página." : "Este navegador solo permite avisos de apps instaladas con servicio en segundo plano. Usa los avisos de WhatsApp o Telegram.",
           );
         }
       });
@@ -161,7 +178,7 @@ export function openSystemSheet(onSignedOut: SignedOut): void {
       logoutAll.addEventListener("click", () => {
         confirmSheet({
           title: "¿Cerrar sesión en todos los móviles?",
-          text: "Todos los móviles conectados, también este, tendrán que volver a entrar con un código de Telegram.",
+          text: "Todos los móviles conectados, también este, tendrán que volver a entrar con un código de acceso.",
           confirmLabel: "Cerrar sesión en todos",
           danger: true,
           async onConfirm(confirm) {
@@ -194,7 +211,7 @@ export function openSystemSheet(onSignedOut: SignedOut): void {
               "span",
               null,
               h("span", { class: "device__name", text: session?.label ?? "—" }),
-              h("span", { class: "device__how", text: session?.method === "access" ? "Conectado con Cloudflare Access" : "Conectado con código de Telegram" }),
+              h("span", { class: "device__how", text: session?.method === "access" ? "Conectado con Cloudflare Access" : "Conectado con código de acceso" }),
             ),
           ),
           h("div", "group__actions", logout, logoutAll),

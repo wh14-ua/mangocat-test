@@ -8,6 +8,9 @@
  *   GET  /api/orders/:id                 order status for the customer (Bearer order token)
  * Stripe:
  *   POST /api/stripe/webhook             verified Stripe events -> order/payment state
+ * WhatsApp (Cloud API):
+ *   GET  /api/whatsapp/webhook           Meta's subscription check
+ *   POST /api/whatsapp/webhook           signed message status updates (delivery receipts)
  * Staff panel (mobile PWA):
  *   GET  /admin, /admin/*                panel shell and assets (no data inside)
  *   POST /api/admin/auth/code|verify     Telegram one-time code sign-in
@@ -30,6 +33,7 @@ import { handleOrderLookup } from "./orders";
 import { verifySchema } from "./schema";
 import { authorizeStaff, handleLoginCode, handleLoginVerify, handleLogout } from "./staff-auth";
 import { handleStripeWebhook, paymentsModeFor } from "./webhook";
+import { handleWhatsAppWebhook } from "./whatsapp-webhook";
 
 const PUBLIC_API = /^\/api\/(health|config|checkout|orders\/[^/]+)$/;
 
@@ -92,6 +96,11 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
       if (outdated) return withCors(outdated, env, request);
       const response = await routePublic(request, env, deps, path, method);
       return withCors(response, env, request);
+    }
+
+    if (servesApi && path === "/api/whatsapp/webhook") {
+      // 503 while the schema is outdated: Meta retries status webhooks for up to 7 days.
+      return (await schemaOutdated(env, path)) ?? (await handleWhatsAppWebhook(request, env, deps));
     }
 
     if (servesApi && path === "/api/stripe/webhook") {

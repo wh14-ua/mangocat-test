@@ -235,6 +235,49 @@ export function telegramConfig(env: Env): TelegramConfig | null {
   return { token, chatIds: [...new Set(chatIds)] };
 }
 
+export type WhatsAppConfig = {
+  token: string;
+  phoneNumberId: string;
+  /** Digits only (E.164 without "+"), deduplicated. */
+  recipients: string[];
+  apiBase: string;
+  version: string;
+  language: string;
+};
+
+/** E.164 number → digits ("+34 612 345 678" → "34612345678"); null if it is not a plausible number. */
+export function normalizeWhatsAppNumber(raw: string): string | null {
+  const digits = raw.replace(/[\s().-]/g, "").replace(/^\+/, "");
+  return /^[1-9]\d{7,14}$/.test(digits) ? digits : null;
+}
+
+/**
+ * WhatsApp Cloud API, the primary alert channel. Configured only when the token, the sender's
+ * phone number id and at least one authorised recipient are all present; alerts and sign-in
+ * codes only ever go to WHATSAPP_RECIPIENTS.
+ */
+export function whatsappConfig(env: Env): WhatsAppConfig | null {
+  const token = env.WHATSAPP_ACCESS_TOKEN?.trim() ?? "";
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID?.trim() ?? "";
+  const recipients = [
+    ...new Set(
+      (env.WHATSAPP_RECIPIENTS ?? "")
+        .split(",")
+        .map((r) => normalizeWhatsAppNumber(r.trim()))
+        .filter((r): r is string => Boolean(r)),
+    ),
+  ];
+  if (token.length < 20 || !/^\d{6,20}$/.test(phoneNumberId) || recipients.length === 0) return null;
+  const version = /^v\d{2,3}\.\d$/.test(env.WHATSAPP_API_VERSION?.trim() ?? "") ? (env.WHATSAPP_API_VERSION as string).trim() : "v26.0";
+  const language = /^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE?.trim() ?? "") ? (env.WHATSAPP_TEMPLATE_LANGUAGE as string).trim() : "es";
+  return { token, phoneNumberId, recipients, apiBase: localOverride(env, env.WHATSAPP_API_BASE) ?? "https://graph.facebook.com", version, language };
+}
+
+/** Channels that can deliver staff sign-in codes, in order of preference. */
+export function codeChannels(env: Env): ("whatsapp" | "telegram")[] {
+  return [...(whatsappConfig(env) ? (["whatsapp"] as const) : []), ...(telegramConfig(env) ? (["telegram"] as const) : [])];
+}
+
 /** The staff panel's public URL (https, or localhost for the mock stack). */
 export function panelUrl(env: Env): string | null {
   const raw = env.PANEL_URL?.trim();

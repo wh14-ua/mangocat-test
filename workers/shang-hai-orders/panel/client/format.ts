@@ -114,9 +114,10 @@ export const SOURCE_TEXT: Record<string, string> = {
 };
 
 export const ALERT_TEXT: Record<AlertState, string | null> = {
-  sent: "Aviso Telegram enviado",
-  pending: "Aviso Telegram pendiente",
-  failed: "Aviso Telegram fallido",
+  delivered: "Aviso entregado",
+  sent: "Aviso enviado (sin confirmar entrega)",
+  pending: "Aviso pendiente",
+  failed: "Aviso fallido",
   none: null,
 };
 

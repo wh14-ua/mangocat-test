@@ -4,7 +4,8 @@
 //   storefronts (static build pointed at the local Worker)  http://localhost:4174/mangocat-test/showcase/shang-hai/
 //   order Worker (wrangler dev: workerd + local D1)          http://localhost:8787   (panel: /admin)
 //   fake Stripe (API + payment page + signed webhooks)      http://localhost:8790/pay/...
-//   fake Telegram ("staff phone")                           http://localhost:8790/telegram
+//   fake WhatsApp ("owner's phone")                         http://localhost:8790/whatsapp
+//   fake Telegram ("staff phone", alternative channel)      http://localhost:8790/telegram
 //
 // Usage:  npm run demo:local                 keeps the previous local state (orders, payments, chats)
 //         npm run demo:local -- --fresh      starts from an empty local state (deletes .local-stack/ only)
@@ -177,7 +178,8 @@ async function main() {
    Local demo ready (test data only, no real money)
    Storefronts:   ${stack.urls.site}/mangocat-test/showcase/shang-hai/
    Staff panel:   ${stack.urls.worker}/admin   (sign in: ENVIAR CÓDIGO, then read it on the phone page)
-   Staff phone:   ${stack.urls.cloud}/telegram (Telegram alerts and sign-in codes)
+   Owner's phone: ${stack.urls.cloud}/whatsapp (WhatsApp alerts and sign-in codes — the product's channel)
+   Staff phone:   ${stack.urls.cloud}/telegram (Telegram, kept as the alternative channel)
    Payment page:  opens automatically from the checkout (fake Stripe)
    State:         ${relative(ROOT, stack.stateDir)}/ — D1, fake Stripe and fake Telegram are kept together.
                   Start from scratch:  npm run demo:local -- --fresh

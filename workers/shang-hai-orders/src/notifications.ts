@@ -1,9 +1,10 @@
 import { formatCents } from "../../../src/lib/commerce/money";
-import { panelUrl, telegramApiBase, telegramConfig } from "./config";
+import { panelUrl, telegramApiBase, telegramConfig, whatsappConfig } from "./config";
 import { getOrder, setState, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
 import { escapeHtml, sendTelegramMessage } from "./telegram";
+import { PAIR_INTERVAL_MS, sendWhatsAppTemplate, whatsappMessageFor, whatsappRetryDelay } from "./whatsapp";
 
 /**
  * Staff notifications through an outbox in D1.
@@ -15,16 +16,20 @@ import { escapeHtml, sendTelegramMessage } from "./telegram";
  *   recreates rows that were lost and reminds every hour while an incident is unattended.
  * - Delivery is attempted right after the order changes (waitUntil) and retried by the
  *   cron with backoff; every failure is recorded and shown in the panel.
- * - Messages contain the order number, item count, total and payment state only — never
- *   the customer's name, phone, email or notes.
+ * - Messages contain the order number, the dishes, the total and the payment state only —
+ *   never the customer's name, phone, email, notes or address.
+ * - Channels: WhatsApp (Cloud API, primary; delivery confirmed by its status webhook) and
+ *   Telegram (alternative). Each authorised recipient of each configured channel gets a row.
  */
 
 export type NotificationKind = "new_order" | "reminder" | "auto_cancelled" | "needs_review";
 
+export type NotificationChannel = "whatsapp" | "telegram" | "webpush";
+
 export type NotificationRow = {
   id: number;
   order_id: string;
-  channel: "telegram" | "webpush";
+  channel: NotificationChannel;
   recipient: string;
   kind: NotificationKind;
   status: "pending" | "sending" | "sent" | "failed" | "skipped";
@@ -32,10 +37,29 @@ export type NotificationRow = {
   next_attempt_at: string | null;
   last_error: string | null;
   provider_message_id: string | null;
+  error_code: string | null;
   created_at: string;
   updated_at: string;
   sent_at: string | null;
+  /** WhatsApp receipts (status webhook): reached the phone / opened. */
+  delivered_at: string | null;
+  read_at: string | null;
 };
+
+/** Who gets alerts: every authorised recipient of every configured channel (WhatsApp first). */
+export function alertRecipients(env: Env): { channel: "whatsapp" | "telegram"; recipient: string }[] {
+  const whatsapp = whatsappConfig(env);
+  const telegram = telegramConfig(env);
+  return [
+    ...(whatsapp?.recipients.map((recipient) => ({ channel: "whatsapp" as const, recipient })) ?? []),
+    ...(telegram?.chatIds.map((recipient) => ({ channel: "telegram" as const, recipient })) ?? []),
+  ];
+}
+
+/** The restaurant's name in alerts (the commercial product serves other restaurants too). */
+export function restaurantName(env: Env): string {
+  return env.RESTAURANT_NAME?.trim().slice(0, 40) || "SHANG HAI";
+}
 
 /** Seconds to wait after each failed attempt; after the last one the row stays failed. */
 export const RETRY_DELAYS_SECONDS = [15, 60, 120, 300, 600, 1800];
@@ -55,18 +79,18 @@ export async function enqueueNotification(
   now: string,
   options: { rearm?: boolean } = {},
 ): Promise<number> {
-  const telegram = telegramConfig(env);
-  if (!telegram) return 0;
+  const recipients = alertRecipients(env);
+  if (!recipients.length) return 0;
   const sql = options.rearm
     ? `INSERT INTO notifications (order_id, channel, recipient, kind, status, attempts, next_attempt_at, created_at, updated_at)
-       VALUES (?, 'telegram', ?, ?, 'pending', 0, ?, ?, ?)
+       VALUES (?, ?, ?, ?, 'pending', 0, ?, ?, ?)
        ON CONFLICT (order_id, channel, recipient, kind) DO UPDATE SET
-         status = 'pending', attempts = 0, next_attempt_at = excluded.next_attempt_at, last_error = NULL,
-         updated_at = excluded.updated_at
+         status = 'pending', attempts = 0, next_attempt_at = excluded.next_attempt_at, last_error = NULL, error_code = NULL,
+         provider_message_id = NULL, sent_at = NULL, delivered_at = NULL, read_at = NULL, updated_at = excluded.updated_at
        WHERE notifications.status IN ('sent', 'failed', 'skipped')`
     : `INSERT OR IGNORE INTO notifications (order_id, channel, recipient, kind, status, attempts, next_attempt_at, created_at, updated_at)
-       VALUES (?, 'telegram', ?, ?, 'pending', 0, ?, ?, ?)`;
-  const statements = telegram.chatIds.map((chatId) => env.DB.prepare(sql).bind(orderId, chatId, kind, now, now, now));
+       VALUES (?, ?, ?, ?, 'pending', 0, ?, ?, ?)`;
+  const statements = recipients.map(({ channel, recipient }) => env.DB.prepare(sql).bind(orderId, channel, recipient, kind, now, now, now));
   const results = await env.DB.batch(statements);
   return results.reduce((n, r) => n + (r.meta.changes ?? 0), 0);
 }
@@ -138,7 +162,7 @@ export function composeMessage(
 }
 
 /** What happened to the money, from the order's payment status when the alert goes out. */
-function autoCancelPaymentText(payment: OrderRow["payment_status"]): string {
+export function autoCancelPaymentText(payment: OrderRow["payment_status"]): string {
   switch (payment) {
     case "canceled":
     case "unpaid":
@@ -172,7 +196,8 @@ export type DeliveryOptions = { orderId?: string; limit?: number; reminderMinute
 /** Sends every due notification (optionally of one order). Safe to run concurrently. */
 export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions = {}): Promise<{ sent: number; failed: number }> {
   const telegram = telegramConfig(env);
-  if (!telegram) return { sent: 0, failed: 0 };
+  const whatsapp = whatsappConfig(env);
+  if (!telegram && !whatsapp) return { sent: 0, failed: 0 };
   const now = deps.now();
   const nowIso = now.toISOString();
   const staleSending = new Date(now.getTime() - SENDING_STALE_MS).toISOString();
@@ -182,7 +207,7 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
   params.push(options.limit ?? 25);
   const due = await env.DB.prepare(
     `SELECT * FROM notifications
-      WHERE channel = 'telegram'
+      WHERE channel IN ('whatsapp', 'telegram')
         AND ((status IN ('pending', 'failed') AND next_attempt_at IS NOT NULL AND next_attempt_at <= ?)
              OR (status = 'sending' AND updated_at <= ?))
         ${filter}
@@ -205,8 +230,9 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
       .run();
     if (!claim.meta.changes) continue;
 
-    // A chat removed from TELEGRAM_CHAT_IDS gets nothing more, not even queued retries.
-    if (!telegram.chatIds.includes(row.recipient)) {
+    // A recipient removed from the configuration gets nothing more, not even queued retries.
+    const authorised = row.channel === "whatsapp" ? whatsapp?.recipients.includes(row.recipient) : telegram?.chatIds.includes(row.recipient);
+    if (!authorised) {
       await env.DB.prepare(
         `UPDATE notifications SET status = 'skipped', next_attempt_at = NULL, last_error = 'recipient no longer authorised', updated_at = ? WHERE id = ?`,
       )
@@ -222,43 +248,145 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
         .run();
       continue;
     }
-    const count = await env.DB.prepare(`SELECT COALESCE(SUM(quantity), 0) AS n FROM order_items WHERE order_id = ?`)
-      .bind(order.id)
-      .first<{ n: number }>();
-    const html = composeMessage(row.kind, order, Number(count?.n ?? 0), options);
-    const result = await sendTelegramMessage(deps.fetch, {
-      apiBase: telegramApiBase(env),
-      token: telegram.token,
-      chatId: row.recipient,
-      html,
-      buttonText: "VER PEDIDO",
-      buttonUrl: orderPanelLink(env, order.id),
-    });
-    const attempts = row.attempts + 1;
-    if (result.ok) {
-      sent += 1;
-      await env.DB.prepare(
-        `UPDATE notifications SET status = 'sent', attempts = ?, provider_message_id = ?, sent_at = ?, next_attempt_at = NULL,
-           last_error = NULL, updated_at = ? WHERE id = ?`,
-      )
-        .bind(attempts, String(result.messageId), nowIso, nowIso, row.id)
-        .run();
-      await setState(env.DB, "telegram.last_success", row.kind, nowIso);
-      continue;
-    }
-    failed += 1;
-    const delay = result.retryAfter ?? RETRY_DELAYS_SECONDS[attempts - 1];
-    const retry = result.retryable && attempts < RETRY_DELAYS_SECONDS.length + 1 && delay !== undefined;
-    const next = retry ? new Date(now.getTime() + delay * 1000).toISOString() : null;
-    await env.DB.prepare(
-      `UPDATE notifications SET status = 'failed', attempts = ?, next_attempt_at = ?, last_error = ?, updated_at = ? WHERE id = ?`,
-    )
-      .bind(attempts, next, result.error, nowIso, row.id)
-      .run();
-    await setState(env.DB, "telegram.last_error", result.error, nowIso);
-    log("notify.failed", { orderId: order.id, kind: row.kind, attempts, retry, error: result.error });
+    const outcome = row.channel === "whatsapp" && whatsapp ? await sendWhatsAppRow(env, deps, whatsapp, row, order, options) : telegram ? await sendTelegramRow(env, deps, telegram, row, order, options) : null;
+    if (outcome === "sent") sent += 1;
+    if (outcome === "failed") failed += 1;
   }
   return { sent, failed };
+}
+
+type Outcome = "sent" | "failed" | "deferred";
+
+/**
+ * When this number last got a WhatsApp message from us — an alert or a sign-in code — for the
+ * pair rate limit (Meta: about one message every 6 s to the same recipient).
+ */
+export async function lastWhatsAppSend(env: Env, recipient: string, excludeRow?: number): Promise<string | null> {
+  const row = await env.DB.prepare(
+    `SELECT MAX(at) AS at FROM (
+        SELECT MAX(sent_at) AS at FROM notifications WHERE channel = 'whatsapp' AND recipient = ? AND sent_at IS NOT NULL AND id <> ?
+        UNION ALL SELECT updated_at AS at FROM system_state WHERE key = ?)`,
+  )
+    .bind(recipient, excludeRow ?? -1, `whatsapp.last_send:${recipient}`)
+    .first<{ at: string | null }>();
+  return row?.at ?? null;
+}
+
+export async function recordWhatsAppSend(env: Env, recipient: string, at: string): Promise<void> {
+  await setState(env.DB, `whatsapp.last_send:${recipient}`, "sent", at);
+}
+
+async function orderLines(env: Env, orderId: string): Promise<{ quantity: number; name: string }[]> {
+  const { results } = await env.DB.prepare(`SELECT quantity, name FROM order_items WHERE order_id = ? ORDER BY position`)
+    .bind(orderId)
+    .all<{ quantity: number; name: string }>();
+  return results;
+}
+
+async function sendTelegramRow(
+  env: Env,
+  deps: Deps,
+  telegram: NonNullable<ReturnType<typeof telegramConfig>>,
+  row: NotificationRow,
+  order: OrderRow,
+  options: DeliveryOptions,
+): Promise<Outcome> {
+  const now = deps.now();
+  const nowIso = now.toISOString();
+  const lines = await orderLines(env, order.id);
+  const html = composeMessage(row.kind, order, lines.reduce((n, l) => n + l.quantity, 0), options);
+  const result = await sendTelegramMessage(deps.fetch, {
+    apiBase: telegramApiBase(env),
+    token: telegram.token,
+    chatId: row.recipient,
+    html,
+    buttonText: "VER PEDIDO",
+    buttonUrl: orderPanelLink(env, order.id),
+  });
+  const attempts = row.attempts + 1;
+  if (result.ok) {
+    await env.DB.prepare(
+      `UPDATE notifications SET status = 'sent', attempts = ?, provider_message_id = ?, sent_at = ?, next_attempt_at = NULL,
+         last_error = NULL, error_code = NULL, updated_at = ? WHERE id = ?`,
+    )
+      .bind(attempts, String(result.messageId), nowIso, nowIso, row.id)
+      .run();
+    await setState(env.DB, "telegram.last_success", row.kind, nowIso);
+    return "sent";
+  }
+  const delay = result.retryAfter ?? RETRY_DELAYS_SECONDS[attempts - 1];
+  const retry = result.retryable && attempts < RETRY_DELAYS_SECONDS.length + 1 && delay !== undefined;
+  const next = retry ? new Date(now.getTime() + delay * 1000).toISOString() : null;
+  await env.DB.prepare(
+    `UPDATE notifications SET status = 'failed', attempts = ?, next_attempt_at = ?, last_error = ?, updated_at = ? WHERE id = ?`,
+  )
+    .bind(attempts, next, result.error, nowIso, row.id)
+    .run();
+  await setState(env.DB, "telegram.last_error", result.error, nowIso);
+  log("notify.failed", { orderId: order.id, channel: "telegram", kind: row.kind, attempts, retry, error: result.error });
+  return "failed";
+}
+
+/**
+ * One WhatsApp template message. Paced per recipient (Meta's pair rate limit, ~1 message every
+ * 6 s to the same number): a second alert due within that interval waits instead of failing.
+ * Accepted = "sent" (not delivered: the status webhook confirms delivery). Each failure kind has
+ * its own retry policy (whatsappRetryDelay); credential, configuration and template problems are
+ * also recorded for the panel's «Estado del sistema».
+ */
+async function sendWhatsAppRow(
+  env: Env,
+  deps: Deps,
+  whatsapp: NonNullable<ReturnType<typeof whatsappConfig>>,
+  row: NotificationRow,
+  order: OrderRow,
+  options: DeliveryOptions,
+): Promise<Outcome> {
+  const now = deps.now();
+  const nowIso = now.toISOString();
+  const lastAt = await lastWhatsAppSend(env, row.recipient, row.id);
+  const wait = lastAt ? Date.parse(lastAt) + PAIR_INTERVAL_MS - now.getTime() : 0;
+  if (wait > 0) {
+    await env.DB.prepare(`UPDATE notifications SET status = 'pending', next_attempt_at = ?, updated_at = ? WHERE id = ?`)
+      .bind(new Date(now.getTime() + wait).toISOString(), nowIso, row.id)
+      .run();
+    return "deferred";
+  }
+
+  const message = whatsappMessageFor(row.kind, order, await orderLines(env, order.id), {
+    restaurant: restaurantName(env),
+    reminderMinutes: options.reminderMinutes,
+    timeoutMinutes: options.timeoutMinutes,
+    autoCancelText: autoCancelPaymentText(order.payment_status),
+  });
+  const attempts = row.attempts + 1;
+  // Echoed by every status webhook: reconciles a send whose answer was lost (no duplicate retry).
+  const result = await sendWhatsAppTemplate(deps.fetch, whatsapp, row.recipient, message, `n:${row.id}`);
+  if (result.ok) {
+    await env.DB.prepare(
+      `UPDATE notifications SET status = 'sent', attempts = ?, provider_message_id = ?, sent_at = ?, next_attempt_at = NULL,
+         last_error = NULL, error_code = NULL, updated_at = ? WHERE id = ? AND status = 'sending'`,
+    )
+      .bind(attempts, result.messageId, nowIso, nowIso, row.id)
+      .run();
+    await setState(env.DB, "whatsapp.last_accepted", row.kind, nowIso);
+    await recordWhatsAppSend(env, row.recipient, nowIso);
+    return "sent";
+  }
+  const delay = whatsappRetryDelay(result.kind, attempts, result.retryAfterSeconds);
+  const next = delay === null ? null : new Date(now.getTime() + delay * 1000).toISOString();
+  await env.DB.prepare(
+    `UPDATE notifications SET status = 'failed', attempts = ?, next_attempt_at = ?, last_error = ?, error_code = ?, updated_at = ?
+      WHERE id = ? AND status = 'sending'`,
+  )
+    .bind(attempts, next, result.error, result.code === null ? result.kind : String(result.code), nowIso, row.id)
+    .run();
+  await setState(env.DB, "whatsapp.last_error", result.error, nowIso);
+  if (result.kind === "credentials" || result.kind === "configuration" || result.kind === "template") {
+    await setState(env.DB, "whatsapp.problem", JSON.stringify({ kind: result.kind, code: result.code, error: result.error }), nowIso);
+  }
+  log("notify.failed", { orderId: order.id, channel: "whatsapp", kind: row.kind, attempts, failure: result.kind, retry: next !== null, error: result.error });
+  return "failed";
 }
 
 export async function notificationsForOrders(env: Env, ids: string[]): Promise<Map<string, NotificationRow[]>> {
@@ -277,10 +405,15 @@ export async function notificationsForOrders(env: Env, ids: string[]): Promise<M
   return out;
 }
 
-/** "sent" if any recipient got the new-order alert, else the best known state. */
-export function alertSummary(rows: NotificationRow[] | undefined): "sent" | "pending" | "failed" | "none" {
+/**
+ * The new-order alert's best state across channels and recipients: "delivered" when a phone
+ * confirmed it (WhatsApp receipt, or Telegram — which accepts into the chat at once), "sent"
+ * when WhatsApp accepted it but no receipt has arrived yet, then pending / failed / none.
+ */
+export function alertSummary(rows: NotificationRow[] | undefined): "delivered" | "sent" | "pending" | "failed" | "none" {
   const alerts = (rows ?? []).filter((r) => r.kind === "new_order");
   if (!alerts.length) return "none";
+  if (alerts.some((r) => (r.channel === "whatsapp" ? Boolean(r.delivered_at || r.read_at) : r.status === "sent"))) return "delivered";
   if (alerts.some((r) => r.status === "sent")) return "sent";
   if (alerts.some((r) => r.status === "pending" || r.status === "sending" || (r.status === "failed" && r.next_attempt_at))) {
     return "pending";

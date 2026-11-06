@@ -75,6 +75,10 @@ function applyBoard(board: Board): void {
 // ---------------------------------------------------------------------------
 
 function hashOrderId(): string | null {
+  // WhatsApp template buttons can only append to the URL: they open ?pedido=<id>. It becomes
+  // the usual #pedido=<id> route (the id then stays out of later requests and server logs).
+  const query = new URLSearchParams(window.location.search).get("pedido");
+  if (query) history.replaceState(history.state, "", `${window.location.pathname}#pedido=${encodeURIComponent(query)}`);
   const raw = window.location.hash.replace(/^#/, "");
   if (!raw) return null;
   return new URLSearchParams(raw).get("pedido");

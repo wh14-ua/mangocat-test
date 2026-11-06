@@ -13,6 +13,7 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 import { createFakeStripe, signPayload } from "./fake-stripe.mjs";
 import { createFakeTelegram } from "./fake-telegram.mjs";
+import { createFakeWhatsApp, signMeta } from "./fake-whatsapp.mjs";
 
 const PORT = Number(process.env.PORT ?? 8790);
 const HOST = process.env.HOST ?? "localhost";
@@ -24,6 +25,48 @@ const STATE_DIR = process.env.STATE_DIR || "";
 const stripe = createFakeStripe({ hostedBase: `${ORIGIN}/pay`, persistPath: STATE_DIR ? join(STATE_DIR, "fake-stripe.json") : undefined });
 const telegram = createFakeTelegram({ persistPath: STATE_DIR ? join(STATE_DIR, "fake-telegram.json") : undefined });
 const webhookLog = [];
+
+// WhatsApp Cloud API stand-in (the owner's phone: /whatsapp). Status webhooks are signed with the
+// app secret and retried until the Worker takes them, like Meta does (for up to 7 days).
+const whatsapp = createFakeWhatsApp({
+  token: process.env.WHATSAPP_TOKEN || undefined,
+  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || undefined,
+  pairIntervalMs: process.env.WHATSAPP_PAIR_INTERVAL_MS ? Number(process.env.WHATSAPP_PAIR_INTERVAL_MS) : 6_000,
+  panelUrl: process.env.PANEL_URL || undefined,
+  persistPath: STATE_DIR ? join(STATE_DIR, "fake-whatsapp.json") : undefined,
+});
+const WHATSAPP_WEBHOOK_URL = process.env.WHATSAPP_WEBHOOK_URL ?? "http://localhost:8787/api/whatsapp/webhook";
+const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET ?? "local-fake-meta-app-secret";
+const whatsappHooks = { paused: false };
+let whatsappDelivering = false;
+
+async function deliverWhatsAppStatuses() {
+  if (whatsappHooks.paused || whatsappDelivering) return;
+  whatsappDelivering = true;
+  try {
+    const failed = [];
+    for (const payload of whatsapp.takeStatusPayloads()) {
+      const body = JSON.stringify(payload);
+      let status = 0;
+      try {
+        const res = await fetch(WHATSAPP_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Hub-Signature-256": signMeta(body, WHATSAPP_APP_SECRET) },
+          body,
+          signal: AbortSignal.timeout(20_000),
+        });
+        status = res.status;
+      } catch {
+        status = 0;
+      }
+      if (status !== 200) failed.push(payload);
+    }
+    if (failed.length) whatsapp.requeueStatusPayloads(failed);
+  } finally {
+    whatsappDelivering = false;
+  }
+}
+setInterval(() => void deliverWhatsAppStatuses(), 1_000).unref();
 
 // Webhook chaos controls (tests): pause delivery (late / never), duplicate, reverse order.
 const webhooks = { paused: false, duplicate: false, reverse: false };
@@ -109,6 +152,24 @@ function checkoutPage(session, error = "") {
   );
 }
 
+function whatsappPage() {
+  const messages = [...whatsapp.messages()].reverse();
+  // Opening the chat reads the messages (as on a real phone): read receipts go to the Worker.
+  for (const m of messages) if (!m.readQueued) {
+    m.readQueued = true;
+    whatsapp.read(m.id);
+  }
+  const items = messages
+    .map(
+      (m) =>
+        `<div class="msg" data-testid="whatsapp-message" data-template="${escape(m.template)}"><div class="meta">para +${escape(m.to)} · ${escape(m.at.slice(11, 19))} · ${escape(m.template)}</div>${escape(m.text)}${
+          m.button?.url ? `<a class="btn pay" href="${escape(m.button.url)}" target="_blank" rel="noopener" data-testid="whatsapp-button">${escape(m.button.text)}</a>` : ""
+        }${m.button?.copy ? `<p class="meta">[${escape(m.button.text)}: ${escape(m.button.copy)}]</p>` : ""}</div>`,
+    )
+    .join("");
+  return page("WhatsApp (simulado)", `<h1>📱 WhatsApp del propietario (simulado)</h1><p class="meta">Mensajes de la cuenta de WhatsApp Business del restaurante. Se actualiza cada 3 s.</p>${items || "<p>Sin mensajes todavía.</p>"}`, true);
+}
+
 function phonePage() {
   const messages = [...telegram.messages()].reverse();
   const items = messages
@@ -186,6 +247,20 @@ const server = createServer(async (req, res) => {
     }
     if (path === "/telegram") return send(res, 200, phonePage(), "text/html");
 
+    // --- WhatsApp Cloud API and the owner's phone --------------------------------
+    if (/^\/v\d+\.\d\/\d+\/messages$/.test(path) && req.method === "POST") {
+      const headers = Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k.toLowerCase(), String(v)]));
+      const result = whatsapp.handle("POST", path, headers, await readBody(req));
+      if (result.network) {
+        req.socket.destroy();
+        return;
+      }
+      send(res, result.status, result.body);
+      void deliverWhatsAppStatuses();
+      return;
+    }
+    if (path === "/whatsapp") return send(res, 200, whatsappPage(), "text/html");
+
     // --- Control (tests) --------------------------------------------------------
     if (path === "/__control/state") {
       return send(res, 200, {
@@ -206,7 +281,29 @@ const server = createServer(async (req, res) => {
         queuedWebhooks: stripe.state.events.length,
         webhooks: webhookLog.slice(-100),
         telegram: telegram.messages(),
+        whatsapp: whatsapp.messages(),
+        queuedWhatsAppStatuses: whatsapp.state.statuses.length,
       });
+    }
+    if (path === "/__control/whatsapp/fail" && req.method === "POST") {
+      whatsapp.failNext(JSON.parse(await readBody(req)));
+      return send(res, 200, { ok: true });
+    }
+    if (path === "/__control/whatsapp/token" && req.method === "POST") {
+      whatsapp.expireToken(Boolean(JSON.parse((await readBody(req)) || "{}").expired));
+      return send(res, 200, { ok: true });
+    }
+    if (path === "/__control/whatsapp/template" && req.method === "POST") {
+      const body = JSON.parse(await readBody(req));
+      whatsapp.setTemplateStatus(body.name, body.status);
+      return send(res, 200, { ok: true });
+    }
+    if (path === "/__control/whatsapp/webhooks" && req.method === "POST") {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      if (typeof body.paused === "boolean") whatsappHooks.paused = body.paused;
+      if (body.drop) whatsapp.takeStatusPayloads();
+      if (!whatsappHooks.paused) await deliverWhatsAppStatuses();
+      return send(res, 200, { ok: true, ...whatsappHooks, queued: whatsapp.state.statuses.length });
     }
     if (path === "/__control/webhooks" && req.method === "POST") {
       const body = JSON.parse((await readBody(req)) || "{}");
@@ -250,7 +347,7 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { ok: true });
     }
     if (path === "/") {
-      return send(res, 200, page("Nube local", `<h1>Nube local de pruebas</h1><p><a href="/telegram">Telegram del restaurante (simulado)</a></p>`), "text/html");
+      return send(res, 200, page("Nube local", `<h1>Nube local de pruebas</h1><p><a href="/whatsapp">WhatsApp del propietario (simulado)</a></p><p><a href="/telegram">Telegram del restaurante (simulado)</a></p>`), "text/html");
     }
     send(res, 404, { error: "not-found" });
   } catch (error) {
@@ -263,4 +360,5 @@ server.listen(PORT, HOST, () => {
     `Local cloud on ${ORIGIN}  (Stripe API ${ORIGIN}/v1, staff phone ${ORIGIN}/telegram)${STATE_DIR ? ` — state kept in ${STATE_DIR}` : " — in memory"}`,
   );
   void deliverEvents(); // events queued before a restart
+  void deliverWhatsAppStatuses();
 });

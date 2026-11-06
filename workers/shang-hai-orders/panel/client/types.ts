@@ -30,9 +30,9 @@ export type PaymentStatus =
 
 export type Column = "new" | "preparing" | "ready" | "completed" | "rejected";
 export type StaffAction = "accept" | "reject" | "ready" | "complete" | "retry";
-export type AlertState = "sent" | "pending" | "failed" | "none";
+export type AlertState = "delivered" | "sent" | "pending" | "failed" | "none";
 export type PaymentsMode = "stripe-test" | "stripe-live" | "disabled";
-export type LoginMethod = "access" | "telegram";
+export type LoginMethod = "access" | "whatsapp" | "telegram";
 
 export type CardLine = { quantity: number; name: string; options: string | null; lineTotalCents: number };
 
@@ -79,6 +79,8 @@ export type OrderNotification = {
   lastError: string | null;
   sentAt: string | null;
   nextAttemptAt: string | null;
+  deliveredAt?: string | null;
+  readAt?: string | null;
 };
 
 export type OrderDetail = Card & {
@@ -106,6 +108,16 @@ export type Health = {
     lastError: string | null;
     failedLast24h: number;
   };
+  whatsapp?: {
+    configured: boolean;
+    lastDeliveredAt: string | null;
+    lastAcceptedAt: string | null;
+    lastErrorAt: string | null;
+    lastError: string | null;
+    /** A problem a person must fix (expired token, missing template, recipient not allowed…). */
+    problem: { kind: string; code: number | null; error: string; at: string } | null;
+    failedLast24h: number;
+  };
 };
 
 export type Board = {
@@ -118,7 +130,7 @@ export type Board = {
 
 export type Session = {
   authenticated: true;
-  method: "telegram-code" | "access";
+  method: "code" | "access";
   label: string;
   loginMethods: LoginMethod[];
 };

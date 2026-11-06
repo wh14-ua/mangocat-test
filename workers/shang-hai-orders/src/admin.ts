@@ -10,7 +10,7 @@ import {
   type ActionResult,
   type Actor,
 } from "./actions";
-import { prepTimeOptions, resolvePayments, staleLockMs, telegramConfig } from "./config";
+import { prepTimeOptions, resolvePayments, staleLockMs, telegramConfig, whatsappConfig } from "./config";
 import { ORDER_ID_PATTERN } from "./crypto";
 import {
   getItemsForOrders,
@@ -164,11 +164,14 @@ export async function handleBoard(env: Env, deps: Deps): Promise<Response> {
   // Oldest first where staff work through a queue; newest first in the history columns.
   for (const key of ["new", "preparing", "ready"] as const) columns[key].reverse();
 
-  const failedAlerts = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM notifications WHERE status = 'failed' AND next_attempt_at IS NULL AND updated_at >= ?`,
+  const dayAgo = new Date(now.getTime() - 86_400_000).toISOString();
+  const failed = await env.DB.prepare(
+    `SELECT channel, COUNT(*) AS n FROM notifications WHERE status = 'failed' AND next_attempt_at IS NULL AND updated_at >= ? GROUP BY channel`,
   )
-    .bind(new Date(now.getTime() - 86_400_000).toISOString())
-    .first<{ n: number }>();
+    .bind(dayAgo)
+    .all<{ channel: string; n: number }>();
+  const failedOn = (channel: string) => Number(failed.results.find((r) => r.channel === channel)?.n ?? 0);
+  const failedAlerts = { n: failedOn("telegram") };
   return json({
     now: now.toISOString(),
     paymentsMode: resolvePayments(env).mode,
@@ -186,8 +189,34 @@ export async function handleBoard(env: Env, deps: Deps): Promise<Response> {
         lastError: states["telegram.last_error"]?.value ?? null,
         failedLast24h: Number(failedAlerts?.n ?? 0),
       },
+      whatsapp: {
+        configured: Boolean(whatsappConfig(env)),
+        lastDeliveredAt: states["whatsapp.last_delivered"]?.updatedAt ?? null,
+        lastAcceptedAt: states["whatsapp.last_accepted"]?.updatedAt ?? null,
+        lastErrorAt: states["whatsapp.last_error"]?.updatedAt ?? null,
+        lastError: states["whatsapp.last_error"]?.value ?? null,
+        problem: whatsappProblem(states["whatsapp.problem"], states["whatsapp.last_delivered"]?.updatedAt ?? null),
+        failedLast24h: failedOn("whatsapp"),
+      },
     },
   });
+}
+
+/**
+ * The last WhatsApp problem a person must fix — until a later delivery proves it fixed (an
+ * alert delivered after it). Expired tokens, unapproved templates, numbers not allowed…
+ */
+function whatsappProblem(
+  state: { value: string; updatedAt: string } | undefined,
+  lastDeliveredAt: string | null,
+): { kind: string; code: number | null; error: string; at: string } | null {
+  if (!state || (lastDeliveredAt && lastDeliveredAt > state.updatedAt)) return null;
+  try {
+    const parsed = JSON.parse(state.value) as { kind?: string; code?: number | null; error?: string };
+    return { kind: String(parsed.kind ?? "configuration"), code: parsed.code ?? null, error: String(parsed.error ?? ""), at: state.updatedAt };
+  } catch {
+    return null;
+  }
 }
 
 export async function handleOrderDetail(env: Env, deps: Deps, id: string): Promise<Response> {
@@ -221,6 +250,8 @@ export async function handleOrderDetail(env: Env, deps: Deps, id: string): Promi
         lastError: n.last_error,
         sentAt: n.sent_at,
         nextAttemptAt: n.next_attempt_at,
+        deliveredAt: n.delivered_at,
+        readAt: n.read_at,
       })),
     },
   });

@@ -124,6 +124,7 @@ export async function cloudState(stack: Stack) {
     queuedWebhooks: number;
     webhooks: { id: string; type: string; status: number }[];
     telegram: { chat_id: string; text: string; button: { url: string } | null }[];
+    whatsapp: { id: string; to: string; template: string; params: string[]; text: string; button: { text: string; url: string | null; copy: string | null } | null }[];
   };
 }
 

@@ -1,5 +1,5 @@
 /**
- * Sign-in with a one-time Telegram code (sent only to the restaurant's authorised chats),
+ * Sign-in with a one-time code sent by WhatsApp and/or Telegram (only to the restaurant's authorised numbers),
  * or instructions for Cloudflare Access. The session is an HttpOnly cookie set by the
  * server; nothing secret is kept by the page.
  */
@@ -17,13 +17,20 @@ function frame(root: HTMLElement, ...content: HTMLElement[]): HTMLElement {
   return card;
 }
 
+/** "WhatsApp", "Telegram" or "WhatsApp y Telegram": where the sign-in code arrives. */
+export function codeChannelText(login: LoginMethod[]): string {
+  const names = [login.includes("whatsapp") ? "WhatsApp" : null, login.includes("telegram") ? "Telegram" : null].filter(Boolean);
+  return names.join(" y ");
+}
+
 export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; notice?: string; onSignedIn: () => void }): void {
-  const telegram = options.login.includes("telegram");
+  const channel = codeChannelText(options.login);
+  const codes = Boolean(channel);
   const access = options.login.includes("access");
   const parts: HTMLElement[] = [];
   if (options.notice) parts.push(h("p", { class: "signin__notice", attrs: { role: "status" } }, icon("info"), h("span", { text: options.notice })));
 
-  if (!telegram) {
+  if (!codes) {
     parts.push(
       h("h2", { class: "signin__title", text: "Entrar con Cloudflare Access" }),
       h("p", {
@@ -49,7 +56,7 @@ export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; n
   const step1 = h(
     "div",
     "signin__step",
-    h("p", { class: "signin__text", text: "Te enviaremos un código de 6 cifras al Telegram del restaurante. Así este móvil queda conectado 30 días." }),
+    h("p", { class: "signin__text", text: `Te enviaremos un código de 6 cifras por ${channel} a los números autorizados del restaurante. Así este móvil queda conectado 30 días.` }),
     send,
   );
 
@@ -79,7 +86,7 @@ export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; n
     "form",
     { class: "signin__step", attrs: { novalidate: true, hidden: true } },
     sentInfo,
-    h("div", "field", h("label", { class: "field__label", attrs: { for: "code" }, text: "Código de 6 cifras" }), codeInput, h("p", { class: "field__hint", attrs: { id: "code-hint" }, text: "Lo encontrarás en el chat de Telegram del restaurante." })),
+    h("div", "field", h("label", { class: "field__label", attrs: { for: "code" }, text: "Código de 6 cifras" }), codeInput, h("p", { class: "field__hint", attrs: { id: "code-hint" }, text: `Lo encontrarás en ${channel}, en el mensaje con el código de acceso.` })),
     h("div", "field", h("label", { class: "field__label", attrs: { for: "device" }, text: "Nombre de este móvil (opcional)" }), labelInput),
     enter,
     resend,
@@ -110,7 +117,7 @@ export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; n
     button.removeAttribute("aria-busy");
     if (res.ok) {
       const minutes = Math.round((res.data.expiresInSeconds || 600) / 60);
-      sentInfo.replaceChildren(icon("check"), h("span", { text: `Código enviado a Telegram. Caduca en ${minutes} minutos.` }));
+      sentInfo.replaceChildren(icon("check"), h("span", { text: `Código enviado por ${channel}. Caduca en ${minutes} minutos.` }));
       step1.hidden = true;
       step2.hidden = false;
       startCooldown();
@@ -121,12 +128,12 @@ export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; n
       // A code was sent moments ago: let them type it.
       step1.hidden = true;
       step2.hidden = false;
-      sentInfo.replaceChildren(icon("info"), h("span", { text: "Ya hay un código reciente en Telegram." }));
+      sentInfo.replaceChildren(icon("info"), h("span", { text: `Ya hay un código reciente en ${channel}.` }));
       startCooldown();
     }
     showError(
       res.data?.message ??
-        (res.network ? "Sin conexión. Comprueba la conexión y vuelve a intentarlo." : res.status === 503 ? "El acceso con Telegram no está disponible ahora mismo." : "No se ha podido enviar el código."),
+        (res.network ? "Sin conexión. Comprueba la conexión y vuelve a intentarlo." : res.status === 503 ? "El acceso con código no está disponible ahora mismo." : "No se ha podido enviar el código."),
     );
   };
   send.addEventListener("click", () => void requestCode(send));
@@ -165,7 +172,7 @@ export function showSignIn(root: HTMLElement, options: { login: LoginMethod[]; n
     focusQuietly(codeInput);
   });
 
-  parts.push(h("h2", { class: "signin__title", text: "Entrar con un código de Telegram" }), step1, step2, error);
+  parts.push(h("h2", { class: "signin__title", text: `Entrar con un código de ${channel}` }), step1, step2, error);
   if (access) {
     parts.push(h("p", { class: "signin__alt", text: "También puedes entrar con el enlace de Cloudflare Access que te dio el restaurante." }));
   }
@@ -181,7 +188,7 @@ export function showClosed(root: HTMLElement): void {
     h("h2", { class: "signin__title", text: "El panel aún no está configurado" }),
     h("p", {
       class: "signin__text",
-      text: "Para entrar hace falta configurar en el servidor el bot de Telegram del restaurante o Cloudflare Access. Mientras tanto el panel permanece cerrado.",
+      text: "Para entrar hace falta configurar en el servidor WhatsApp (o Telegram) del restaurante, o Cloudflare Access. Mientras tanto el panel permanece cerrado.",
     }),
     retry,
   );

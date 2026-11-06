@@ -9,7 +9,7 @@ const ORDER = `INSERT INTO orders (id, token_hash, status, storefront, fulfillme
 
 describe("migration 0002 (acceptance flow)", () => {
   it("is applied after the initial schema", () => {
-    expect(MIGRATIONS).toEqual(["0001_init.sql", "0002_acceptance_flow.sql", "0003_lock_owner.sql"]);
+    expect(MIGRATIONS).toEqual(["0001_init.sql", "0002_acceptance_flow.sql", "0003_lock_owner.sql", "0004_whatsapp_channel.sql"]);
   });
 
   it("keeps every existing order, line and event, mapping old statuses", () => {
@@ -76,5 +76,37 @@ describe("migration 0003 (lock owner)", () => {
       lock_token: null, // a lock from before 0003: recovery treats it as expired once stale
       lock_expires_at: null,
     });
+  });
+});
+
+describe("migration 0004 (WhatsApp channel)", () => {
+  it("rebuilds the outbox and the sessions keeping every row and id, and accepts WhatsApp and code sessions", () => {
+    const db = createTestD1({ migrations: 3 });
+    const raw = db.raw;
+    raw.exec(`INSERT INTO orders (id, number, token_hash, status, payment_status, storefront, fulfillment, catalog_id, catalog_version,
+      subtotal_cents, total_cents, customer_name, customer_phone, customer_email, payments_mode, created_at, updated_at)
+      VALUES ('SH-261106-AAAAAA', 1001, 'h', 'awaiting_acceptance', 'authorized', 'ink-house', 'pickup', 'shang-hai-orihuela', 'v1',
+      1000, 1000, 'Ana', '+34600000000', 'a@example.es', 'stripe-test', '2026-11-06T10:00:00.000Z', '2026-11-06T10:00:00.000Z')`);
+    raw.exec(`INSERT INTO notifications (id, order_id, channel, recipient, kind, status, attempts, created_at, updated_at, sent_at, provider_message_id)
+      VALUES (7, 'SH-261106-AAAAAA', 'telegram', '111', 'new_order', 'sent', 1, '2026-11-06T10:00:01.000Z', '2026-11-06T10:00:01.000Z', '2026-11-06T10:00:01.000Z', '42')`);
+    raw.exec(`INSERT INTO staff_sessions (id, label, method, created_at, last_seen_at, expires_at) VALUES ('s1', 'Móvil', 'telegram-code', 'a', 'a', 'z')`);
+    raw.exec(readFileSync(new URL("../migrations/0004_whatsapp_channel.sql", import.meta.url), "utf8"));
+    expect({ ...(raw.prepare("SELECT id, channel, status, sent_at, provider_message_id, delivered_at, read_at, error_code FROM notifications").get() as object) }).toEqual({
+      id: 7,
+      channel: "telegram",
+      status: "sent",
+      sent_at: "2026-11-06T10:00:01.000Z",
+      provider_message_id: "42",
+      delivered_at: null,
+      read_at: null,
+      error_code: null,
+    });
+    expect({ ...(raw.prepare("SELECT id, method FROM staff_sessions").get() as object) }).toEqual({ id: "s1", method: "telegram-code" });
+    raw.exec(`INSERT INTO notifications (order_id, channel, recipient, kind, status, attempts, created_at, updated_at)
+      VALUES ('SH-261106-AAAAAA', 'whatsapp', '34612000111', 'new_order', 'pending', 0, 'b', 'b')`);
+    expect(Number((raw.prepare("SELECT MAX(id) AS n FROM notifications").get() as { n: number }).n)).toBe(8); // ids continue
+    raw.exec(`INSERT INTO staff_sessions (id, label, method, created_at, last_seen_at, expires_at) VALUES ('s2', 'Móvil', 'code', 'a', 'a', 'z')`);
+    expect(() => raw.exec(`UPDATE notifications SET channel = 'sms' WHERE id = 7`)).toThrow();
+    expect(raw.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   });
 });

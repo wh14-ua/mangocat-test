@@ -9,6 +9,7 @@
 //   fake-stripe.json     sessions, PaymentIntents, charges, refunds, idempotency  persists
 //                        keys and undelivered webhooks (Stripe never forgets)
 //   fake-telegram.json   the staff chat history                                   persists
+//   fake-whatsapp.json   the owner's WhatsApp messages and pending status webhooks persists
 //   backups/…            copies taken before any automatic schema repair
 // The Worker itself, the static site, injected failures and cron timers are stateless.
 // A fresh start deletes exactly that directory (refused for anything that is not a local
@@ -30,6 +31,12 @@ export const LOCAL_SECRETS = {
   stripeKey: "sk_test_local_fake_stripe_not_a_real_key",
   telegramToken: "1234567890:LOCAL_fake_telegram_token_for_demo_only",
   staffChats: "100000001,100000002",
+  // WhatsApp Cloud API (fake): token FORMAT only; the owner's number below is fictitious.
+  whatsappToken: "EAAlocal-fake-whatsapp-token-not-a-real-one-000000",
+  whatsappPhoneNumberId: "100000000000001",
+  whatsappOwner: "+34600000001",
+  whatsappAppSecret: "local-fake-meta-app-secret",
+  whatsappVerifyToken: "local-whatsapp-verify-token",
 };
 
 /** Deletes a local test state directory — and refuses anything else. */
@@ -75,6 +82,12 @@ export function createStack(options = {}) {
     TELEGRAM_API_BASE: urls.cloud,
     TELEGRAM_BOT_TOKEN: LOCAL_SECRETS.telegramToken,
     TELEGRAM_CHAT_IDS: LOCAL_SECRETS.staffChats,
+    WHATSAPP_ACCESS_TOKEN: LOCAL_SECRETS.whatsappToken,
+    WHATSAPP_PHONE_NUMBER_ID: LOCAL_SECRETS.whatsappPhoneNumberId,
+    WHATSAPP_RECIPIENTS: LOCAL_SECRETS.whatsappOwner,
+    WHATSAPP_APP_SECRET: LOCAL_SECRETS.whatsappAppSecret,
+    WHATSAPP_WEBHOOK_VERIFY_TOKEN: LOCAL_SECRETS.whatsappVerifyToken,
+    WHATSAPP_API_BASE: urls.cloud,
     PANEL_URL: `${urls.worker}/admin`,
     CORS_ALLOWED_ORIGIN: `${urls.site},http://localhost:3000`,
     STRIPE_SUCCESS_URL: `${urls.site}/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}&lang={lang}`,
@@ -154,6 +167,12 @@ export function createStack(options = {}) {
         PORT: String(ports.cloud),
         WEBHOOK_URL: `${urls.worker}/api/stripe/webhook`,
         WEBHOOK_SECRET: LOCAL_SECRETS.webhookSecret,
+        WHATSAPP_WEBHOOK_URL: `${urls.worker}/api/whatsapp/webhook`,
+        WHATSAPP_APP_SECRET: LOCAL_SECRETS.whatsappAppSecret,
+        WHATSAPP_TOKEN: LOCAL_SECRETS.whatsappToken,
+        WHATSAPP_PHONE_NUMBER_ID: LOCAL_SECRETS.whatsappPhoneNumberId,
+        PANEL_URL: `${urls.worker}/admin`,
+        ...(options.whatsappPairIntervalMs !== undefined ? { WHATSAPP_PAIR_INTERVAL_MS: String(options.whatsappPairIntervalMs) } : {}),
         STATE_DIR: options.persistCloud === false ? "" : stateDir,
       },
     });

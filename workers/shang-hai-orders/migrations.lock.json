@@ -3,6 +3,7 @@
   "migrations": {
     "0001_init.sql": "77a81fb7c1e5cc4e451781280adfaaadf3f5be623342832144c81876479f70d7",
     "0002_acceptance_flow.sql": "a85b9a17a214db1b32ae44de0bad58c938aee0c4f8bc3990f8febcc7e5c87524",
-    "0003_lock_owner.sql": "3cf6c987ac0a9d210c902d554d214b5dd8102a570385576c0a978c42c7d34f26"
+    "0003_lock_owner.sql": "3cf6c987ac0a9d210c902d554d214b5dd8102a570385576c0a978c42c7d34f26",
+    "0004_whatsapp_channel.sql": "8c5c1d0663bd237dbeb52b8caf6188c2b15c05cc11150fc2417c385b6c0c1ac5"
   }
 }

@@ -6,11 +6,26 @@ import { createTestD1 } from "./d1-sqlite";
 // Shared with the local end-to-end stack (scripts/local-stack/).
 import { createFakeStripe } from "../../../scripts/local-stack/fake-stripe.mjs";
 import { createFakeTelegram } from "../../../scripts/local-stack/fake-telegram.mjs";
+import { createFakeWhatsApp, signMeta } from "../../../scripts/local-stack/fake-whatsapp.mjs";
 
 export const TEST_SECRET_KEY = "sk_test_51FakeKeyForUnitTestsOnly";
 export const WEBHOOK_SECRET = "whsec_unit_test_secret";
 export const TELEGRAM_TOKEN = "123456789:AAFakeTokenForUnitTestsOnly_abcdef";
 export const STAFF_CHATS = ["111111111", "-1002222222222"];
+export const WHATSAPP_TOKEN = "EAAfake-whatsapp-token-for-tests-only-0000000000";
+export const WHATSAPP_APP_SECRET = "fake-meta-app-secret-for-tests";
+export const WHATSAPP_VERIFY_TOKEN = "verify-token-for-tests";
+export const OWNER_WHATSAPP = "34612000111";
+/** WhatsApp as the alert channel (Telegram off): the commercial configuration. */
+export const WHATSAPP_ENV = {
+  WHATSAPP_ACCESS_TOKEN: WHATSAPP_TOKEN,
+  WHATSAPP_PHONE_NUMBER_ID: "100000000000001",
+  WHATSAPP_RECIPIENTS: `+${OWNER_WHATSAPP}`,
+  WHATSAPP_APP_SECRET: WHATSAPP_APP_SECRET,
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: WHATSAPP_VERIFY_TOKEN,
+  TELEGRAM_BOT_TOKEN: "",
+  TELEGRAM_CHAT_IDS: "",
+};
 export const STOREFRONT_ORIGIN = "https://wh14-ua.github.io";
 export const WORKER_ORIGIN = "https://orders.example.workers.dev";
 export const PANEL = `${WORKER_ORIGIN}/admin`;
@@ -38,6 +53,7 @@ export type StripeCall = { url: string; method: string; headers: Headers; form: 
 
 type FakeStripe = ReturnType<typeof createFakeStripe>;
 type FakeTelegram = ReturnType<typeof createFakeTelegram>;
+type FakeWhatsApp = ReturnType<typeof createFakeWhatsApp>;
 
 /**
  * Fake network: a stateful Stripe emulator, a Telegram recorder and an optional
@@ -49,6 +65,7 @@ export function fakeNetwork(
     jwks?: JsonWebKey[];
     fakeStripe?: FakeStripe;
     fakeTelegram?: FakeTelegram;
+    fakeWhatsApp?: FakeWhatsApp;
   } = {},
 ) {
   const stripe: FakeStripe =
@@ -56,8 +73,10 @@ export function fakeNetwork(
     createFakeStripe(options.stripe === "bad-url" ? { hostedBase: "https://evil.example/pay" } : {});
   if (options.stripe === "error") stripe.failNext({ method: "POST", path: /^\/v1\/checkout\/sessions$/, status: 500, times: 99 });
   const telegram: FakeTelegram = options.fakeTelegram ?? createFakeTelegram();
+  const whatsapp: FakeWhatsApp = options.fakeWhatsApp ?? createFakeWhatsApp({ pairIntervalMs: 0, panelUrl: PANEL });
   const stripeFetch = stripe.fetchFor();
   const telegramFetch = telegram.fetchFor();
+  const whatsappFetch = whatsapp.fetchFor();
   const stripeCalls: StripeCall[] = [];
   let jwksRequests = 0;
   const fetchImpl: typeof fetch = async (input, init) => {
@@ -73,13 +92,14 @@ export function fakeNetwork(
       return stripeFetch(url, init);
     }
     if (url.startsWith("https://api.telegram.org/")) return telegramFetch(url, init);
+    if (url.startsWith("https://graph.facebook.com/")) return whatsappFetch(url, init);
     if (url === `https://${TEAM_DOMAIN}/cdn-cgi/access/certs`) {
       jwksRequests += 1;
       return Response.json({ keys: options.jwks ?? [] });
     }
     throw new Error(`Unexpected outbound request to ${url}`);
   };
-  return { fetch: fetchImpl, stripeCalls, jwksRequests: () => jwksRequests, stripe, telegram };
+  return { fetch: fetchImpl, stripeCalls, jwksRequests: () => jwksRequests, stripe, telegram, whatsapp };
 }
 
 export type TestDeps = Deps & { flush: () => Promise<void> };
@@ -132,8 +152,9 @@ export function postJson(env: Env, deps: Deps, path: string, body: unknown, head
 /** A test world: env + one fake network shared by every call, with a movable clock. */
 export function world(envOverrides: Partial<Env> = {}, start: Date = NOW) {
   const env = makeEnv(envOverrides);
-  const net = fakeNetwork();
   let clock = start.getTime();
+  // The fake WhatsApp follows the same movable clock (its pair rate limit is time based).
+  const net = fakeNetwork({ fakeWhatsApp: createFakeWhatsApp({ pairIntervalMs: 0, panelUrl: PANEL, now: () => clock }) });
   const deps = makeDeps(net.fetch, () => new Date(clock));
   return {
     env,
@@ -141,6 +162,7 @@ export function world(envOverrides: Partial<Env> = {}, start: Date = NOW) {
     deps,
     stripe: net.stripe,
     telegram: net.telegram,
+    whatsapp: net.whatsapp,
     advance(ms: number) {
       clock += ms;
     },
@@ -308,3 +330,28 @@ export async function signAccessJwt(
 }
 
 export const denyAll: RateLimiterLike = { limit: async () => ({ success: false }) };
+
+// ---------------------------------------------------------------------------
+// WhatsApp status webhooks
+// ---------------------------------------------------------------------------
+
+/** POSTs a payload to the WhatsApp webhook, signed like Meta (or with `signature` as given). */
+export function whatsappWebhook(w: World, payload: unknown, signature?: string | null) {
+  const body = typeof payload === "string" ? payload : JSON.stringify(payload);
+  return call(w.env, w.deps, "/api/whatsapp/webhook", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(signature === null ? {} : { "X-Hub-Signature-256": signature ?? signMeta(body, WHATSAPP_APP_SECRET) }),
+    },
+    body,
+  });
+}
+
+/** Meta delivers the queued status updates (sent / delivered / read / failed) to the Worker. */
+export async function deliverWhatsAppStatuses(w: World) {
+  const responses: Response[] = [];
+  for (const payload of w.whatsapp.takeStatusPayloads()) responses.push(await whatsappWebhook(w, payload));
+  await w.deps.flush();
+  return responses;
+}

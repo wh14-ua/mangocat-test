@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fails if a tracked file contains something that looks like a real credential: Stripe live
-// or test secret keys, webhook signing secrets, Telegram bot tokens, private keys, Cloudflare
-// tokens. Only the documented local/test fakes are allowed (they cannot reach anything real).
+// or test secret keys, webhook signing secrets, Telegram bot tokens, Meta (WhatsApp) access
+// tokens, private keys, Cloudflare tokens. Only the documented local/test fakes are allowed (they cannot reach anything real).
 // Secrets belong in `wrangler secret put …` / GitHub secrets, never in the repository.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -13,6 +13,7 @@ const PATTERNS = [
   ["Stripe secret key", /\b[sr]k_(live|test)_[A-Za-z0-9]{20,}\b/g],
   ["Stripe webhook secret", /\bwhsec_[A-Za-z0-9]{24,}\b/g],
   ["Telegram bot token", /\b\d{8,10}:[A-Za-z0-9_-]{35}\b/g],
+  ["Meta / WhatsApp access token", /\bEAA[A-Za-z0-9]{60,}\b/g],
   ["Private key", /-----BEGIN [A-Z ]*PRIVATE KEY-----/g],
   ["Cloudflare API token", /\bCLOUDFLARE_API_TOKEN\s*[=:]\s*["']?[A-Za-z0-9_-]{30,}/g],
 ];

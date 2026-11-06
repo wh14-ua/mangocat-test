@@ -38,6 +38,14 @@ export interface Env {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   TELEGRAM_BOT_TOKEN?: string;
+  /** WhatsApp Cloud API: a System User access token (whatsapp_business_messaging). */
+  WHATSAPP_ACCESS_TOKEN?: string;
+  /** Meta app secret: verifies the X-Hub-Signature-256 of WhatsApp webhooks. */
+  WHATSAPP_APP_SECRET?: string;
+  /** Any random string; Meta echoes it when the webhook URL is registered. */
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN?: string;
+  /** Optional dedicated secret for staff sign-in codes (else derived from a channel token). */
+  STAFF_CODE_SECRET?: string;
 
   // Vars (wrangler.jsonc)
   STRIPE_TEST_MODE?: string;
@@ -57,8 +65,20 @@ export interface Env {
   STRIPE_CANCEL_URL?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** Restaurant name shown in alerts (default "SHANG HAI"). */
+  RESTAURANT_NAME?: string;
   /** Comma-separated Telegram chat ids allowed to receive order alerts. */
   TELEGRAM_CHAT_IDS?: string;
+  /** WhatsApp sender: the phone number id of the business number (WhatsApp Manager / API setup). */
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  /** Comma-separated WhatsApp numbers (E.164, e.g. +34612345678) allowed to receive alerts and codes. */
+  WHATSAPP_RECIPIENTS?: string;
+  /** Graph API version for WhatsApp calls (default v26.0). */
+  WHATSAPP_API_VERSION?: string;
+  /** Language code of the approved templates (default "es"). */
+  WHATSAPP_TEMPLATE_LANGUAGE?: string;
+  /** Test mode only: base URL of a local fake WhatsApp (never honoured in live mode). */
+  WHATSAPP_API_BASE?: string;
   /** Public URL of the staff panel (the button in Telegram alerts opens it). */
   PANEL_URL?: string;
   /** Preparation times offered to staff when accepting, e.g. "15,20,30,45". */

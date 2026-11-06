@@ -3,8 +3,7 @@ import { acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config
 import { setState, updateOrderIf, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
-import { deliverDue, enqueueNotification } from "./notifications";
-import { telegramConfig } from "./config";
+import { alertRecipients, deliverDue, enqueueNotification } from "./notifications";
 import { syncOrderPayment } from "./sync";
 
 /** Reason shown to the customer when nobody accepted in time. */
@@ -69,7 +68,8 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
   //    an acceptance that could not be charged a moment ago must not be declined behind the
   //    back of the person who is retrying it.
   //    The clock only starts once the restaurant is known to have been told about the order
-  //    (a new-order alert was delivered, or a signed-in device showed it). An order nobody was
+  //    (a WhatsApp alert the phone confirmed as delivered — accepted by the API is not enough —,
+  //    a Telegram alert sent, or a signed-in device that showed it). An order nobody was
   //    able to see — Telegram down, blocked or not configured, panel closed — is never declined
   //    automatically: it stays pending (and visible) until a person decides.
   const timeout = acceptanceTimeoutMinutes(env);
@@ -81,8 +81,11 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
           WHERE o.status = 'awaiting_acceptance'
             AND MIN(
               COALESCE(o.staff_seen_at, '9999'),
-              COALESCE((SELECT MIN(n.sent_at) FROM notifications n
-                         WHERE n.order_id = o.id AND n.kind = 'new_order' AND n.status = 'sent'), '9999')
+              COALESCE((SELECT MIN(CASE WHEN n.channel = 'whatsapp' THEN COALESCE(n.delivered_at, n.read_at) ELSE n.sent_at END)
+                          FROM notifications n
+                         WHERE n.order_id = o.id AND n.kind = 'new_order'
+                           AND ((n.channel = 'whatsapp' AND COALESCE(n.delivered_at, n.read_at) IS NOT NULL)
+                                OR (n.channel <> 'whatsapp' AND n.status = 'sent'))), '9999')
             ) <= ?
             AND NOT EXISTS (SELECT 1 FROM order_events e
                              WHERE e.order_id = o.id AND e.source = 'staff'
@@ -179,15 +182,15 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
   // 6. Alerts that must exist: a new order waiting for the restaurant whose alert rows were lost
   //    (an enqueue that failed after the order changed), and incidents in review that were never
   //    alerted for their latest entry, or have waited unattended for REVIEW_REMINDER_MS since.
-  const telegram = telegramConfig(env);
-  if (telegram) {
+  const recipients = alertRecipients(env).length;
+  if (recipients) {
     await step("alerts", async () => {
       for (const order of await rows(
         env,
         `SELECT o.* FROM orders o WHERE o.status = 'awaiting_acceptance'
             AND (SELECT COUNT(*) FROM notifications n WHERE n.order_id = o.id AND n.kind = 'new_order') < ?
           ORDER BY o.created_at LIMIT ?`,
-        telegram.chatIds.length,
+        recipients,
         BATCH,
       )) {
         report.alerts += await enqueueNotification(env, order.id, "new_order", now.toISOString());

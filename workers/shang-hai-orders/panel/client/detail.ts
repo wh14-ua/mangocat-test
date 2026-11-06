@@ -1,5 +1,5 @@
 /**
- * Order detail (tap a ticket, or open PANEL_URL#pedido=<id> from a Telegram alert): the
+ * Order detail (tap a ticket, or open PANEL_URL?pedido=<id> / #pedido=<id> from an alert): the
  * full ticket with its actions, plus email, payment details, history and alert log.
  */
 import { api } from "./api";
@@ -105,7 +105,7 @@ function alertsSection(order: OrderDetail): HTMLElement {
     const statusTextValue = NOTIFICATION_STATUS_TEXT[n.status] ?? n.status;
     const failed = n.status === "failed";
     const details = [
-      n.sentAt ? `Enviado ${stamp(n.sentAt, now)}` : null,
+      n.readAt ? `Leído ${stamp(n.readAt, now)}` : n.deliveredAt ? `Entregado ${stamp(n.deliveredAt, now)}` : n.sentAt ? `Enviado ${stamp(n.sentAt, now)}${n.channel === "whatsapp" ? " (sin confirmar entrega)" : ""}` : null,
       n.attempts ? (n.attempts === 1 ? "1 intento" : `${n.attempts} intentos`) : null,
       n.nextAttemptAt && n.status !== "sent" ? `Próximo intento ${stamp(n.nextAttemptAt, now)}` : null,
     ].filter((x): x is string => Boolean(x));
@@ -115,7 +115,7 @@ function alertsSection(order: OrderDetail): HTMLElement {
       h(
         "p",
         "alertlog__head",
-        h("span", { class: "alertlog__kind", text: `${NOTIFICATION_KIND_TEXT[n.kind] ?? n.kind} (${n.channel === "telegram" ? "Telegram" : n.channel})` }),
+        h("span", { class: "alertlog__kind", text: `${NOTIFICATION_KIND_TEXT[n.kind] ?? n.kind} (${n.channel === "whatsapp" ? "WhatsApp" : n.channel === "telegram" ? "Telegram" : n.channel})` }),
         h("span", { class: failed ? "badge badge--danger" : n.status === "sent" ? "badge badge--ok" : "badge", text: statusTextValue }),
       ),
       details.length ? h("p", { class: "alertlog__meta", text: details.join(" · ") }) : null,
