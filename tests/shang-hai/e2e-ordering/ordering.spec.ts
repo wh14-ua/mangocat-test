@@ -333,3 +333,135 @@ test("losing the connection keeps the last known status on screen and recovers",
   await page.unroute("**/api/orders/**");
   await expect(page.getByText(/Sin conexión/i)).toHaveCount(0, { timeout: 30_000 });
 });
+
+// ---------------------------------------------------------------------------
+// The complete journey, step by step, in the three designs and both languages,
+// with the final state checked at Stripe (fake) and in D1 — not only on screen.
+// ---------------------------------------------------------------------------
+
+async function openCart(page: Page) {
+  const panel = page.getByTestId("cart-panel");
+  if (!(await panel.isVisible())) await visible(page.getByTestId("cart-open")).click();
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+async function staffDetail(id: string) {
+  const staff = await staffSession();
+  const res = await staff.api.get(`/api/admin/orders/${id}`, { headers: { Cookie: staff.cookie } });
+  expect(res.status()).toBe(200);
+  return (await res.json()) as {
+    order: {
+      status: string;
+      totalCents: number;
+      lines: { quantity: number; name: string; lineTotalCents: number }[];
+      payment: { status: string; stripePaymentIntentId: string };
+      events: { to: string; source: string }[];
+    };
+  };
+}
+
+const GYOZAS = "gyozas-de-pollo-a-la-plancha"; // 6,45 €
+const COMBO_A = "combo-a"; // 19,45 €
+const JOURNEY_TOTAL = 3 * 645 + 1945; // 38,80 €
+
+for (const storefront of ["ink-house", "wok-after-dark", "bento-club"] as const) {
+  for (const locale of ["es", "en"] as const) {
+    test(`full journey · ${storefront} · ${locale}: cart edits, reload, pay, alert, accept, ready, delivered — verified at Stripe and in D1`, async ({ page, browser }) => {
+      const errors = trackErrors(page);
+      const money = (es: string, en: string) => (locale === "en" ? en : es);
+
+      // 1. The customer opens the web (fresh browser storage), in their language.
+      await page.goto(`${SITE}/${storefront}/`);
+      await page.evaluate(() => window.localStorage.clear());
+      await page.reload();
+      if (locale === "en") await visible(page.getByTestId("language-en")).click();
+      // 2. Browses the menu.
+      await visible(page.getByTestId("go-to-menu")).click();
+      // 3-4. Adds one dish, then several.
+      await visible(page.getByTestId("menu-search")).fill(locale === "en" ? "peking duck" : "pato pekin");
+      await visible(page.getByTestId("add-pato-a-la-pekinesa")).click();
+      await visible(page.getByTestId("menu-search")).fill("gyozas");
+      await visible(page.getByTestId(`add-${GYOZAS}`)).click();
+      await visible(page.getByTestId("menu-search")).fill("combo a");
+      await visible(page.getByTestId(`add-${COMBO_A}`)).click();
+      // 5. Changes a quantity.
+      const panel = await openCart(page);
+      const gyozas = panel.getByTestId(`cart-line-${GYOZAS}`);
+      await gyozas.getByTestId("qty-inc").click();
+      await gyozas.getByTestId("qty-inc").click();
+      await expect(gyozas.getByTestId("line-qty")).toHaveText(/3/);
+      // 6. Removes a dish.
+      await panel.getByTestId("cart-line-pato-a-la-pekinesa").getByTestId("line-remove").click();
+      await expect(panel.getByTestId("cart-line-pato-a-la-pekinesa")).toHaveCount(0);
+      await expect(panel.getByTestId("cart-total")).toContainText(money("38,80", "€38.80"));
+      // 7-8. Reloads the page: the cart is still there, same lines, same total.
+      await page.reload();
+      const restored = await openCart(page);
+      await expect(restored.getByTestId(`cart-line-${GYOZAS}`).getByTestId("line-qty")).toHaveText(/3/);
+      await expect(restored.getByTestId(`cart-line-${COMBO_A}`)).toBeVisible();
+      await expect(restored.getByTestId("cart-total")).toContainText(money("38,80", "€38.80"));
+      // 9-10. Fills in their details and starts the payment: Stripe shows the same total.
+      await visible(restored.getByTestId("checkout-start")).click();
+      await fillCheckout(page, locale === "en" ? "Jane Smith" : "Pedro Ruiz");
+      await expect(page.getByText("38,80 €").first()).toBeVisible();
+      // 11. Authorises the payment (held, not charged).
+      const orderId = await authorise(page);
+      if (locale === "en") expect(page.url()).toContain("lang=en");
+      let detail = await staffDetail(orderId);
+      expect(detail.order).toMatchObject({ status: "awaiting_acceptance", totalCents: JOURNEY_TOTAL, payment: { status: "authorized" } });
+      expect(detail.order.lines.map((l) => [l.quantity, l.lineTotalCents]).sort()).toEqual([[1, 1945], [3, 1935]].sort());
+      const piId = detail.order.payment.stripePaymentIntentId;
+      expect((await cloudState()).intents.find((i) => i.id === piId)).toMatchObject({ status: "requires_capture", order: orderId });
+
+      // 12. The restaurant is alerted on both authorised phones: number and total, no personal data.
+      await expect
+        .poll(async () => (await cloudState()).telegram.filter((m) => m.text.includes("NUEVO PEDIDO") && m.button?.url.endsWith(orderId)).length, { timeout: 15_000 })
+        .toBe(2);
+      const alert = (await cloudState()).telegram.filter((m) => m.button?.url.endsWith(orderId)).at(-1);
+      expect(alert?.text).toContain("38,80");
+      for (const secret of ["Pedro", "Jane", "612", "@example.es", "Sin cebolla"]) expect(alert?.text).not.toContain(secret);
+
+      // 13. A worker opens the order from the alert's VER PEDIDO button.
+      const phone = await staffPhone(browser);
+      await phone.goto(alert!.button!.url);
+      const detailView = phone.locator("#detail");
+      await expect(detailView).toBeVisible({ timeout: 15_000 });
+      await expect(detailView).toContainText("Sin cebolla");
+      // 14. Accepts it with 20 minutes.
+      await detailView.getByRole("button", { name: /Aceptar pedido/i }).click();
+      await phone.locator("label.prep__opt", { hasText: "20 min" }).click();
+      await phone.getByRole("button", { name: /Aceptar · listo en 20 min/ }).click();
+
+      // 15-16. Stripe confirms the capture, and the customer's page shows it by itself.
+      const status = visible(page.getByTestId("order-status"));
+      await expect(status).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
+      await expect(status).toHaveAttribute("data-payment-status", "captured");
+      expect((await cloudState()).intents.find((i) => i.id === piId)).toMatchObject({ status: "succeeded" });
+      detail = await staffDetail(orderId);
+      expect(detail.order).toMatchObject({ status: "preparing", payment: { status: "captured" } });
+
+      // 17-18. LISTO → the customer sees "ready".
+      await phone.goto(`${WORKER}/admin`);
+      await phone.locator("#tab-preparing").click();
+      await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como listo/i }).click();
+      await expect(status).toHaveAttribute("data-status", "ready", { timeout: 30_000 });
+      // 19-20. ENTREGADO → the customer sees "collected".
+      await phone.locator("#tab-ready").click();
+      await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como entregado/i }).click();
+      await expect(status).toHaveAttribute("data-status", "completed", { timeout: 40_000 });
+      await phone.close();
+
+      // Final truth: D1 and Stripe agree — charged once, the order total, nothing refunded.
+      detail = await staffDetail(orderId);
+      expect(detail.order).toMatchObject({ status: "completed", totalCents: JOURNEY_TOTAL, payment: { status: "captured" } });
+      expect(detail.order.events.map((e) => e.to)).toEqual(expect.arrayContaining(["awaiting_acceptance", "accepting", "preparing", "ready", "completed"]));
+      const stripe = await cloudState();
+      expect(stripe.intents.filter((i) => i.order === orderId)).toHaveLength(1);
+      // The status page emptied the cart that produced this order.
+      await page.goto(`${SITE}/${storefront}/`);
+      await expect(page.getByTestId(`cart-line-${GYOZAS}`)).toHaveCount(0);
+      expect(errors).toEqual([]);
+    });
+  }
+}

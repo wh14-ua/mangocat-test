@@ -94,3 +94,12 @@ describe("Stripe events", () => {
     expect(count(w.env, "SELECT COUNT(*) AS n FROM system_state WHERE key = 'stripe.last_webhook'")).toBe(1);
   });
 });
+
+describe("payloads that are valid JSON but not events (found by fuzzing)", () => {
+  it("a signed null, number, string or array is a 400, never a 500", async () => {
+    const env = makeEnv();
+    for (const payload of [null, 0, "x", [], [{}], true]) {
+      expect((await signedWebhook(env, payload)).status, JSON.stringify(payload)).toBe(400);
+    }
+  });
+});

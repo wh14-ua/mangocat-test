@@ -86,7 +86,8 @@ export async function handleStripeWebhook(request: Request, env: Env, deps: Deps
   } catch {
     return errorJson("invalid-payload", 400);
   }
-  if (typeof event.id !== "string" || typeof event.type !== "string") {
+  // Any JSON parses (null, a number, an array…): only an object with an id and a type is an event.
+  if (!event || typeof event !== "object" || typeof event.id !== "string" || typeof event.type !== "string") {
     return errorJson("invalid-payload", 400);
   }
   const now = deps.now().toISOString();

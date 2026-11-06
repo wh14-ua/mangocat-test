@@ -17,7 +17,8 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "test-results/ordering",
   use: {
-    channel: "chrome",
+    // System Chrome locally; CI installs Playwright's Chromium (PW_CHANNEL unset there).
+    ...(process.env.CI && !process.env.PW_CHANNEL ? {} : { channel: process.env.PW_CHANNEL ?? "chrome" }),
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     locale: "es-ES",
@@ -31,10 +32,13 @@ export default defineConfig({
   ],
   webServer: [
     {
+      // Its own state dir (.local-stack-e2e, wiped at start): never the demo's data.
       command: "LOCAL_STACK_STATE=.local-stack-e2e CRON_EVERY_MS=3000 node scripts/local-stack/run.mjs --backend-only --fresh",
       url: "http://localhost:8787/api/health",
       reuseExistingServer: false,
       timeout: 120_000,
+      // run.mjs stops wrangler/workerd and the fake cloud (their own process groups) on SIGTERM.
+      gracefulShutdown: { signal: "SIGTERM", timeout: 15_000 },
     },
     {
       command: "PORT=4174 HOST=localhost STATIC_ROOT=out-local node scripts/serve-static.mjs",
