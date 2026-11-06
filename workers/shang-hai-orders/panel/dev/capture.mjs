@@ -115,9 +115,12 @@ const scenarios = {
     await page.locator(".tk--prep").first().waitFor();
     await shot(page, "06-preparing-390");
     await axe(page, "preparing");
+    await shot(page, "06b-preparing-390-full", { fullPage: true });
     await page.locator("#tab-ready").click();
     await page.locator(".tk--ready").first().waitFor();
     await shot(page, "07-ready-390");
+    await axe(page, "ready");
+    await shot(page, "07b-ready-390-full", { fullPage: true });
     await page.locator("#tab-completed").click();
     await shot(page, "08-completed-390");
     await page.locator("#tab-rejected").click();
