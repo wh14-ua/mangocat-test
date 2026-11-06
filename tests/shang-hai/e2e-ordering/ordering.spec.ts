@@ -1,4 +1,12 @@
-import { expect, request as playwrightRequest, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  request as playwrightRequest,
+  test,
+  type APIRequestContext,
+  type Browser,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 /**
  * The real ordering system end to end, on a phone-sized screen:
@@ -94,6 +102,86 @@ async function authorise(page: Page): Promise<string> {
   await expect(status).toHaveAttribute("data-payment-status", "authorized");
   return new URL(page.url()).searchParams.get("pedido") ?? "";
 }
+
+// ---------------------------------------------------------------------------
+// The restaurant's phone: the SHANG HAI — PEDIDOS panel
+// ---------------------------------------------------------------------------
+
+let panelCookie: { name: string; value: string } | null = null;
+
+async function staffPhone(browser: Browser): Promise<Page> {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  if (panelCookie) await context.addCookies([{ ...panelCookie, url: WORKER }]);
+  const phone = await context.newPage();
+  await phone.goto(`${WORKER}/admin`);
+  return phone;
+}
+
+test("panel: the staff phone signs in with the code sent by Telegram", async ({ browser }) => {
+  const phone = await staffPhone(browser);
+  await phone.getByRole("button", { name: /Enviar código/i }).click();
+  await expect(phone.locator("#code")).toBeVisible();
+  const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
+  const code = /\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "";
+  await phone.locator("#code").fill(code);
+  await phone.locator("#device").fill("Móvil de cocina");
+  await phone.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(phone.getByRole("tab", { name: /Nuevos/ })).toBeVisible();
+  const cookie = (await phone.context().cookies(WORKER)).find((c) => c.name === "__Host-shp_session");
+  expect(cookie?.httpOnly).toBe(true);
+  panelCookie = { name: cookie!.name, value: cookie!.value };
+  // The API helpers below reuse this session instead of asking for another code.
+  const api = await playwrightRequest.newContext({ baseURL: WORKER, extraHTTPHeaders: { Origin: WORKER } });
+  cachedStaff = Promise.resolve({ api, cookie: `${cookie!.name}=${cookie!.value}` });
+  await phone.context().close();
+});
+
+test("panel: a new order arrives, ACEPTAR 20 min, LISTO, ENTREGADO — the customer's phone follows", async ({ page, browser }) => {
+  await orderOneDish(page, "bento-club");
+  await fillCheckout(page);
+  const orderId = await authorise(page);
+
+  const phone = await staffPhone(browser);
+  const ticket = phone.locator(`article[data-id="${orderId}"]`).first();
+  await expect(ticket).toBeVisible({ timeout: 15_000 });
+  await expect(ticket).toContainText("Sin cebolla");
+  await ticket.getByRole("button", { name: /Aceptar pedido/i }).click();
+  await phone.locator("label.prep__opt", { hasText: "20 min" }).click();
+  await phone.getByRole("button", { name: /Aceptar · listo en 20 min/ }).click();
+
+  const status = visible(page.getByTestId("order-status"));
+  await expect(status).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
+  await expect(status).toHaveAttribute("data-payment-status", "captured");
+
+  await phone.getByRole("tab", { name: /En preparación/ }).click();
+  await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como listo/i }).click();
+  await expect(status).toHaveAttribute("data-status", "ready", { timeout: 30_000 });
+
+  await phone.getByRole("tab", { name: /Listos/ }).click();
+  await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como entregado/i }).click();
+  await expect(status).toHaveAttribute("data-status", "completed", { timeout: 40_000 });
+  await phone.context().close();
+});
+
+test("panel: RECHAZAR with a reason — the customer is told nothing was charged", async ({ page, browser }) => {
+  await orderOneDish(page, "ink-house");
+  await fillCheckout(page);
+  const orderId = await authorise(page);
+
+  const phone = await staffPhone(browser);
+  const ticket = phone.locator(`article[data-id="${orderId}"]`).first();
+  await expect(ticket).toBeVisible({ timeout: 15_000 });
+  await ticket.getByRole("button", { name: /Rechazar pedido/i }).click();
+  await phone.locator(`#reason-${orderId}`).fill("Nos hemos quedado sin gyozas");
+  await phone.getByRole("button", { name: /Confirmar rechazo/i }).click();
+
+  const status = visible(page.getByTestId("order-status"));
+  await expect(status).toHaveAttribute("data-status", "rejected", { timeout: 20_000 });
+  await expect(status).toHaveAttribute("data-payment-status", "canceled");
+  await expect(page.getByText("Nos hemos quedado sin gyozas").first()).toBeVisible();
+  await expect(page.getByText(/no se te ha cobrado nada/i).first()).toBeVisible();
+  await phone.context().close();
+});
 
 for (const storefront of ["bento-club", "ink-house", "wok-after-dark"] as const) {
   test(`${storefront}: customer orders on the phone, the restaurant accepts (20 min) and marks it ready`, async ({ page }) => {

@@ -175,6 +175,27 @@ describe("staff board", () => {
     expect(detail.order.notifications).toHaveLength(2);
   });
 
+  it("never drops a pending order off the board, however busy the day was", async () => {
+    const w = world();
+    const pending = await placedOrder(w);
+    // 200 orders already completed today, all newer than the pending one.
+    const insert = w.env.DB.raw.prepare(
+      `INSERT INTO orders (id, number, token_hash, status, payment_status, storefront, locale, fulfillment, catalog_id,
+         catalog_version, subtotal_cents, total_cents, customer_name, customer_phone, customer_email, payments_mode,
+         created_at, updated_at)
+       VALUES (?, ?, 'h', 'completed', 'captured', 'ink-house', 'es', 'pickup', 'shang-hai-orihuela', 'v', 100, 100,
+         'X', '+34600000000', 'x@example.es', 'stripe-test', ?, ?)`,
+    );
+    for (let i = 0; i < 200; i++) {
+      const at = new Date(w.now().getTime() + (i + 1) * 1000).toISOString();
+      insert.run(`SH-261029-H${String(i).padStart(5, "0")}`, 5000 + i, at, at);
+    }
+    const cookie = await staffCookie(w.env, "A", w.now());
+    const board = (await (await staffCall(w, cookie, "/api/admin/board")).json()) as { columns: Record<string, { id: string }[]> };
+    expect(board.columns.new.map((o) => o.id)).toEqual([pending.orderId]);
+    expect(board.columns.completed.length).toBe(100);
+  });
+
   it("uses the preparation times configured for the restaurant", async () => {
     const w = world({ PREP_TIME_OPTIONS: "10, 25, 40, 999, x" });
     const cookie = await staffCookie(w.env, "A", w.now());

@@ -222,19 +222,28 @@ export async function getOrderEvents(db: D1Like, id: string): Promise<OrderEvent
   return res.results;
 }
 
-/** Orders for the staff board: everything not finished, plus finished ones since `since`. */
-export async function listBoardOrders(db: D1Like, since: string, limit = 150): Promise<OrderRow[]> {
-  const res = await db
+/**
+ * Orders for the staff board: EVERY order that still needs someone (never cut off by the
+ * history), plus today's finished ones (most recent first, bounded).
+ */
+export async function listBoardOrders(db: D1Like, since: string, historyLimit = 100): Promise<OrderRow[]> {
+  const active = await db
     .prepare(
       `SELECT * FROM orders
         WHERE status IN ('awaiting_acceptance', 'accepting', 'rejecting', 'needs_review', 'preparing', 'ready')
-           OR (status IN ('completed', 'rejected') AND updated_at >= ?)
-           OR (status = 'cancelled' AND authorized_at IS NOT NULL AND updated_at >= ?)
-        ORDER BY created_at DESC LIMIT ?`,
+        ORDER BY created_at DESC`,
     )
-    .bind(since, since, limit)
     .all<OrderRow>();
-  return res.results;
+  const finished = await db
+    .prepare(
+      `SELECT * FROM orders
+        WHERE (status IN ('completed', 'rejected') AND updated_at >= ?)
+           OR (status = 'cancelled' AND authorized_at IS NOT NULL AND updated_at >= ?)
+        ORDER BY updated_at DESC LIMIT ?`,
+    )
+    .bind(since, since, historyLimit)
+    .all<OrderRow>();
+  return [...active.results, ...finished.results];
 }
 
 export async function attachStripeSession(db: D1Like, id: string, sessionId: string, now: string) {
