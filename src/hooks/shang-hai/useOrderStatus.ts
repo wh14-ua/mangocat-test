@@ -6,6 +6,7 @@ import type { OrderSummary } from "@/lib/commerce/types";
 import type { DemoRestaurantAction, OrderLookup } from "@/lib/commerce/checkout/gateway";
 import { describeOrder } from "@/lib/commerce/order-view";
 import { getOrderGateway } from "@/lib/shang-hai/checkout";
+import { cartSignature, readLastOrder, writeLastOrder } from "@/lib/shang-hai/last-order";
 import { useCart } from "./useCart";
 
 type State =
@@ -14,8 +15,11 @@ type State =
   | { phase: "error"; error: "not-found" | "network" | "server" }
   | { phase: "ready"; order: OrderSummary };
 
-/** Statuses meaning the order reached the restaurant: the cart has done its job. */
-const PLACED = new Set(["awaiting_acceptance", "accepting", "preparing", "ready", "completed", "rejecting", "rejected", "needs_review"]);
+/**
+ * Statuses meaning the order reached the restaurant and goes ahead: the cart that produced it
+ * has done its job. A declined order keeps its cart, so the customer can try again.
+ */
+const PLACED = new Set(["awaiting_acceptance", "accepting", "preparing", "ready", "completed", "needs_review"]);
 
 /**
  * Reads ?pedido=&t= from the URL and keeps the order fresh from the backend (or the demo
@@ -92,14 +96,17 @@ export function useOrderStatus() {
     kickRef.current();
   }, [orderId, token]);
 
-  // The order reached the restaurant (payment authorised): empty the cart once.
+  // The order reached the restaurant (payment authorised): empty the cart that produced it,
+  // once — never a cart built afterwards (an old status link, another tab, a second order).
   const order = state.phase === "ready" ? state.order : null;
   useEffect(() => {
-    if (!order || clearedRef.current) return;
-    if (PLACED.has(order.status)) {
-      clearedRef.current = true;
-      if (cart.lines.length) cart.clear();
-    }
+    if (!order || clearedRef.current || !cart.hydrated) return;
+    if (!PLACED.has(order.status)) return;
+    clearedRef.current = true;
+    const last = readLastOrder(cart.storefront);
+    if (!last || last.orderId !== order.id || last.cleared) return;
+    if (cart.lines.length && cartSignature(cart.lines) === last.cart) cart.clear();
+    writeLastOrder(cart.storefront, { ...last, cleared: true });
   }, [order, cart]);
 
   const simulateRestaurant = gateway.simulateRestaurant

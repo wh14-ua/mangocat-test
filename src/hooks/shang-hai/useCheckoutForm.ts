@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { validateCustomer, type FieldErrors } from "@/lib/commerce/validation";
 import type { CheckoutFailure } from "@/lib/commerce/checkout/gateway";
 import { CHECKOUT_ERROR_TEXT, VALIDATION_TEXT } from "@/lib/commerce/messages";
-import { getOrderGateway, lastOrderStorageKey } from "@/lib/shang-hai/checkout";
+import { formatMoney } from "@/lib/i18n/format";
+import { getOrderGateway } from "@/lib/shang-hai/checkout";
 import { shangHaiCatalog, shangHaiOrdering } from "@/lib/shang-hai/catalog";
+import { cartSignature, writeLastOrder } from "@/lib/shang-hai/last-order";
+import { itemName } from "@/lib/shang-hai/menu-i18n";
 import { useCart } from "./useCart";
 import { useLocale } from "./useLocale";
 
@@ -35,7 +38,20 @@ export function useCheckoutForm() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<CheckoutFailure | null>(null);
+  // The total the server quoted after a "price-changed" answer: shown to the customer, and
+  // the one the next press of "pay" confirms (the menu in this page may be older than the
+  // server's). Stripe then shows that same amount before anything is authorised.
+  const [confirmedTotal, setConfirmedTotal] = useState<{ cart: string; totalCents: number } | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+
+  // Back from the payment page (bfcache restores this page as it was): the form must be usable.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setSubmitting(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
 
   const setField = useCallback(<K extends keyof CheckoutValues>(key: K, value: CheckoutValues[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
@@ -90,6 +106,8 @@ export function useCheckoutForm() {
       return;
     }
     setSubmitting(true);
+    const signature = cartSignature(cart.lines);
+    const expectedTotalCents = confirmedTotal?.cart === signature ? confirmedTotal.totalCents : cart.quote.totalCents;
     const result = await getOrderGateway().createCheckout({
       catalogId: shangHaiCatalog.catalog.catalogId,
       catalogVersion: shangHaiCatalog.catalog.version,
@@ -107,13 +125,16 @@ export function useCheckoutForm() {
         ...(values.notes.trim() ? { notes: values.notes } : {}),
       },
       ageConfirmed: requiresAge ? values.ageConfirmed : undefined,
-      expectedTotalCents: cart.quote.totalCents,
+      expectedTotalCents,
       // Stripe Checkout, server messages and the return page follow the visitor's language.
       locale,
     });
     if (!result.ok) {
       setSubmitting(false);
       setFailure(result);
+      if (result.error === "price-changed" && Number.isFinite(result.totalCents)) {
+        setConfirmedTotal({ cart: signature, totalCents: result.totalCents });
+      }
       if (result.error === "invalid") {
         const mapped: FieldErrors = {};
         for (const [k, v] of Object.entries(result.fieldErrors)) {
@@ -124,14 +145,7 @@ export function useCheckoutForm() {
       }
       return;
     }
-    try {
-      window.localStorage.setItem(
-        lastOrderStorageKey(cart.storefront),
-        JSON.stringify({ orderId: result.orderId, token: result.orderToken, at: Date.now() }),
-      );
-    } catch {
-      /* optional */
-    }
+    writeLastOrder(cart.storefront, { orderId: result.orderId, token: result.orderToken, at: Date.now(), cart: signature });
     if (result.next.kind === "external") window.location.assign(result.next.url);
     else router.push(result.next.path);
   }
@@ -143,9 +157,50 @@ export function useCheckoutForm() {
     submit,
     submitting,
     failure,
-    failureMessage: failure ? CHECKOUT_ERROR_TEXT[locale][failure.error] : null,
+    failureMessage: failure ? checkoutFailureMessage(failure, locale, cart.quote.totalCents) : null,
     requiresAge,
     formRef,
     quote: cart.quote,
   };
+}
+
+/**
+ * What went wrong, in words the customer can act on: the new total when prices changed (and
+ * that pressing pay again accepts it), which dishes cannot be ordered, or a reload when the
+ * request itself is out of date (fields that are not on the form).
+ */
+function checkoutFailureMessage(failure: CheckoutFailure, locale: "es" | "en", shownTotalCents: number): string {
+  const base = CHECKOUT_ERROR_TEXT[locale][failure.error];
+  const en = locale === "en";
+  if (failure.error === "price-changed" && Number.isFinite(failure.totalCents)) {
+    const total = formatMoney(failure.totalCents, locale);
+    const shown = formatMoney(shownTotalCents, locale);
+    return en
+      ? `Prices have changed: the current total is ${total} (this page showed ${shown}). Press pay again to continue with ${total}; you will see it on the payment page before anything is authorised.`
+      : `Los precios han cambiado: el total actual es ${total} (en esta página aparecía ${shown}). Pulsa de nuevo para continuar con ${total}; lo verás en la página de pago antes de autorizar nada.`;
+  }
+  if (failure.error === "not-payable" && failure.issues.length) {
+    const names = [
+      ...new Set(
+        failure.issues
+          .map((i) => {
+            if (!("itemId" in i) || !i.itemId) return null;
+            const item = shangHaiCatalog.byId.get(i.itemId);
+            return item ? itemName(item, locale) : i.itemId;
+          })
+          .filter(Boolean),
+      ),
+    ];
+    if (names.length) {
+      return en
+        ? `These dishes cannot be ordered online right now: ${names.join(", ")}. Remove them from your order to continue.`
+        : `Estos platos no se pueden pedir online ahora mismo: ${names.join(", ")}. Quítalos del pedido para continuar.`;
+    }
+  }
+  if (failure.error === "invalid" && !Object.keys(failure.fieldErrors).some((k) => /^customer\.|^(name|phone|email|notes|ageConfirmed)$/.test(k))) {
+    return en
+      ? "Your order could not be sent because this page is out of date (the menu may have been updated). Reload the page and try again."
+      : "No se ha podido enviar el pedido porque esta página está desactualizada (puede que la carta haya cambiado). Recarga la página y vuelve a intentarlo.";
+  }
+  return base;
 }

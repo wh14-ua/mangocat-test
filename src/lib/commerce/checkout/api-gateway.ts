@@ -15,17 +15,29 @@ type Fetch = typeof fetch;
  * re-prices everything and returns a Stripe Checkout URL; this client never sends or
  * trusts prices.
  */
-export function createApiGateway(baseUrl: string, fetchImpl: Fetch = fetch): OrderGateway {
+/** No request may leave a button busy or the status page frozen: a slow answer is "no connection". */
+export const CHECKOUT_TIMEOUT_MS = 25_000;
+export const LOOKUP_TIMEOUT_MS = 10_000;
+
+export function createApiGateway(baseUrl: string, fetchImpl: Fetch = fetch, timeouts = { checkout: CHECKOUT_TIMEOUT_MS, lookup: LOOKUP_TIMEOUT_MS }): OrderGateway {
   const base = baseUrl.replace(/\/+$/, "");
 
-  async function request(path: string, init?: RequestInit): Promise<Response | null> {
+  async function request(path: string, init: RequestInit = {}, timeoutMs = timeouts.lookup): Promise<Response | null> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetchImpl(`${base}${path}`, {
+      const res = await fetchImpl(`${base}${path}`, {
         ...init,
-        headers: { Accept: "application/json", ...(init?.headers ?? {}) },
+        signal: controller.signal,
+        headers: { Accept: "application/json", ...(init.headers ?? {}) },
       });
+      // The body is read under the same deadline (a stalled body is a stalled request).
+      const text = await res.text();
+      return new Response(text, { status: res.status, headers: res.headers });
     } catch {
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -39,11 +51,15 @@ export function createApiGateway(baseUrl: string, fetchImpl: Fetch = fetch): Ord
     },
 
     async createCheckout(payload: CheckoutRequest): Promise<CheckoutResult> {
-      const res = await request("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await request(
+        "/api/checkout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+        timeouts.checkout,
+      );
       if (!res) return { ok: false, error: "network" };
       const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
       if (res.ok && body && typeof body.checkoutUrl === "string") {
