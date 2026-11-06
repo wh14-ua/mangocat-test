@@ -87,7 +87,9 @@ export const REQUIRED_SCHEMA = {
       "ready_by",
       "ready_at",
       "completed_at",
-      "rejected_at"
+      "rejected_at",
+      "lock_token",
+      "lock_expires_at"
     ],
     "staff_login_codes": [
       "id",

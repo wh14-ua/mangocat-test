@@ -41,6 +41,10 @@ export type OrderRow = {
   rejection_reason: string | null;
   review_reason: string | null;
   staff_seen_at: string | null;
+  /** Owner of the current accept/reject lock (migration 0003); null when not locked. */
+  lock_token: string | null;
+  /** After this time the lock is considered abandoned and recovery may take it over. */
+  lock_expires_at: string | null;
   created_at: string;
   updated_at: string;
   authorized_at: string | null;
@@ -277,10 +281,14 @@ export type OrderPatch = Partial<
     | "ready_at"
     | "completed_at"
     | "rejected_at"
+    | "lock_token"
+    | "lock_expires_at"
   >
 >;
 
 const PATCH_COLUMNS = new Set<string>([
+  "lock_token",
+  "lock_expires_at",
   "payment_status",
   "stripe_session_id",
   "stripe_payment_intent_id",
@@ -336,6 +344,8 @@ export async function updateOrderIf(
   patch: OrderPatch,
   meta: EventMeta | null,
   now?: string,
+  /** Only the owner of the accept/reject lock may change a locked order's status. */
+  lockToken?: string | null,
 ): Promise<UpdateResult> {
   const entries = Object.entries(patch).filter(([k, v]) => PATCH_COLUMNS.has(k) && v !== undefined) as [
     string,
@@ -343,9 +353,10 @@ export async function updateOrderIf(
   ][];
   const sets = [...(to ? ["status = ?"] : []), ...entries.map(([k]) => `${k} = ?`), "updated_at = ?"];
   const values: (string | number | null)[] = [...(to ? [to] : []), ...entries.map(([, v]) => v), meta?.now ?? now ?? new Date().toISOString()];
+  const guarded = lockToken !== undefined;
   const update = db
-    .prepare(`UPDATE orders SET ${sets.join(", ")} WHERE id = ? AND status = ?`)
-    .bind(...values, id, from);
+    .prepare(`UPDATE orders SET ${sets.join(", ")} WHERE id = ? AND status = ?${guarded ? " AND lock_token IS ?" : ""}`)
+    .bind(...values, id, from, ...(guarded ? [lockToken] : []));
   if (!meta) {
     const res = await update.run();
     return res.meta.changes ? { ok: true, changed: true } : { ok: false, reason: "conflict" };
@@ -363,17 +374,48 @@ export async function updateOrderIf(
 
 /**
  * The accept/reject lock an order is in: how many times one was taken (each attempt gets its
- * own Stripe idempotency key) and when the current one was taken (for the review deadline).
+ * own Stripe idempotency key), when the current one was taken (for the review deadline) and
+ * the status it was taken from (where an attempt that charged nothing goes back to).
  */
-export async function lockInfo(db: D1Like, orderId: string, status: "accepting" | "rejecting"): Promise<{ attempts: number; since: string | null }> {
+export async function lockInfo(
+  db: D1Like,
+  orderId: string,
+  status: "accepting" | "rejecting",
+): Promise<{ attempts: number; since: string | null; origin: OrderStatus | null }> {
   const row = await db
     .prepare(
-      `SELECT COUNT(*) AS n, MAX(created_at) AS since FROM order_events
+      `SELECT COUNT(*) AS n, MAX(created_at) AS since,
+              (SELECT e2.from_status FROM order_events e2
+                WHERE e2.order_id = ? AND e2.to_status = ? AND e2.from_status IS NOT NULL AND e2.from_status <> e2.to_status
+                ORDER BY e2.id DESC LIMIT 1) AS origin
+         FROM order_events
         WHERE order_id = ? AND to_status = ? AND from_status IS NOT NULL AND from_status <> to_status`,
     )
-    .bind(orderId, status)
-    .first<{ n: number; since: string | null }>();
-  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null };
+    .bind(orderId, status, orderId, status)
+    .first<{ n: number; since: string | null; origin: OrderStatus | null }>();
+  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null, origin: row?.origin ?? null };
+}
+
+/**
+ * Takes over an abandoned lock (recovery: cron or REINTENTAR). Succeeds only if the lock is
+ * exactly as it was read — same owner, same expiry — so two recoverers, or a recoverer and a
+ * late owner, can never both act on it.
+ */
+export async function takeOverLock(
+  db: D1Like,
+  order: Pick<OrderRow, "id" | "status" | "lock_token" | "lock_expires_at">,
+  token: string,
+  expiresAt: string,
+  now: string,
+): Promise<boolean> {
+  const res = await db
+    .prepare(
+      `UPDATE orders SET lock_token = ?, lock_expires_at = ?, updated_at = ?
+        WHERE id = ? AND status = ? AND lock_token IS ? AND lock_expires_at IS ?`,
+    )
+    .bind(token, expiresAt, now, order.id, order.status, order.lock_token, order.lock_expires_at)
+    .run();
+  return Boolean(res.meta.changes);
 }
 
 export type TransitionResult =

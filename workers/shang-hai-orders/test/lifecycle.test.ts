@@ -135,9 +135,10 @@ describe("authorise → restaurant decides → capture", () => {
   it("keeps the order in ACEPTANDO when Stripe does not answer, and the cron finishes it from Stripe's state", async () => {
     const w = world();
     const order = await placedOrder(w);
-    // The capture happens at Stripe but the answer is lost, and the retrieve also fails.
+    // The capture happens at Stripe but the answer is lost, and the re-read after it also fails
+    // (the read made BEFORE capturing — reconcile first — succeeds).
     w.stripe.failNext({ method: "POST", path: /\/capture$/, network: true, afterExecute: true });
-    w.stripe.failNext({ method: "GET", path: /^\/v1\/payment_intents\//, network: true });
+    w.stripe.failNext({ method: "GET", path: /^\/v1\/payment_intents\//, network: true, skip: 1 });
     const pi = orderRow(w.env, order.orderId)?.stripe_payment_intent_id as string;
     const res = await staffAction(w, await staff(w), order.orderId, "accept", { prepMinutes: 20 });
     expect(res.status).toBe(202);

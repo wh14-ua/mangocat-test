@@ -67,8 +67,11 @@ export function allowedActions(order: OrderRow, now: Date, staleMs = STALE_LOCK_
     case "needs_review":
       return [...(placed ? (["accept"] as const) : []), "reject", "retry"];
     case "accepting":
-    case "rejecting":
-      return now.getTime() - Date.parse(order.updated_at) > staleMs ? ["retry"] : [];
+    case "rejecting": {
+      // REINTENTAR only once the lock's owner can no longer be working (the server checks too).
+      const expired = order.lock_expires_at ? Date.parse(order.lock_expires_at) <= now.getTime() : now.getTime() - Date.parse(order.updated_at) > staleMs;
+      return expired ? ["retry"] : [];
+    }
     case "preparing":
       return ["ready", "reject"];
     case "ready":
@@ -256,13 +259,17 @@ export async function handleStaffAction(
     }
   }
   const actor: Actor = { label: identity.label, source: "staff" };
+  // What the phone showed when the button was pressed. If the order has moved on since (another
+  // phone accepted it a moment earlier), the action is refused instead of being applied to a
+  // different situation: RECHAZAR on a new order must never refund an order just accepted.
+  const expected = typeof payload.expectedStatus === "string" ? (payload.expectedStatus as OrderStatus) : undefined;
   let result: ActionResult;
   switch (action) {
     case "accept":
-      result = await acceptOrder(env, deps, id, payload.prepMinutes, actor);
+      result = await acceptOrder(env, deps, id, payload.prepMinutes, actor, expected);
       break;
     case "reject":
-      result = await rejectOrder(env, deps, id, payload.reason, actor);
+      result = await rejectOrder(env, deps, id, payload.reason, actor, expected);
       break;
     case "ready":
       result = await markReady(env, deps, id, actor);

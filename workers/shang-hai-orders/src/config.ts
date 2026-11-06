@@ -143,6 +143,15 @@ export function staleLockMs(env: Env): number {
   return Number.isFinite(n) && n >= 5 && n <= 600 ? Math.round(n * 1000) : 90_000;
 }
 
+/**
+ * How long an accept/reject lock belongs to the request that took it. Never shorter than the
+ * longest a request can spend on Stripe (four calls, each with its own timeout) plus margin:
+ * recovery must not take over a lock whose owner is still working.
+ */
+export function lockTtlMs(env: Env): number {
+  return Math.max(staleLockMs(env), 4 * stripeTimeoutMs(env) + 10_000);
+}
+
 /** A lock Stripe does not let us resolve goes to review after this long (LOCK_REVIEW_SECONDS, default 300). */
 export function lockReviewMs(env: Env): number {
   const n = Number(env.LOCK_REVIEW_SECONDS);

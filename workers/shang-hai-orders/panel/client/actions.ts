@@ -57,7 +57,9 @@ function successTitle(card: Card, action: StaffAction, reply: ActionReply): stri
 async function run(card: Card, action: StaffAction, body: Record<string, unknown>): Promise<Outcome> {
   state.pending.set(card.id, action);
   emit("pending");
-  const res = await api.action(card.id, action, body);
+  // Tell the server what this phone showed: if another phone changed the order meanwhile, the
+  // action is refused (409) instead of being applied to a situation nobody saw.
+  const res = await api.action(card.id, action, { ...body, expectedStatus: card.status });
   state.pending.delete(card.id);
   state.mutations += 1;
   const ref = orderRef(card);

@@ -1,15 +1,22 @@
-import { rejectOrder, resolveLock } from "./actions";
+import { recoverLock, rejectOrder } from "./actions";
 import { acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config";
 import { setState, updateOrderIf, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
 import { deliverDue, enqueueNotification } from "./notifications";
+import { telegramConfig } from "./config";
 import { syncOrderPayment } from "./sync";
 
 /** Reason shown to the customer when nobody accepted in time. */
 export const TIMEOUT_REASON = "El restaurante no ha podido confirmar el pedido a tiempo";
 
 const BATCH = 20;
+
+/** An incident still unattended after this long is alerted again (until a person acts). */
+export const REVIEW_REMINDER_MS = 60 * 60_000;
+
+/** After a staff decision attempt, the automatic decline waits at least this long. */
+export const DECISION_GRACE_MS = 10 * 60_000;
 
 async function rows(env: Env, sql: string, ...params: (string | number)[]): Promise<OrderRow[]> {
   return (await env.DB.prepare(sql).bind(...params).all<OrderRow>()).results;
@@ -23,7 +30,7 @@ async function rows(env: Env, sql: string, ...params: (string | number)[]): Prom
 export async function runScheduled(env: Env, deps: Deps): Promise<Record<string, number>> {
   const now = deps.now();
   const at = (msAgo: number) => new Date(now.getTime() - msAgo).toISOString();
-  const report: Record<string, number> = { reminders: 0, timeouts: 0, locks: 0, payments: 0, refunds: 0, sent: 0, failed: 0 };
+  const report: Record<string, number> = { reminders: 0, timeouts: 0, locks: 0, payments: 0, refunds: 0, alerts: 0, sent: 0, failed: 0 };
   const step = async (name: string, fn: () => Promise<void>) => {
     try {
       await fn();
@@ -32,15 +39,27 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
     }
   };
 
-  // 1. Locks left by requests that died half-way (accepting / rejecting).
+  // 1. Locks whose owner's time is up (the request died half-way). A lock still within its
+  //    expiry belongs to a request that may be talking to Stripe right now: never touched.
   await step("locks", async () => {
-    for (const order of await rows(env, `SELECT * FROM orders WHERE status IN ('accepting', 'rejecting') AND updated_at <= ? LIMIT ?`, at(staleLockMs(env)), BATCH)) {
-      await resolveLock(env, deps, order, { label: "sistema", source: "system" });
+    for (const order of await rows(
+      env,
+      `SELECT * FROM orders WHERE status IN ('accepting', 'rejecting')
+          AND ((lock_expires_at IS NULL AND updated_at <= ?) OR lock_expires_at <= ?)
+        ORDER BY COALESCE(lock_expires_at, updated_at) LIMIT ?`,
+      at(staleLockMs(env)),
+      now.toISOString(),
+      BATCH,
+    )) {
+      await recoverLock(env, deps, order, { label: "sistema", source: "system" });
       report.locks += 1;
     }
   });
 
   // 2. Nobody decided in time: decline and release the hold so the customer is not left waiting.
+  //    A staff decision (ACEPTAR / RECHAZAR) in the last DECISION_GRACE_MS also stops the clock:
+  //    an acceptance that could not be charged a moment ago must not be declined behind the
+  //    back of the person who is retrying it.
   //    The clock only starts once the restaurant is known to have been told about the order
   //    (a new-order alert was delivered, or a signed-in device showed it). An order nobody was
   //    able to see — Telegram down, blocked or not configured, panel closed — is never declined
@@ -57,12 +76,18 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
               COALESCE((SELECT MIN(n.sent_at) FROM notifications n
                          WHERE n.order_id = o.id AND n.kind = 'new_order' AND n.status = 'sent'), '9999')
             ) <= ?
+            AND NOT EXISTS (SELECT 1 FROM order_events e
+                             WHERE e.order_id = o.id AND e.source = 'staff'
+                               AND e.to_status IN ('accepting', 'rejecting') AND e.created_at > ?)
           LIMIT ?`,
         at(timeout * 60_000),
+        at(DECISION_GRACE_MS),
         BATCH,
       )) {
         const result = await rejectOrder(env, deps, order.id, TIMEOUT_REASON, { label: "sistema (sin respuesta a tiempo)", source: "system" });
-        if (result.ok) {
+        // Alert once the decline is done (its wording comes from the final payment status). If
+        // Stripe could not confirm, the lock's recovery finishes it or puts it in review — alerted then.
+        if (result.ok && !result.pending) {
           await enqueueNotification(env, order.id, "auto_cancelled", now.toISOString());
           report.timeouts += 1;
         }
@@ -121,7 +146,40 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
     }
   });
 
-  // 6. Deliver due notifications (new, retries and the reminders/timeouts above).
+  // 6. Alerts that must exist: a new order waiting for the restaurant whose alert rows were lost
+  //    (an enqueue that failed after the order changed), and incidents in review that were never
+  //    alerted for their latest entry, or have waited unattended for REVIEW_REMINDER_MS since.
+  const telegram = telegramConfig(env);
+  if (telegram) {
+    await step("alerts", async () => {
+      for (const order of await rows(
+        env,
+        `SELECT o.* FROM orders o WHERE o.status = 'awaiting_acceptance'
+            AND (SELECT COUNT(*) FROM notifications n WHERE n.order_id = o.id AND n.kind = 'new_order') < ?
+          ORDER BY o.created_at LIMIT ?`,
+        telegram.chatIds.length,
+        BATCH,
+      )) {
+        report.alerts += await enqueueNotification(env, order.id, "new_order", now.toISOString());
+      }
+      for (const order of await rows(
+        env,
+        `SELECT o.* FROM orders o WHERE o.status = 'needs_review'
+            AND NOT EXISTS (SELECT 1 FROM notifications n
+                             WHERE n.order_id = o.id AND n.kind = 'needs_review'
+                               AND n.updated_at >= COALESCE((SELECT MAX(e.created_at) FROM order_events e
+                                                              WHERE e.order_id = o.id AND e.to_status = 'needs_review'), '')
+                               AND (n.status <> 'sent' OR n.sent_at > ?))
+          ORDER BY o.updated_at LIMIT ?`,
+        at(REVIEW_REMINDER_MS),
+        BATCH,
+      )) {
+        report.alerts += await enqueueNotification(env, order.id, "needs_review", now.toISOString(), { rearm: true });
+      }
+    });
+  }
+
+  // 7. Deliver due notifications (new, retries and the reminders/timeouts above).
   await step("notifications", async () => {
     const res = await deliverDue(env, deps, { limit: 40, reminderMinutes: reminder, timeoutMinutes: timeout });
     report.sent = res.sent;

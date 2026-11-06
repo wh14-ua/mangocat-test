@@ -31,6 +31,10 @@ import { call, makeDeps, makeEnv, fakeNetwork, staffCookie, type TestEnv } from 
 const MIGRATIONS_DIR = new URL("../migrations/", import.meta.url).pathname;
 const OLD_0002 = readFileSync(new URL("./fixtures/0002_acceptance_flow.rev-9bffa95.sql", import.meta.url), "utf8");
 const INIT = readFileSync(new URL("../migrations/0001_init.sql", import.meta.url), "utf8");
+/** Every migration after 0002, applied normally (wrangler applies new files by name). */
+const LATER = Object.entries(readMigrationFiles(MIGRATIONS_DIR))
+  .filter(([name]) => name >= "0003")
+  .map(([, text]) => text);
 
 /** A database migrated with the historical revision of 0002 (what the demo laptop had). */
 function driftedDatabase(): DatabaseSync {
@@ -38,6 +42,7 @@ function driftedDatabase(): DatabaseSync {
   db.exec("PRAGMA foreign_keys = ON;");
   db.exec(INIT);
   db.exec(OLD_0002);
+  for (const text of LATER) db.exec(text);
   return db;
 }
 
@@ -47,7 +52,7 @@ describe("migrations are immutable once recorded", () => {
   });
 
   it("would have caught the in-place edit of 0002 that caused the demo failure", () => {
-    const lockedAtFirstCommit = { migrations: { "0001_init.sql": migrationHash(INIT), "0002_acceptance_flow.sql": migrationHash(OLD_0002) } };
+    const lockedAtFirstCommit = { migrations: { ...readLock().migrations, "0002_acceptance_flow.sql": migrationHash(OLD_0002) } };
     const problems = verifyLock(readMigrationFiles(MIGRATIONS_DIR), lockedAtFirstCommit);
     expect(problems).toHaveLength(1);
     expect(problems[0]).toMatchObject({ kind: "modified", name: "0002_acceptance_flow.sql" });
@@ -144,6 +149,7 @@ describe("the Worker on an outdated database", () => {
     const d1 = createTestD1({ migrations: 0 });
     d1.raw.exec(INIT);
     d1.raw.exec(OLD_0002);
+    for (const text of LATER) d1.raw.exec(text);
     d1.raw.exec(`INSERT INTO orders (id, number, token_hash, status, payment_status, storefront, fulfillment, catalog_id, catalog_version,
       subtotal_cents, total_cents, customer_name, customer_phone, customer_email, payments_mode, created_at, updated_at, authorized_at)
       VALUES ('SH-261106-STKPJ4', 1002, 'h', 'awaiting_acceptance', 'authorized', 'ink-house', 'pickup', 'shang-hai-orihuela', 'v1',

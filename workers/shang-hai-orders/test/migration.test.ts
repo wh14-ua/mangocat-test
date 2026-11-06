@@ -9,7 +9,7 @@ const ORDER = `INSERT INTO orders (id, token_hash, status, storefront, fulfillme
 
 describe("migration 0002 (acceptance flow)", () => {
   it("is applied after the initial schema", () => {
-    expect(MIGRATIONS).toEqual(["0001_init.sql", "0002_acceptance_flow.sql"]);
+    expect(MIGRATIONS).toEqual(["0001_init.sql", "0002_acceptance_flow.sql", "0003_lock_owner.sql"]);
   });
 
   it("keeps every existing order, line and event, mapping old statuses", () => {
@@ -56,5 +56,25 @@ describe("migration 0002 (acceptance flow)", () => {
     // New statuses are accepted, unknown ones still refused.
     raw.prepare("UPDATE orders SET status = 'rejected', payment_status = 'refunded' WHERE id = 'SH-261020-AAAAAA'").run();
     expect(() => raw.prepare("UPDATE orders SET status = 'paid' WHERE id = 'SH-261021-BBBBBB'").run()).toThrow();
+  });
+});
+
+describe("migration 0003 (lock owner)", () => {
+  it("adds the lock columns to a database in use, keeping every order — including one locked by the old code", () => {
+    const db = createTestD1({ migrations: 2 });
+    const raw = db.raw;
+    raw.exec(`INSERT INTO orders (id, number, token_hash, status, payment_status, storefront, fulfillment, catalog_id, catalog_version,
+      subtotal_cents, total_cents, customer_name, customer_phone, customer_email, payments_mode, created_at, updated_at)
+      VALUES ('SH-261106-STKPJ4', 1002, 'h', 'accepting', 'authorized', 'ink-house', 'pickup', 'shang-hai-orihuela', 'v1',
+      4645, 4645, 'Bea', '+34600000000', 'b@example.es', 'stripe-test', '2026-11-06T10:50:26.207Z', '2026-11-06T10:57:26.484Z')`);
+    raw.exec(readFileSync(new URL("../migrations/0003_lock_owner.sql", import.meta.url), "utf8"));
+    expect({ ...(raw.prepare("SELECT number, status, payment_status, total_cents, lock_token, lock_expires_at FROM orders").get() as object) }).toEqual({
+      number: 1002,
+      status: "accepting",
+      payment_status: "authorized",
+      total_cents: 4645,
+      lock_token: null, // a lock from before 0003: recovery treats it as expired once stale
+      lock_expires_at: null,
+    });
   });
 });

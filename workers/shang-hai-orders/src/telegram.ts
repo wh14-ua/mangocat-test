@@ -39,6 +39,7 @@ export async function sendTelegramMessage(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000), // a hanging Telegram must not hold the cron or a request
     });
   } catch {
     return { ok: false, retryable: true, retryAfter: null, error: "network" };

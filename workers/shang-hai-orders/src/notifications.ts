@@ -10,7 +10,9 @@ import { escapeHtml, sendTelegramMessage } from "./telegram";
  *
  * - The order is always stored first; a notification is only a pointer to it. The panel
  *   lists pending orders whether or not any alert got through.
- * - One row per (order, channel, recipient, kind): duplicates are impossible.
+ * - One row per (order, channel, recipient, kind): duplicates are impossible. An order that
+ *   enters EN REVISIÓN again re-arms its row (a new incident is a new alert), and the cron
+ *   recreates rows that were lost and reminds every hour while an incident is unattended.
  * - Delivery is attempted right after the order changes (waitUntil) and retried by the
  *   cron with backoff; every failure is recorded and shown in the panel.
  * - Messages contain the order number, item count, total and payment state only — never
@@ -41,25 +43,44 @@ export const RETRY_DELAYS_SECONDS = [15, 60, 120, 300, 600, 1800];
 /** A "sending" row older than this is considered abandoned (the Worker was interrupted). */
 const SENDING_STALE_MS = 2 * 60_000;
 
-export async function enqueueNotification(env: Env, orderId: string, kind: NotificationKind, now: string): Promise<number> {
+/**
+ * Queues an alert for every authorised chat. `rearm`: a row already delivered (or given up on)
+ * is queued again — used for a NEW incident of the same kind (an order back in EN REVISIÓN) and
+ * for reminders; a row still pending or being sent is left alone (no duplicates).
+ */
+export async function enqueueNotification(
+  env: Env,
+  orderId: string,
+  kind: NotificationKind,
+  now: string,
+  options: { rearm?: boolean } = {},
+): Promise<number> {
   const telegram = telegramConfig(env);
   if (!telegram) return 0;
-  const statements = telegram.chatIds.map((chatId) =>
-    env.DB.prepare(
-      `INSERT OR IGNORE INTO notifications (order_id, channel, recipient, kind, status, attempts, next_attempt_at, created_at, updated_at)
-       VALUES (?, 'telegram', ?, ?, 'pending', 0, ?, ?, ?)`,
-    ).bind(orderId, chatId, kind, now, now, now),
-  );
+  const sql = options.rearm
+    ? `INSERT INTO notifications (order_id, channel, recipient, kind, status, attempts, next_attempt_at, created_at, updated_at)
+       VALUES (?, 'telegram', ?, ?, 'pending', 0, ?, ?, ?)
+       ON CONFLICT (order_id, channel, recipient, kind) DO UPDATE SET
+         status = 'pending', attempts = 0, next_attempt_at = excluded.next_attempt_at, last_error = NULL,
+         updated_at = excluded.updated_at
+       WHERE notifications.status IN ('sent', 'failed', 'skipped')`
+    : `INSERT OR IGNORE INTO notifications (order_id, channel, recipient, kind, status, attempts, next_attempt_at, created_at, updated_at)
+       VALUES (?, 'telegram', ?, ?, 'pending', 0, ?, ?, ?)`;
+  const statements = telegram.chatIds.map((chatId) => env.DB.prepare(sql).bind(orderId, chatId, kind, now, now, now));
   const results = await env.DB.batch(statements);
   return results.reduce((n, r) => n + (r.meta.changes ?? 0), 0);
 }
 
-/** Enqueues and tries to deliver right away, without delaying the response. */
+/**
+ * Enqueues and tries to deliver right away, without delaying the response. If this fails (the
+ * Worker is interrupted, D1 errors), nothing is lost: the cron recreates missing alerts for
+ * every order waiting for the restaurant or in review (see runScheduled, step "alerts").
+ */
 export function notifySoon(env: Env, deps: Deps, orderId: string, kind: NotificationKind) {
   const now = deps.now().toISOString();
   deps.waitUntil(
     (async () => {
-      const added = await enqueueNotification(env, orderId, kind, now);
+      const added = await enqueueNotification(env, orderId, kind, now, { rearm: kind === "needs_review" });
       if (added) await deliverDue(env, deps, { orderId });
     })().catch((error) => log("notify.error", { orderId, message: error instanceof Error ? error.message : "unknown" })),
   );
@@ -106,13 +127,29 @@ export function composeMessage(
     case "auto_cancelled":
       return [
         `${test}⚠️ <b>Pedido ${escapeHtml(number)} cancelado automáticamente</b>`,
-        `Nadie lo aceptó en ${options.timeoutMinutes ?? "el tiempo previsto"} min. Se ha anulado el pago: no se ha cobrado nada.`,
+        `Nadie lo aceptó en ${options.timeoutMinutes ?? "el tiempo previsto"} min. ${autoCancelPaymentText(order.payment_status)}`,
       ].join("\n");
     case "needs_review":
       return [
         `${test}⚠️ <b>Pedido ${escapeHtml(number)} necesita revisión</b>`,
         escapeHtml((order.review_reason ?? "Revisa el pedido en el panel.").slice(0, 300)),
       ].join("\n");
+  }
+}
+
+/** What happened to the money, from the order's payment status when the alert goes out. */
+function autoCancelPaymentText(payment: OrderRow["payment_status"]): string {
+  switch (payment) {
+    case "canceled":
+    case "unpaid":
+    case "failed":
+      return "Se ha anulado el pago: no se ha cobrado nada.";
+    case "refunded":
+      return "Se ha devuelto el importe cobrado.";
+    case "refund_pending":
+      return "Se ha pedido la devolución del importe cobrado; Stripe aún no la ha confirmado.";
+    default:
+      return "Revisa el estado del pago en el panel.";
   }
 }
 
@@ -157,14 +194,26 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
   let sent = 0;
   let failed = 0;
   for (const row of due.results) {
-    // Claim the row: whoever flips it to "sending" first delivers it; the others skip.
+    // Claim the row: whoever flips it to "sending" first delivers it; the others skip. A row that
+    // another run has meanwhile rescheduled or given up on (failed without next attempt) is not due.
     const claim = await env.DB.prepare(
       `UPDATE notifications SET status = 'sending', updated_at = ?
-        WHERE id = ? AND (status IN ('pending', 'failed') OR (status = 'sending' AND updated_at <= ?))`,
+        WHERE id = ? AND ((status IN ('pending', 'failed') AND next_attempt_at IS NOT NULL AND next_attempt_at <= ?)
+                          OR (status = 'sending' AND updated_at <= ?))`,
     )
-      .bind(nowIso, row.id, staleSending)
+      .bind(nowIso, row.id, nowIso, staleSending)
       .run();
     if (!claim.meta.changes) continue;
+
+    // A chat removed from TELEGRAM_CHAT_IDS gets nothing more, not even queued retries.
+    if (!telegram.chatIds.includes(row.recipient)) {
+      await env.DB.prepare(
+        `UPDATE notifications SET status = 'skipped', next_attempt_at = NULL, last_error = 'recipient no longer authorised', updated_at = ? WHERE id = ?`,
+      )
+        .bind(nowIso, row.id)
+        .run();
+      continue;
+    }
 
     const order = await getOrder(env.DB, row.order_id);
     if (!order || !stillRelevant(row.kind, order)) {

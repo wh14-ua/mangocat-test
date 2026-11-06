@@ -236,6 +236,10 @@ export function createFakeStripe(options = {}) {
     const index = state.failures.findIndex((f) => f.method === method && f.path.test(path));
     if (index === -1) return null;
     const failure = state.failures[index];
+    if (failure.skip > 0) {
+      failure.skip -= 1; // let this matching call through; fail a later one
+      return null;
+    }
     if (--failure.times <= 0) state.failures.splice(index, 1);
     return failure;
   }
@@ -385,7 +389,7 @@ export function createFakeStripe(options = {}) {
     event: persisted(event),
     save,
     persistPath,
-    /** Next matching call fails: { method, path: RegExp, status?, code?, network?, afterExecute?, times? } */
+    /** Next matching call fails: { method, path: RegExp, status?, code?, network?, afterExecute?, times?, skip? } (skip: let N matching calls through first) */
     failNext(failure) {
       state.failures.push({ times: 1, ...failure });
     },
