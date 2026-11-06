@@ -51,7 +51,7 @@ afterAll(async () => {
 }, 60_000);
 
 /** Cron runs until `check` holds (the Worker's own scheduled handler, like Cloudflare's). */
-async function cronUntil<T>(check: () => Promise<T | null | undefined | false>, what: string, timeoutMs = 30_000) {
+async function cronUntil<T>(check: () => Promise<T | null | undefined | false>, what: string, timeoutMs = 60_000) {
   return eventually(async () => {
     await stack.runCron();
     return check();
@@ -168,13 +168,14 @@ describe("E — a fresh start", () => {
 describe("F/G — the Worker dies in the middle of a payment operation", () => {
   it("F1: killed after Stripe captured (answer never came back): the cron finishes the acceptance, one charge", async () => {
     const order = await placedOrder(stack);
-    await control(stack, "stripe/delay", { method: "POST", path: "/capture$", delayMs: 2500, after: true });
+    await control(stack, "stripe/delay", { method: "POST", path: "/capture$", delayMs: 6000, after: true });
     const inFlight = accept(stack, cookie, order.orderId, 20).catch(() => null);
-    await eventually(async () => orderRow(stack, order.orderId).status === "accepting", "the accept lock");
-    await sleep(500);
+    // Followed over HTTP (fast): the capture is at Stripe, its answer 6 s away.
+    await eventually(async () => (await customerView(stack, order)).status === "accepting", "the accept lock");
+    await sleep(1500);
     await stack.stopWorker("SIGKILL"); // crash, not a graceful stop
     await inFlight;
-    await sleep(2500); // Stripe finishes the capture meanwhile
+    await sleep(5000); // Stripe has finished the capture meanwhile
     await stack.startWorker();
     const row = orderRow(stack, order.orderId);
     expect(row.status).toBe("accepting"); // nothing decided blindly while the Worker was down
@@ -184,32 +185,34 @@ describe("F/G — the Worker dies in the middle of a payment operation", () => {
     expect(await capturesExecuted(String(done.stripe_payment_intent_id))).toBe(1);
   });
 
-  it("F2: killed before the capture reached Stripe: the order goes back to pending, nothing charged, and can be accepted", async () => {
+  it("F2: killed before the capture reached Stripe: the order goes to EN REVISIÓN (visible), nothing charged, and can be accepted", async () => {
     const order = await placedOrder(stack);
     await control(stack, "stripe/delay", { method: "POST", path: "/capture$", delayMs: 60_000, after: false });
     const inFlight = accept(stack, cookie, order.orderId, 20).catch(() => null);
-    await eventually(async () => orderRow(stack, order.orderId).status === "accepting", "the accept lock");
+    await eventually(async () => (await customerView(stack, order)).status === "accepting", "the accept lock");
     await stack.stopWorker("SIGKILL");
     await inFlight;
     await control(stack, "stripe/clear-failures");
     await stack.restartCloud(); // drops the held request: it never reached "Stripe"
     await stack.startWorker();
-    await cronUntil(async () => orderRow(stack, order.orderId).status === "awaiting_acceptance", "the lock to be released");
+    await cronUntil(async () => orderRow(stack, order.orderId).status === "needs_review", "the abandoned lock to be recovered");
     const pi = String(orderRow(stack, order.orderId).stripe_payment_intent_id);
     expect(await capturesExecuted(pi)).toBe(0);
-    expect(orderRow(stack, order.orderId).payment_status).toBe("authorized");
+    expect(orderRow(stack, order.orderId)).toMatchObject({ payment_status: "authorized", lock_token: null });
+    expect(String(orderRow(stack, order.orderId).review_reason)).toMatch(/no llegó a cobrarse/);
     expect((await accept(stack, cookie, order.orderId, 20)).status).toBe(200);
     expect(await capturesExecuted(pi)).toBe(1);
   });
 
   it("G: killed during a rejection: the cron finishes it from Stripe; the hold is released, nothing charged", async () => {
     const order = await placedOrder(stack);
-    await control(stack, "stripe/delay", { method: "POST", path: "/cancel$", delayMs: 2500, after: true });
+    await control(stack, "stripe/delay", { method: "POST", path: "/cancel$", delayMs: 6000, after: true });
     const inFlight = reject(stack, cookie, order.orderId, "Sin existencias").catch(() => null);
-    await eventually(async () => orderRow(stack, order.orderId).status === "rejecting", "the reject lock");
+    await eventually(async () => (await customerView(stack, order)).status === "rejecting", "the reject lock");
+    await sleep(1500);
     await stack.stopWorker("SIGKILL");
     await inFlight;
-    await sleep(2500);
+    await sleep(5000);
     await stack.startWorker();
     await cronUntil(async () => orderRow(stack, order.orderId).status === "rejected", "the cron to finish the rejection");
     const row = orderRow(stack, order.orderId);

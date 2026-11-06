@@ -12,6 +12,22 @@ import { createStack } from "../../../scripts/local-stack/harness.mjs";
 
 export type Stack = ReturnType<typeof createStack>;
 
+/**
+ * fetch() that retries once when Node's HTTP client reused a keep-alive connection the local
+ * dev server had already closed (the request never left: "other side closed" with no answer).
+ * Browsers do the same transparently. Safe for staff actions too: they are conditional on the
+ * order's state on the server, so a duplicate can only get 409.
+ */
+export async function http(url: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    const cause = (error as { cause?: { code?: string } }).cause;
+    if (cause?.code !== "UND_ERR_SOCKET") throw error;
+    return fetch(url, init);
+  }
+}
+
 export function tempStateDir(name: string): string {
   return mkdtempSync(join(tmpdir(), `shanghai-${name}-`));
 }
@@ -26,9 +42,10 @@ export function suiteStack(name: string, base: number, workerVars: Record<string
     workerVars: {
       ACCEPTANCE_REMINDER_MINUTES: "0",
       ACCEPTANCE_TIMEOUT_MINUTES: "0",
+      // Lock TTL = max(stale, 4 × Stripe timeout + 10 s) = 18 s: recovery is quick to observe.
       LOCK_STALE_SECONDS: "5",
       LOCK_REVIEW_SECONDS: "20",
-      STRIPE_TIMEOUT_MS: "3000",
+      STRIPE_TIMEOUT_MS: "2000",
       ...workerVars,
     },
   });
@@ -61,7 +78,8 @@ export const LINES = [
 ];
 export const LINES_TOTAL = 2 * 1945 + 765;
 
-export async function checkout(stack: Stack, overrides: Record<string, unknown> = {}): Promise<Placed> {
+/** `ip`: the customer's address as Cloudflare reports it (rate limits are per address). */
+export async function checkout(stack: Stack, overrides: Record<string, unknown> = {}, ip?: string): Promise<Placed> {
   const body = {
     catalogId: "shang-hai-orihuela",
     storefront: "ink-house",
@@ -72,9 +90,9 @@ export async function checkout(stack: Stack, overrides: Record<string, unknown> 
     expectedTotalCents: LINES_TOTAL,
     ...overrides,
   };
-  const res = await fetch(`${stack.urls.worker}/api/checkout`, {
+  const res = await http(`${stack.urls.worker}/api/checkout`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Origin: stack.urls.site },
+    headers: { "Content-Type": "application/json", Origin: stack.urls.site, ...(ip ? { "CF-Connecting-IP": ip } : {}) },
     body: JSON.stringify(body),
   });
   if (res.status !== 201) throw new Error(`checkout failed: ${res.status} ${await res.text()}`);
@@ -84,20 +102,20 @@ export async function checkout(stack: Stack, overrides: Record<string, unknown> 
 
 /** The customer presses "authorise" (or "decline") on the hosted payment page. */
 export async function payOnPage(stack: Stack, sessionId: string, outcome: "authorize" | "decline" = "authorize") {
-  const res = await fetch(`${stack.urls.cloud}/pay/${sessionId}/${outcome}`, { method: "POST", redirect: "manual" });
+  const res = await http(`${stack.urls.cloud}/pay/${sessionId}/${outcome}`, { method: "POST", redirect: "manual" });
   return res.status;
 }
 
-export async function customerView(stack: Stack, order: Pick<Placed, "orderId" | "orderToken">) {
-  const res = await fetch(`${stack.urls.worker}/api/orders/${order.orderId}`, {
-    headers: { Authorization: `Bearer ${order.orderToken}`, Origin: stack.urls.site },
+export async function customerView(stack: Stack, order: Pick<Placed, "orderId" | "orderToken">, ip?: string) {
+  const res = await http(`${stack.urls.worker}/api/orders/${order.orderId}`, {
+    headers: { Authorization: `Bearer ${order.orderToken}`, Origin: stack.urls.site, ...(ip ? { "CF-Connecting-IP": ip } : {}) },
   });
   if (!res.ok) throw new Error(`customer view ${res.status}`);
   return ((await res.json()) as { order: Record<string, unknown> }).order;
 }
 
 export async function cloudState(stack: Stack) {
-  return (await (await fetch(`${stack.urls.cloud}/__control/state`)).json()) as {
+  return (await (await http(`${stack.urls.cloud}/__control/state`)).json()) as {
     intents: { id: string; status: string; order: string; amount: number; amountReceived: number; amountCapturable: number }[];
     charges: { id: string; pi: string; captured: boolean; amountCaptured: number; amountRefunded: number }[];
     refunds: { id: string; status: string; amount: number; pi: string }[];
@@ -110,12 +128,16 @@ export async function cloudState(stack: Stack) {
 }
 
 export async function control(stack: Stack, path: string, body: unknown = {}) {
-  const res = await fetch(`${stack.urls.cloud}/__control/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const res = await http(`${stack.urls.cloud}/__control/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`control ${path}: ${res.status}`);
   return res.json();
 }
 
-/** Rows straight from the local D1 (wrangler d1 execute, same files the Worker uses). */
+/**
+ * Rows straight from the local D1 (wrangler d1 execute, same files the Worker uses). It is a
+ * second process on the same SQLite file: use it when the Worker is not in the middle of a
+ * burst of writes (workerd answers SQLITE_BUSY otherwise — a local-only effect).
+ */
 export function d1(stack: Stack, sql: string): Record<string, unknown>[] {
   return queryD1(sql, { persistTo: stack.stateDir }) as Record<string, unknown>[];
 }
@@ -132,14 +154,14 @@ export function orderRow(stack: Stack, id: string) {
 export async function staffSignIn(stack: Stack, label = "Móvil de cocina"): Promise<string> {
   const headers = { "Content-Type": "application/json", Origin: stack.urls.worker };
   const before = (await cloudState(stack)).telegram.length;
-  const asked = await fetch(`${stack.urls.worker}/api/admin/auth/code`, { method: "POST", headers, body: "{}" });
+  const asked = await http(`${stack.urls.worker}/api/admin/auth/code`, { method: "POST", headers, body: "{}" });
   if (asked.status !== 200 && asked.status !== 202) throw new Error(`code request ${asked.status} ${await asked.text()}`);
   const code = await eventually(async () => {
     const msgs = (await cloudState(stack)).telegram.slice(before);
     const m = msgs.map((x) => /\b(\d{3})\s?(\d{3})\b/.exec(x.text)).find(Boolean);
     return m ? `${m[1]}${m[2]}` : null;
   }, "sign-in code on the staff phone");
-  const verified = await fetch(`${stack.urls.worker}/api/admin/auth/verify`, { method: "POST", headers, body: JSON.stringify({ code, label }) });
+  const verified = await http(`${stack.urls.worker}/api/admin/auth/verify`, { method: "POST", headers, body: JSON.stringify({ code, label }) });
   if (verified.status !== 200) throw new Error(`verify ${verified.status} ${await verified.text()}`);
   const cookie = /(__Host-shp_session=[^;]+)/.exec(verified.headers.get("set-cookie") ?? "")?.[1];
   if (!cookie) throw new Error("no session cookie");
@@ -147,7 +169,7 @@ export async function staffSignIn(stack: Stack, label = "Móvil de cocina"): Pro
 }
 
 export async function staff(stack: Stack, cookie: string, path: string, body?: unknown) {
-  const res = await fetch(`${stack.urls.worker}${path}`, {
+  const res = await http(`${stack.urls.worker}${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: { Cookie: cookie, Origin: stack.urls.worker, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
     body: body === undefined ? undefined : JSON.stringify(body),
