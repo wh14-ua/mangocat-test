@@ -29,7 +29,7 @@
     "qa:quick": "node scripts/qa/full.mjs --quick",
     "qa:full": "node scripts/qa/full.mjs",
     "qa:predeploy": "node scripts/qa/full.mjs && node scripts/db/schema.mjs check --remote",
-    "test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=text-summary --coverage.reporter=html --coverage.reportsDirectory=test-results/coverage --coverage.include='workers/shang-hai-orders/src/**' --coverage.include='src/lib/commerce/**' --coverage.exclude='**/schema.generated.ts'"
+    "test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=text-summary --coverage.reporter=json-summary --coverage.reporter=html --coverage.reportsDirectory=test-results/coverage --coverage.include='workers/shang-hai-orders/src/**' --coverage.include='src/lib/commerce/**' --coverage.exclude='**/schema.generated.ts'"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
