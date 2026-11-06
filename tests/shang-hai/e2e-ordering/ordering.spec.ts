@@ -4,6 +4,7 @@ import {
   test,
   type APIRequestContext,
   type Browser,
+  type BrowserContext,
   type Locator,
   type Page,
 } from "@playwright/test";
@@ -51,11 +52,21 @@ function staffSession(): Promise<{ api: APIRequestContext; cookie: string }> {
   return cachedStaff;
 }
 
+/** Asks for a sign-in code; codes are rate limited (one per 30 s), so wait and retry once. */
+async function requestCode(api: APIRequestContext) {
+  let res = await api.post("/api/admin/auth/code", { data: {} });
+  if (res.status() === 429) {
+    await new Promise((r) => setTimeout(r, 31_000));
+    res = await api.post("/api/admin/auth/code", { data: {} });
+  }
+  expect(res.status()).toBe(202);
+  const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
+  return /\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "";
+}
+
 async function signIn(): Promise<{ api: APIRequestContext; cookie: string }> {
   const api = await playwrightRequest.newContext({ baseURL: WORKER, extraHTTPHeaders: { Origin: WORKER } });
-  expect((await api.post("/api/admin/auth/code", { data: {} })).status()).toBe(202);
-  const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
-  const code = /\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "";
+  const code = await requestCode(api);
   const verified = await api.post("/api/admin/auth/verify", { data: { code, label: "Móvil E2E" } });
   expect(verified.status()).toBe(200);
   const cookie = (verified.headers()["set-cookie"] ?? "").split(";")[0];
@@ -107,33 +118,46 @@ async function authorise(page: Page): Promise<string> {
 // The restaurant's phone: the SHANG HAI — PEDIDOS panel
 // ---------------------------------------------------------------------------
 
-let panelCookie: { name: string; value: string } | null = null;
+/** The restaurant's phone: one browser context kept for the whole run, signed in through the UI. */
+let staffContext: BrowserContext | null = null;
 
 async function staffPhone(browser: Browser): Promise<Page> {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  if (panelCookie) await context.addCookies([{ ...panelCookie, url: WORKER }]);
-  const phone = await context.newPage();
+  if (!staffContext) {
+    staffContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const phone = await staffContext.newPage();
+    await phone.goto(`${WORKER}/admin`);
+    await phone.getByRole("button", { name: /Enviar código/i }).click();
+    const codeShown = await phone
+      .locator("#code")
+      .waitFor({ state: "visible", timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!codeShown) {
+      await phone.waitForTimeout(31_000); // a code was sent less than 30 s ago
+      await phone.getByRole("button", { name: /Enviar código/i }).click();
+    }
+    await expect(phone.locator("#code")).toBeVisible();
+    const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
+    await phone.locator("#code").fill(/\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "");
+    await phone.locator("#device").fill("Móvil de cocina");
+    await phone.getByRole("button", { name: "Entrar", exact: true }).click();
+    await expect(phone.getByRole("tab", { name: /Nuevos/ })).toBeVisible();
+    // The API helpers reuse this phone's session instead of asking for another code.
+    const cookie = (await staffContext.cookies(WORKER)).find((c) => c.name === "__Host-shp_session");
+    expect(cookie?.httpOnly).toBe(true);
+    const api = await playwrightRequest.newContext({ baseURL: WORKER, extraHTTPHeaders: { Origin: WORKER } });
+    cachedStaff = Promise.resolve({ api, cookie: `${cookie!.name}=${cookie!.value}` });
+    return phone;
+  }
+  const phone = await staffContext.newPage();
   await phone.goto(`${WORKER}/admin`);
   return phone;
 }
 
 test("panel: the staff phone signs in with the code sent by Telegram", async ({ browser }) => {
   const phone = await staffPhone(browser);
-  await phone.getByRole("button", { name: /Enviar código/i }).click();
-  await expect(phone.locator("#code")).toBeVisible();
-  const message = (await cloudState()).telegram.filter((m) => m.text.includes("Código")).at(-1);
-  const code = /\b(\d{6})\b/.exec(message?.text ?? "")?.[1] ?? "";
-  await phone.locator("#code").fill(code);
-  await phone.locator("#device").fill("Móvil de cocina");
-  await phone.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(phone.getByRole("tab", { name: /Nuevos/ })).toBeVisible();
-  const cookie = (await phone.context().cookies(WORKER)).find((c) => c.name === "__Host-shp_session");
-  expect(cookie?.httpOnly).toBe(true);
-  panelCookie = { name: cookie!.name, value: cookie!.value };
-  // The API helpers below reuse this session instead of asking for another code.
-  const api = await playwrightRequest.newContext({ baseURL: WORKER, extraHTTPHeaders: { Origin: WORKER } });
-  cachedStaff = Promise.resolve({ api, cookie: `${cookie!.name}=${cookie!.value}` });
-  await phone.context().close();
+  await phone.close();
 });
 
 test("panel: a new order arrives, ACEPTAR 20 min, LISTO, ENTREGADO — the customer's phone follows", async ({ page, browser }) => {
@@ -153,14 +177,14 @@ test("panel: a new order arrives, ACEPTAR 20 min, LISTO, ENTREGADO — the custo
   await expect(status).toHaveAttribute("data-status", "preparing", { timeout: 20_000 });
   await expect(status).toHaveAttribute("data-payment-status", "captured");
 
-  await phone.getByRole("tab", { name: /En preparación/ }).click();
+  await phone.locator("#tab-preparing").click();
   await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como listo/i }).click();
   await expect(status).toHaveAttribute("data-status", "ready", { timeout: 30_000 });
 
-  await phone.getByRole("tab", { name: /Listos/ }).click();
+  await phone.locator("#tab-ready").click();
   await phone.locator(`article[data-id="${orderId}"]`).first().getByRole("button", { name: /Marcar como entregado/i }).click();
   await expect(status).toHaveAttribute("data-status", "completed", { timeout: 40_000 });
-  await phone.context().close();
+  await phone.close();
 });
 
 test("panel: RECHAZAR with a reason — the customer is told nothing was charged", async ({ page, browser }) => {
@@ -180,7 +204,7 @@ test("panel: RECHAZAR with a reason — the customer is told nothing was charged
   await expect(status).toHaveAttribute("data-payment-status", "canceled");
   await expect(page.getByText("Nos hemos quedado sin gyozas").first()).toBeVisible();
   await expect(page.getByText(/no se te ha cobrado nada/i).first()).toBeVisible();
-  await phone.context().close();
+  await phone.close();
 });
 
 for (const storefront of ["bento-club", "ink-house", "wok-after-dark"] as const) {
