@@ -135,6 +135,25 @@ export const NOTIFICATION_STATUS_TEXT: Record<string, string> = {
   skipped: "Omitido",
 };
 
+/** Stripe's own words, translated for staff (the raw value is shown next to it). */
+export const STRIPE_STATUS_TEXT: Record<string, string> = {
+  requires_payment_method: "Sin método de pago",
+  requires_confirmation: "Pendiente de confirmar",
+  requires_action: "Esperando al cliente",
+  processing: "Procesando",
+  requires_capture: "Autorizado, sin cobrar",
+  canceled: "Anulado",
+  succeeded: "Cobrado",
+};
+
+export const REFUND_STATUS_TEXT: Record<string, string> = {
+  pending: "Pendiente",
+  requires_action: "Requiere acción",
+  succeeded: "Devuelto",
+  failed: "Fallida",
+  canceled: "Cancelada",
+};
+
 export const MODE_TEXT: Record<PaymentsMode, string> = {
   "stripe-test": "PRUEBA",
   "stripe-live": "REAL",

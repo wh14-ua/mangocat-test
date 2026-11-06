@@ -806,6 +806,10 @@ div.tk__title {
   font-weight: 700;
 }
 
+.tk__when.is-late {
+  color: var(--stop-text);
+}
+
 .tk__amount {
   flex: none;
   font-size: 21px;
@@ -947,18 +951,9 @@ div.tk__title {
   background: var(--stop-solid);
 }
 
-.timer__left {
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.timer__left.is-late {
-  color: var(--stop-text);
-}
-
 .waitline {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 16px;
   font-weight: 700;

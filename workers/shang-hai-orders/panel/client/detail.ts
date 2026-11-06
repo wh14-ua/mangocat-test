@@ -11,7 +11,9 @@ import {
   NOTIFICATION_STATUS_TEXT,
   ORDER_ID,
   orderRef,
+  REFUND_STATUS_TEXT,
   SOURCE_TEXT,
+  STRIPE_STATUS_TEXT,
   stamp,
   statusText,
 } from "./format";
@@ -49,6 +51,11 @@ function row(label: string, value: Node | string | null): HTMLElement | null {
   return h("div", "facts__row", h("dt", { text: label }), h("dd", null, value));
 }
 
+function stripeWords(table: Record<string, string>, raw: string): HTMLElement {
+  const words = table[raw];
+  return words ? h("span", null, words, " ", h("span", { class: "mono muted", text: `(${raw})` })) : h("span", { class: "mono", text: raw });
+}
+
 function paymentSection(order: OrderDetail): HTMLElement {
   const now = serverNow();
   const p = order.payment;
@@ -60,8 +67,8 @@ function paymentSection(order: OrderDetail): HTMLElement {
       "facts facts--wide",
       row("Estado", payChip(order)),
       row("Modo", p.mode === "stripe-test" ? `${MODE_TEXT["stripe-test"]} (no se cobra dinero real)` : p.mode === "stripe-live" ? MODE_TEXT["stripe-live"] : p.mode),
-      row("Estado en Stripe", p.stripeStatus),
-      row("Devolución", p.refundStatus),
+      row("Estado en Stripe", p.stripeStatus ? stripeWords(STRIPE_STATUS_TEXT, p.stripeStatus) : null),
+      row("Devolución", p.refundStatus ? stripeWords(REFUND_STATUS_TEXT, p.refundStatus) : null),
       row("Autorizado", order.authorizedAt ? stamp(order.authorizedAt, now) : null),
       row("Cobrar antes de", order.paymentStatus === "authorized" && order.captureBefore ? stamp(order.captureBefore, now) : null),
       row("Referencia Stripe", p.stripePaymentIntentId ? h("span", { class: "mono", text: p.stripePaymentIntentId }) : null),

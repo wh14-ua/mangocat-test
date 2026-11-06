@@ -74,15 +74,12 @@ function stateLabel(card: Card, kind: Kind): string {
   }
 }
 
-/** Label + time shown on the right of the ticket head. */
-function headTime(card: Card, kind: Kind): { label: string; time: string; sub: HTMLElement | null } {
+/** Label + time shown on the right of the ticket head. In the kitchen: the live countdown. */
+function headTime(card: Card, kind: Kind): { label: string; time: string; sub: HTMLElement | null; due?: string } {
   switch (kind) {
     case "prep":
-      return {
-        label: "Listo hacia",
-        time: clock(card.readyBy),
-        sub: card.prepMinutes ? h("span", { class: "tk__sub", text: `(${minutesText(card.prepMinutes)})` }) : null,
-      };
+      if (card.readyBy) return { label: "Faltan", time: "", sub: null, due: card.readyBy };
+      return { label: "Aceptado a las", time: clock(card.acceptedAt), sub: null };
     case "ready":
       return { label: "Listo a las", time: clock(card.readyAt), sub: null };
     case "done":
@@ -109,19 +106,29 @@ function titleBlock(card: Card, kind: Kind, mode: TicketMode, compact: boolean):
 
 function head(card: Card, kind: Kind, mode: TicketMode): HTMLElement {
   const when = headTime(card, kind);
-  return h(
-    "header",
-    "tk__head",
-    titleBlock(card, kind, mode, false),
-    h(
-      "p",
-      "tk__when",
-      h("span", { class: "tk__when-label", text: when.label }),
-      h("span", { class: "tk__time", text: when.time }),
-      when.sub,
-    ),
-    mode === "board" ? h("span", "tk__chev", icon("chevron")) : null,
+  const box = h(
+    "p",
+    { class: "tk__when", attrs: when.due ? { "data-due-head": when.due } : undefined },
+    h("span", { class: "tk__when-label", text: when.label }),
+    h("span", { class: "tk__time", text: when.time }),
+    when.sub,
   );
+  if (when.due) paintCountdown(box, Date.now() + state.offset);
+  return h("header", "tk__head", titleBlock(card, kind, mode, false), box, mode === "board" ? h("span", "tk__chev", icon("chevron")) : null);
+}
+
+/** "Faltan 8 min" / "Retrasado 6 min" in the head of a ticket in the kitchen. */
+function paintCountdown(box: HTMLElement, now: number): void {
+  const due = Date.parse(box.dataset.dueHead ?? "");
+  if (!Number.isFinite(due)) return;
+  const diff = due - now;
+  const late = diff < 0;
+  const label = late ? "Retrasado" : "Faltan";
+  const value = late ? minutesText(Math.max(1, Math.floor(-diff / 60_000))) : diff < 60_000 ? "< 1 min" : minutesText(Math.ceil(diff / 60_000));
+  const [labelEl, valueEl] = [box.querySelector(".tk__when-label"), box.querySelector(".tk__time")];
+  if (labelEl && labelEl.textContent !== label) labelEl.textContent = label;
+  if (valueEl && valueEl.textContent !== value) valueEl.textContent = value;
+  box.classList.toggle("is-late", late);
 }
 
 /** Review reason, Stripe in progress, kitchen timer, waiting time or rejection reason. */
@@ -174,7 +181,6 @@ function statusNote(card: Card, kind: Kind, mode: TicketMode): HTMLElement | nul
           "aria-label": "Tiempo de preparación transcurrido",
         },
       });
-      const countdown = h("span", { class: "timer__left", attrs: { "data-due": card.readyBy } });
       const block = h(
         "div",
         "timer",
@@ -185,7 +191,6 @@ function statusNote(card: Card, kind: Kind, mode: TicketMode): HTMLElement | nul
           card.prepMinutes ? h("span", { class: "timer__span", text: ` (${minutesText(card.prepMinutes)})` }) : null,
         ),
         progress,
-        countdown,
       );
       tickTimes(block, now);
       return block;
@@ -195,8 +200,12 @@ function statusNote(card: Card, kind: Kind, mode: TicketMode): HTMLElement | nul
         "p",
         "waitline",
         icon("clock"),
-        h("span", { text: "Esperando al cliente desde " }),
-        h("span", { attrs: { "data-ago": card.readyAt ?? card.updatedAt }, text: ago(card.readyAt ?? card.updatedAt, now) }),
+        h(
+          "span",
+          null,
+          "Esperando al cliente desde ",
+          h("span", { attrs: { "data-ago": card.readyAt ?? card.updatedAt }, text: ago(card.readyAt ?? card.updatedAt, now) }),
+        ),
       );
     case "rejected":
       return card.rejectionReason
@@ -364,7 +373,7 @@ function compactTicket(card: Card, kind: Kind): HTMLElement {
       "tk__body",
       h("p", "tk__meta", h("span", { text: `${when.label} ${when.time}` }), h("span", { text: itemsText(card.itemCount) })),
       statusNote(card, kind, "board"),
-      h("div", "tk__paybox", payChip(card), card.mode === "stripe-test" ? h("span", { class: "chip chip--test", text: "PRUEBA" }) : null),
+      h("div", "tk__paybox", payChip(card)),
       actionButtons(card, kind),
     ),
   );
@@ -406,19 +415,7 @@ export function tickTimes(root: ParentNode, now: number): void {
     const text = ago(el.dataset.ago, now);
     if (el.textContent !== text) el.textContent = text;
   });
-  root.querySelectorAll<HTMLElement>("[data-due]").forEach((el) => {
-    const due = Date.parse(el.dataset.due ?? "");
-    if (!Number.isFinite(due)) return;
-    const diff = due - now;
-    const late = diff < 0;
-    const text = late
-      ? `Retrasado ${minutesText(Math.max(1, Math.floor(-diff / 60_000)))}`
-      : diff < 60_000
-        ? "Falta menos de 1 min"
-        : `Faltan ${minutesText(Math.ceil(diff / 60_000))}`;
-    if (el.textContent !== text) el.textContent = text;
-    el.classList.toggle("is-late", late);
-  });
+  root.querySelectorAll<HTMLElement>("[data-due-head]").forEach((el) => paintCountdown(el, now));
   root.querySelectorAll<HTMLElement>("[data-at-min]").forEach((el) => {
     const text = `hacia las ${clockAt(now + Number(el.dataset.atMin) * 60_000)}`;
     if (el.textContent !== text) el.textContent = text;
