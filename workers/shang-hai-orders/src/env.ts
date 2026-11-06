@@ -106,6 +106,8 @@ export interface Deps {
   jwksCache: JwksCache;
   /** Work allowed to finish after the response (ctx.waitUntil on Cloudflare). */
   waitUntil: (promise: Promise<unknown>) => void;
+  /** Waits (wall-clock time; tests move their clock instead). */
+  sleep: (ms: number) => Promise<void>;
 }
 
 const sharedJwksCache: JwksCache = new Map();
@@ -119,5 +121,6 @@ export function defaultDeps(ctx?: { waitUntil(promise: Promise<unknown>): void }
       const guarded = promise.catch(() => undefined);
       if (ctx) ctx.waitUntil(guarded);
     },
+    sleep: (ms) => new Promise((done) => setTimeout(done, ms)),
   };
 }

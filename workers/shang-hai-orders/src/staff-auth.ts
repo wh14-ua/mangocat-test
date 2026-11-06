@@ -8,7 +8,7 @@ import { log } from "./log";
 import { allow } from "./rate-limit";
 import { sendTelegramMessage } from "./telegram";
 import { loginCodeMessage, sendWhatsAppTemplate } from "./whatsapp";
-import { recordWhatsAppSend } from "./notifications";
+import { recordWhatsAppSend, takeWhatsAppTurn } from "./notifications";
 
 /**
  * Who may use the staff panel. Two server-verified ways in, no passwords anywhere:
@@ -35,6 +35,8 @@ const SESSION_DAYS = 30;
 const CODE_TTL_MS = 10 * 60_000;
 const CODE_MAX_ATTEMPTS = 5;
 const CODE_MIN_INTERVAL_MS = 30_000;
+/** How long a sign-in code waits for its WhatsApp turn (one pair-rate interval and a margin). */
+const CODE_TURN_WAIT_MS = 7_000;
 const CODES_PER_HOUR = 8;
 const LAST_SEEN_REFRESH_MS = 10 * 60_000;
 
@@ -161,11 +163,15 @@ export async function handleLoginCode(request: Request, env: Env, deps: Deps, li
   let sent = 0;
   // WhatsApp: the approved authentication template (fixed Meta text + copy-code button).
   for (const number of whatsapp?.recipients ?? []) {
+    // Its turn first (pair rate limit: an alert may have just gone to this number). Someone is
+    // waiting for the code, so after a few seconds it goes anyway; alerts then wait for it.
+    const turn = await takeWhatsAppTurn(env, deps, number, deps.now().getTime() + CODE_TURN_WAIT_MS);
+    if (!turn.ours) await recordWhatsAppSend(env, number, deps.now().toISOString());
     const res = await sendWhatsAppTemplate(deps.fetch, whatsapp!, number, loginCodeMessage(code));
+    await recordWhatsAppSend(env, number, deps.now().toISOString());
     if (res.ok) {
       sent += 1;
       if (!channels.includes("whatsapp")) channels.push("whatsapp");
-      await recordWhatsAppSend(env, number, created); // alerts to this number wait their turn (pair rate limit)
     } else {
       log("admin.login-code-failed", { channel: "whatsapp", failure: res.kind, error: res.error });
     }

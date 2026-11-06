@@ -105,7 +105,8 @@ export function notifySoon(env: Env, deps: Deps, orderId: string, kind: Notifica
   deps.waitUntil(
     (async () => {
       const added = await enqueueNotification(env, orderId, kind, now, { rearm: kind === "needs_review" });
-      if (added) await deliverDue(env, deps, { orderId });
+      // Waiting for a WhatsApp turn stays well inside waitUntil's 30 s after the response.
+      if (added) await deliverDue(env, deps, { orderId, paceBudgetMs: NOTIFY_SOON_PACE_MS });
     })().catch((error) => log("notify.error", { orderId, message: error instanceof Error ? error.message : "unknown" })),
   );
 }
@@ -191,7 +192,22 @@ function stillRelevant(kind: NotificationKind, order: OrderRow): boolean {
   }
 }
 
-export type DeliveryOptions = { orderId?: string; limit?: number; reminderMinutes?: number; timeoutMinutes?: number };
+export type DeliveryOptions = {
+  orderId?: string;
+  limit?: number;
+  reminderMinutes?: number;
+  timeoutMinutes?: number;
+  /** How long this run may wait for a recipient's WhatsApp turn (0: leave it to a later run). */
+  paceBudgetMs?: number;
+};
+
+/**
+ * Pacing waits allowed after a change (inside waitUntil, which Cloudflare lets run 30 s after the
+ * response: 15 s of waiting + a 10 s send fit) and in each cron run.
+ */
+export const NOTIFY_SOON_PACE_MS = 15_000;
+export const CRON_PACE_MS = 40_000;
+const MAX_TURN_WAITS = 10;
 
 /** Sends every due notification (optionally of one order). Safe to run concurrently. */
 export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions = {}): Promise<{ sent: number; failed: number }> {
@@ -200,6 +216,7 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
   if (!telegram && !whatsapp) return { sent: 0, failed: 0 };
   const now = deps.now();
   const nowIso = now.toISOString();
+  const paceDeadline = options.paceBudgetMs ? now.getTime() + options.paceBudgetMs : 0;
   const staleSending = new Date(now.getTime() - SENDING_STALE_MS).toISOString();
   const filter = options.orderId ? "AND order_id = ?" : "";
   const params: (string | number)[] = [nowIso, staleSending];
@@ -248,7 +265,12 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
         .run();
       continue;
     }
-    const outcome = row.channel === "whatsapp" && whatsapp ? await sendWhatsAppRow(env, deps, whatsapp, row, order, options) : telegram ? await sendTelegramRow(env, deps, telegram, row, order, options) : null;
+    const outcome =
+      row.channel === "whatsapp" && whatsapp
+        ? await sendWhatsAppRow(env, deps, whatsapp, row, order, options, paceDeadline)
+        : telegram
+          ? await sendTelegramRow(env, deps, telegram, row, order, options)
+          : null;
     if (outcome === "sent") sent += 1;
     if (outcome === "failed") failed += 1;
   }
@@ -257,23 +279,51 @@ export async function deliverDue(env: Env, deps: Deps, options: DeliveryOptions 
 
 type Outcome = "sent" | "failed" | "deferred";
 
+const turnKey = (recipient: string) => `whatsapp.last_send:${recipient}`;
+
+/** Ours (after waiting for it, or not), or someone else's until `freeAt` (ISO). */
+export type WhatsAppTurn = { ours: true; waited: boolean } | { ours: false; freeAt: string };
+
 /**
- * When this number last got a WhatsApp message from us — an alert or a sign-in code — for the
- * pair rate limit (Meta: about one message every 6 s to the same recipient).
+ * Takes this number's WhatsApp turn. Meta allows about one message every 6 s to the same
+ * recipient (error 131056 beyond that), so every message to it — alerts and sign-in codes —
+ * takes a turn first. One conditional upsert decides, so concurrent runs (cron, webhooks, several
+ * orders paid at once) take turns instead of racing each other into 131056. While the turn is
+ * someone else's, waits for it until `deadline` (epoch ms; 0 = do not wait).
  */
-export async function lastWhatsAppSend(env: Env, recipient: string, excludeRow?: number): Promise<string | null> {
-  const row = await env.DB.prepare(
-    `SELECT MAX(at) AS at FROM (
-        SELECT MAX(sent_at) AS at FROM notifications WHERE channel = 'whatsapp' AND recipient = ? AND sent_at IS NOT NULL AND id <> ?
-        UNION ALL SELECT updated_at AS at FROM system_state WHERE key = ?)`,
-  )
-    .bind(recipient, excludeRow ?? -1, `whatsapp.last_send:${recipient}`)
-    .first<{ at: string | null }>();
-  return row?.at ?? null;
+export async function takeWhatsAppTurn(env: Env, deps: Deps, recipient: string, deadline = 0): Promise<WhatsAppTurn> {
+  for (let waits = 0; ; waits += 1) {
+    const now = deps.now();
+    const taken = await env.DB.prepare(
+      `INSERT INTO system_state (key, value, updated_at) VALUES (?, 'sent', ?)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        WHERE system_state.updated_at <= ?`,
+    )
+      .bind(turnKey(recipient), now.toISOString(), new Date(now.getTime() - PAIR_INTERVAL_MS).toISOString())
+      .run();
+    if (taken.meta.changes) return { ours: true, waited: waits > 0 };
+    const last = await env.DB.prepare(`SELECT updated_at FROM system_state WHERE key = ?`)
+      .bind(turnKey(recipient))
+      .first<{ updated_at: string }>();
+    const freeAt = Math.max(now.getTime(), (last ? Date.parse(last.updated_at) : 0) + PAIR_INTERVAL_MS);
+    if (freeAt > deadline || waits >= MAX_TURN_WAITS) return { ours: false, freeAt: new Date(freeAt).toISOString() };
+    await deps.sleep(freeAt - now.getTime());
+  }
 }
 
+/**
+ * A message to this number went out, or Meta answered it, at `at`: the next turn starts 6 s later
+ * (never moves back). Recorded again with the answer's time because Meta counts the 6 s between
+ * arrivals: a slow request followed by a fast one would otherwise arrive less than 6 s apart.
+ * Also takes the turn when it is not free (a sign-in code someone is waiting for).
+ */
 export async function recordWhatsAppSend(env: Env, recipient: string, at: string): Promise<void> {
-  await setState(env.DB, `whatsapp.last_send:${recipient}`, "sent", at);
+  await env.DB.prepare(
+    `INSERT INTO system_state (key, value, updated_at) VALUES (?, 'sent', ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = MAX(system_state.updated_at, excluded.updated_at)`,
+  )
+    .bind(turnKey(recipient), at)
+    .run();
 }
 
 async function orderLines(env: Env, orderId: string): Promise<{ quantity: number; name: string }[]> {
@@ -329,7 +379,9 @@ async function sendTelegramRow(
 
 /**
  * One WhatsApp template message. Paced per recipient (Meta's pair rate limit, ~1 message every
- * 6 s to the same number): a second alert due within that interval waits instead of failing.
+ * 6 s to the same number): an alert whose turn has not come waits for it while this run has time
+ * (a burst of orders reaches the owner every ~6 s), else it is rescheduled for its turn — never
+ * sent into a 131056.
  * Accepted = "sent" (not delivered: the status webhook confirms delivery). Each failure kind has
  * its own retry policy (whatsappRetryDelay); credential, configuration and template problems are
  * also recorded for the panel's «Estado del sistema».
@@ -341,16 +393,27 @@ async function sendWhatsAppRow(
   row: NotificationRow,
   order: OrderRow,
   options: DeliveryOptions,
+  paceDeadline: number,
 ): Promise<Outcome> {
-  const now = deps.now();
-  const nowIso = now.toISOString();
-  const lastAt = await lastWhatsAppSend(env, row.recipient, row.id);
-  const wait = lastAt ? Date.parse(lastAt) + PAIR_INTERVAL_MS - now.getTime() : 0;
-  if (wait > 0) {
-    await env.DB.prepare(`UPDATE notifications SET status = 'pending', next_attempt_at = ?, updated_at = ? WHERE id = ?`)
-      .bind(new Date(now.getTime() + wait).toISOString(), nowIso, row.id)
+  const turn = await takeWhatsAppTurn(env, deps, row.recipient, paceDeadline);
+  if (!turn.ours) {
+    await env.DB.prepare(`UPDATE notifications SET status = 'pending', next_attempt_at = ?, updated_at = ? WHERE id = ? AND status = 'sending'`)
+      .bind(turn.freeAt, deps.now().toISOString(), row.id)
       .run();
     return "deferred";
+  }
+  const now = deps.now();
+  const nowIso = now.toISOString();
+  if (turn.waited) {
+    // It waited for its turn: the order may have moved on meanwhile (accepted in the panel…).
+    const latest = await getOrder(env.DB, order.id);
+    if (!latest || !stillRelevant(row.kind, latest)) {
+      await env.DB.prepare(`UPDATE notifications SET status = 'skipped', next_attempt_at = NULL, updated_at = ? WHERE id = ? AND status = 'sending'`)
+        .bind(nowIso, row.id)
+        .run();
+      return "deferred";
+    }
+    order = latest;
   }
 
   const message = whatsappMessageFor(row.kind, order, await orderLines(env, order.id), {
@@ -362,6 +425,7 @@ async function sendWhatsAppRow(
   const attempts = row.attempts + 1;
   // Echoed by every status webhook: reconciles a send whose answer was lost (no duplicate retry).
   const result = await sendWhatsAppTemplate(deps.fetch, whatsapp, row.recipient, message, `n:${row.id}`);
+  await recordWhatsAppSend(env, row.recipient, deps.now().toISOString());
   if (result.ok) {
     await env.DB.prepare(
       `UPDATE notifications SET status = 'sent', attempts = ?, provider_message_id = ?, sent_at = ?, next_attempt_at = NULL,
@@ -370,7 +434,6 @@ async function sendWhatsAppRow(
       .bind(attempts, result.messageId, nowIso, nowIso, row.id)
       .run();
     await setState(env.DB, "whatsapp.last_accepted", row.kind, nowIso);
-    await recordWhatsAppSend(env, row.recipient, nowIso);
     return "sent";
   }
   const delay = whatsappRetryDelay(result.kind, attempts, result.retryAfterSeconds);

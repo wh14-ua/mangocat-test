@@ -220,28 +220,117 @@ describe("WhatsApp failures: the order is always on the panel, the alert is retr
     expect(alertRows(w, order.orderId)[0].status).toBe("sent");
   });
 
-  it("two orders in a row to the same owner respect the pair rate limit (one message every 6 s) instead of failing", async () => {
+  it("two orders in a row to the same owner: the second alert waits for its turn (6 s) and goes out, no 131056", async () => {
     const w = world(WHATSAPP_ENV);
     w.whatsapp.state.pairIntervalMs = 6_000;
     const first = await placedOrder(w);
     const second = await placedOrder(w);
-    expect(alertRows(w, first.orderId)[0].status).toBe("sent");
-    expect(alertRows(w, second.orderId)[0]).toMatchObject({ status: "pending", error_code: null }); // waiting, no 131056
-    w.advance(7_000);
-    await runCron(w);
-    expect(alertRows(w, second.orderId)[0].status).toBe("sent");
+    expect(alertRows(w, first.orderId)[0]).toMatchObject({ status: "sent", error_code: null });
+    expect(alertRows(w, second.orderId)[0]).toMatchObject({ status: "sent", error_code: null });
+    const [a, b] = w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo");
+    expect(Date.parse(b.at) - Date.parse(a.at)).toBeGreaterThanOrEqual(6_000);
   });
 
-  it("a sign-in code just sent to the same number also counts for the pair rate limit (the alert waits, it does not fail)", async () => {
+  it("the 6 s count from Meta's answer: a slow request followed by a fast one still arrives 6 s apart (no 131056)", async () => {
+    const w = world(WHATSAPP_ENV);
+    w.whatsapp.state.pairIntervalMs = 6_000; // like Meta: measured between arrivals
+    const direct = w.deps.fetch;
+    let slow = true;
+    w.deps.fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (slow && url.includes("graph.facebook.com")) {
+        slow = false;
+        w.advance(3_000); // the first alert takes 3 s to reach Meta
+      }
+      return direct(input, init);
+    };
+    await placedOrder(w);
+    const second = await placedOrder(w);
+    expect(alertRows(w, second.orderId)[0]).toMatchObject({ status: "sent", error_code: null });
+    const [a, b] = w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo");
+    expect(Date.parse(b.at) - Date.parse(a.at)).toBeGreaterThanOrEqual(6_000);
+  });
+
+  it("simultaneous deliveries to the same owner take turns atomically (no 131056 when many orders arrive at once)", async () => {
+    const w = world(WHATSAPP_ENV);
+    w.whatsapp.state.pairIntervalMs = 6_000;
+    // Two orders paid while their alerts cannot go out yet, then two delivery runs at the same time.
+    w.whatsapp.failNext({ status: 503, code: 2, times: 2 });
+    const a = await placedOrder(w);
+    const b = await placedOrder(w);
+    w.advance(20_000);
+    const { deliverDue } = await import("../src/notifications");
+    await Promise.all([deliverDue(w.env, w.deps), deliverDue(w.env, w.deps)]);
+    const rows = [alertRows(w, a.orderId)[0], alertRows(w, b.orderId)[0]];
+    // Neither run may wait here: one alert goes now, the other is rescheduled for its turn.
+    expect(rows.map((r) => r.status).sort()).toEqual(["pending", "sent"]);
+    expect(rows.some((r) => r.error_code === "131056")).toBe(false);
+    const waiting = rows.find((r) => r.status === "pending")!;
+    expect(Date.parse(String(waiting.next_attempt_at)) - w.now().getTime()).toBe(6_000);
+    expect(w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo")).toHaveLength(1);
+  });
+
+  it("a burst of orders: alerts reach the owner one every 6 s; what does not fit in the run goes out with the cron, none fails", async () => {
+    const w = world(WHATSAPP_ENV);
+    w.whatsapp.state.pairIntervalMs = 6_000;
+    w.whatsapp.failNext({ status: 503, code: 2, times: 9 });
+    const orders = [];
+    for (let i = 0; i < 9; i += 1) orders.push(await placedOrder(w));
+    w.advance(20_000);
+    await runCron(w); // waits up to 40 s for turns: about 7 alerts, the rest rescheduled
+    const firstRun = w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo").length;
+    expect(firstRun).toBeGreaterThanOrEqual(6);
+    expect(firstRun).toBeLessThan(9);
+    w.advance(60_000);
+    await runCron(w);
+    const sent = w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo");
+    expect(sent).toHaveLength(9);
+    for (let i = 1; i < sent.length; i += 1) expect(Date.parse(sent[i].at) - Date.parse(sent[i - 1].at)).toBeGreaterThanOrEqual(6_000);
+    for (const o of orders) expect(alertRows(w, o.orderId)[0]).toMatchObject({ status: "sent", error_code: null });
+  });
+
+  it("an alert that waited for its turn is not sent if the order was dealt with meanwhile", async () => {
+    const w = world(WHATSAPP_ENV);
+    w.whatsapp.state.pairIntervalMs = 6_000;
+    w.whatsapp.failNext({ status: 503, code: 2 });
+    const order = await placedOrder(w); // its alert could not go out: retried later
+    w.advance(60_000);
+    const { deliverDue, recordWhatsAppSend } = await import("../src/notifications");
+    await recordWhatsAppSend(w.env, OWNER_WHATSAPP, w.now().toISOString()); // a message just went to the owner
+    const wait = w.deps.sleep;
+    let waited = 0;
+    w.deps.sleep = async (ms) => {
+      waited += 1; // while the alert waits for the owner's turn, staff reject the order in the panel
+      w.env.DB.raw.prepare("UPDATE orders SET status = 'rejected' WHERE id = ?").run(order.orderId);
+      await wait(ms);
+    };
+    await deliverDue(w.env, w.deps, { paceBudgetMs: 20_000 });
+    expect(waited).toBe(1);
+    expect(alertRows(w, order.orderId)[0].status).toBe("skipped");
+    expect(w.whatsapp.messages().filter((m) => m.template === "pedido_nuevo")).toHaveLength(0);
+  });
+
+  it("a sign-in code just sent to the same number also counts for the pair rate limit (the alert waits its turn, it does not fail)", async () => {
     const w = world(WHATSAPP_ENV);
     w.whatsapp.state.pairIntervalMs = 6_000;
     const asked = await call(w.env, w.deps, "/api/admin/auth/code", { method: "POST", headers: { "Content-Type": "application/json", Origin: WORKER_ORIGIN }, body: "{}" });
     expect(asked.status).toBe(202);
     const order = await placedOrder(w);
-    expect(alertRows(w, order.orderId)[0]).toMatchObject({ status: "pending", error_code: null });
-    w.advance(7_000);
-    await runCron(w);
-    expect(alertRows(w, order.orderId)[0].status).toBe("sent");
+    expect(alertRows(w, order.orderId)[0]).toMatchObject({ status: "sent", error_code: null });
+    const code = w.whatsapp.messages().find((m) => m.template === "codigo_acceso")!;
+    const alert = w.whatsapp.messages().find((m) => m.template === "pedido_nuevo")!;
+    expect(Date.parse(alert.at) - Date.parse(code.at)).toBeGreaterThanOrEqual(6_000);
+  });
+
+  it("an alert just sent: the sign-in code waits a few seconds for its turn and arrives (no 131056)", async () => {
+    const w = world(WHATSAPP_ENV);
+    w.whatsapp.state.pairIntervalMs = 6_000;
+    await placedOrder(w);
+    const asked = await call(w.env, w.deps, "/api/admin/auth/code", { method: "POST", headers: { "Content-Type": "application/json", Origin: WORKER_ORIGIN }, body: "{}" });
+    expect(asked.status).toBe(202);
+    const alert = w.whatsapp.messages().find((m) => m.template === "pedido_nuevo")!;
+    const code = w.whatsapp.messages().find((m) => m.template === "codigo_acceso")!;
+    expect(Date.parse(code.at) - Date.parse(alert.at)).toBeGreaterThanOrEqual(6_000);
   });
 
   it("if Meta still answers 131056, the retry follows its advice (wait, then grow)", async () => {

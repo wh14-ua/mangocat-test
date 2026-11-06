@@ -3,7 +3,7 @@ import { acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config
 import { setState, updateOrderIf, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
-import { alertRecipients, deliverDue, enqueueNotification } from "./notifications";
+import { alertRecipients, CRON_PACE_MS, deliverDue, enqueueNotification } from "./notifications";
 import { syncOrderPayment } from "./sync";
 
 /** Reason shown to the customer when nobody accepted in time. */
@@ -214,7 +214,7 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
 
   // 7. Deliver due notifications (new, retries and the reminders/timeouts above).
   await step("notifications", async () => {
-    const res = await deliverDue(env, deps, { limit: 40, reminderMinutes: reminder, timeoutMinutes: timeout });
+    const res = await deliverDue(env, deps, { limit: 40, reminderMinutes: reminder, timeoutMinutes: timeout, paceBudgetMs: CRON_PACE_MS });
     report.sent = res.sent;
     report.failed = res.failed;
   });

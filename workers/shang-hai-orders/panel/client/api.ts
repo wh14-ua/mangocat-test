@@ -50,7 +50,8 @@ export const api = {
   /** Stripe may take a while: actions wait longer than reads. */
   action: (id: string, action: StaffAction, body: Record<string, unknown> = {}) =>
     request<ActionReply>("POST", `/api/admin/orders/${enc(id)}/${action}`, body, 30_000),
-  sendCode: () => request<{ sent: number; expiresInSeconds: number }>("POST", "/api/admin/auth/code", {}),
+  // The code may wait a few seconds for its WhatsApp turn (an order alert just went to the phone).
+  sendCode: () => request<{ sent: number; expiresInSeconds: number }>("POST", "/api/admin/auth/code", {}, 25_000),
   verify: (code: string, label: string) =>
     request<{ ok: true; label: string }>("POST", "/api/admin/auth/verify", label ? { code, label } : { code }),
   logout: (everywhere: boolean) =>

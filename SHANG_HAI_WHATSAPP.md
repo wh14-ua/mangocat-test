@@ -27,7 +27,7 @@ plantillas, códigos de error, límites, webhooks, precios, coexistencia).
 | Meta acepta el mensaje | Queda «enviado (sin confirmar entrega)». **Entregado** solo cuando llega el recibo de WhatsApp (webhook `delivered`/`read`). |
 | Webhook de estado | `/api/whatsapp/webhook`, firma `X-Hub-Signature-256` (HMAC-SHA256 con el secreto de la app) obligatoria. Duplicados, desorden y reintentos de Meta (hasta 7 días) no deshacen nada. |
 | Sin respuesta de la API | Puede haberse enviado: no se reintenta enseguida. El recibo, que trae `biz_opaque_callback_data` con el id del aviso, lo reconcilia sin duplicar; si no llega, reintento a los 90 s. |
-| Límite por destinatario (131056) | El Worker espacia los mensajes al mismo número (≈1 cada 6 s, incluidos los códigos); si Meta aun así lo devuelve, espera 6 s × 4ⁿ. |
+| Límite por destinatario (131056) | Cada mensaje a un número (avisos y códigos) toma antes su **turno**: uno cada 6 s, contados desde la respuesta de Meta (Meta mide entre llegadas). El turno se toma en una sola operación de D1, así que varios pedidos pagados a la vez no se pisan. Una ráfaga llega al propietario a razón de uno cada ~6 s (cada envío espera su turno hasta 15 s tras el pago —dentro de los 30 s que Cloudflare deja tras la respuesta— y hasta 40 s en cada pasada del cron; lo que no cabe sale en la siguiente). El código de acceso espera su turno hasta 7 s. Si Meta aun así devuelve 131056, espera 6 s × 4ⁿ. |
 | Límite de caudal (130429, 4, 80007) | Reintento con espera creciente. |
 | Caída de Meta (5xx, 131000, 131016) | Reintentos 15 s → 30 min. |
 | Token caducado o inválido (190) | Reintento cada 30 min; «Credenciales de WhatsApp caducadas: renueva el token» en el panel hasta que un aviso posterior se entregue. |

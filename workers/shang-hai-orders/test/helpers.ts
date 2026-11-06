@@ -104,8 +104,11 @@ export function fakeNetwork(
 
 export type TestDeps = Deps & { flush: () => Promise<void> };
 
-/** Deps whose waitUntil work can be awaited with flush() (notifications sent "in background"). */
-export function makeDeps(fetchImpl: typeof fetch, now: Date | (() => Date) = NOW): TestDeps {
+/**
+ * Deps whose waitUntil work can be awaited with flush() (notifications sent "in background").
+ * sleep() never really waits: a world moves its clock forward instead (a fixed clock stays put).
+ */
+export function makeDeps(fetchImpl: typeof fetch, now: Date | (() => Date) = NOW, sleep: (ms: number) => Promise<void> = async () => undefined): TestDeps {
   const pending: Promise<unknown>[] = [];
   return {
     fetch: fetchImpl,
@@ -114,6 +117,7 @@ export function makeDeps(fetchImpl: typeof fetch, now: Date | (() => Date) = NOW
     waitUntil: (p) => {
       pending.push(p.catch(() => undefined));
     },
+    sleep,
     async flush() {
       while (pending.length) await Promise.all(pending.splice(0, pending.length));
     },
@@ -155,7 +159,12 @@ export function world(envOverrides: Partial<Env> = {}, start: Date = NOW) {
   let clock = start.getTime();
   // The fake WhatsApp follows the same movable clock (its pair rate limit is time based).
   const net = fakeNetwork({ fakeWhatsApp: createFakeWhatsApp({ pairIntervalMs: 0, panelUrl: PANEL, now: () => clock }) });
-  const deps = makeDeps(net.fetch, () => new Date(clock));
+  // Waiting moves time on (concurrent waits overlap: the clock goes to the latest end, not the sum).
+  const deps = makeDeps(net.fetch, () => new Date(clock), async (ms) => {
+    const until = clock + ms;
+    await Promise.resolve();
+    clock = Math.max(clock, until);
+  });
   return {
     env,
     net,
