@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { checkLocalDatabase, queryD1, WORKER_DIR } from "../../../scripts/db/schema.mjs";
-import { suiteStack, tempStateDir } from "./stack-client";
+import { eventually, suiteStack, tempStateDir } from "./stack-client";
 
 /**
  * Migrations with the real tooling (wrangler + the local D1 that workerd uses): fresh and
@@ -138,7 +138,8 @@ describe("the Worker's schema guard inside workerd", () => {
       const health = await fetch(`${stack.urls.worker}/api/health`);
       expect(health.status).toBe(503);
       expect(await health.json()).toEqual({ ok: false, schema: "outdated" });
-      expect(stack.logs.worker.join("\n")).toMatch(/schema\.outdated.*orders\.staff_seen_at/);
+      // wrangler forwards the Worker's console output asynchronously: wait for the line.
+      await eventually(async () => /schema\.outdated.*orders\.staff_seen_at/.test(stack.logs.worker.join("\n")), "the schema.outdated log line", 15_000);
       await stack.stopWorker();
       expect(checkLocalDatabase({ persistTo: stack.stateDir, repair: true, log: () => undefined }).ok).toBe(true);
       await stack.startWorker();
