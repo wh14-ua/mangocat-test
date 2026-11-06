@@ -48,6 +48,10 @@ export interface Env {
   STRIPE_CAPTURE_MODE?: string;
   /** Per-request timeout for Stripe API calls in ms (default 15000). */
   STRIPE_TIMEOUT_MS?: string;
+  /** Seconds after which an accept/reject lock is considered abandoned (default 90). */
+  LOCK_STALE_SECONDS?: string;
+  /** Seconds after which a lock Stripe cannot resolve goes to review (default 300). */
+  LOCK_REVIEW_SECONDS?: string;
   CORS_ALLOWED_ORIGIN?: string;
   STRIPE_SUCCESS_URL?: string;
   STRIPE_CANCEL_URL?: string;

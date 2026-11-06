@@ -1,6 +1,9 @@
 // In-memory stand-in for the Telegram Bot API `sendMessage`, for unit tests and the local
 // end-to-end stack. Records every message (chat, text, button) and can be told to fail
 // like Telegram does: 429 with retry_after, 403 when a chat blocked the bot, or a network error.
+// With `persistPath` (local demo) the messages survive restarts, like a real chat history.
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 /**
  * @typedef {{ message_id: number, chat_id: string, text: string, parse_mode: string | null,
@@ -8,9 +11,19 @@
  * @typedef {{ status?: number, retryAfter?: number, network?: boolean }} FakeTelegramFailure
  */
 
-export function createFakeTelegram() {
+/** @param {{ persistPath?: string }} [options] */
+export function createFakeTelegram(options = {}) {
   /** @type {{ messages: FakeTelegramMessage[], failures: FakeTelegramFailure[], calls: number }} */
   const state = { messages: [], failures: [], calls: 0 };
+  const persistPath = options.persistPath ?? null;
+  if (persistPath && existsSync(persistPath)) state.messages = JSON.parse(readFileSync(persistPath, "utf8")).messages ?? [];
+  function save() {
+    if (!persistPath) return;
+    mkdirSync(dirname(persistPath), { recursive: true });
+    const tmp = `${persistPath}.tmp-${process.pid}`;
+    writeFileSync(tmp, JSON.stringify({ version: 1, messages: state.messages }));
+    renameSync(tmp, persistPath);
+  }
 
   function handle(path, body) {
     state.calls += 1;
@@ -33,6 +46,7 @@ export function createFakeTelegram() {
       at: new Date().toISOString(),
     };
     state.messages.push(message);
+    save();
     return { status: 200, body: { ok: true, result: { message_id: message.message_id } } };
   }
 

@@ -64,8 +64,13 @@ function parseWranglerJson(stdout) {
   return JSON.parse(stdout.slice(start));
 }
 
-/** Rows of an introspection (or any read-only query) against a local or remote D1. */
-export function queryD1(sql, { remote = false, persistTo } = {}) {
+/**
+ * Rows of an introspection (or any read-only query) against a local or remote D1.
+ * @param {string} sql
+ * @param {{ remote?: boolean, persistTo?: string }} [options]
+ * @returns {Record<string, unknown>[]}
+ */
+export function queryD1(sql, { remote = false, persistTo = undefined } = {}) {
   const target = remote ? ["--remote"] : ["--local", ...(persistTo ? ["--persist-to", persistTo] : [])];
   const res = wrangler(["d1", "execute", DATABASE, ...target, "--json", "--command", sql.replace(/\s+/g, " ")]);
   if (res.status !== 0) throw new Error(`wrangler d1 execute failed:\n${res.stderr || res.stdout}`);
@@ -88,7 +93,11 @@ function backupLocalD1(persistTo) {
  * Compares a local D1 with the migrations and, with `repair`, applies the additive repair.
  * Used by `npm run demo:local` before the Worker starts.
  */
-export function checkLocalDatabase({ persistTo, repair = false, log = console.log } = {}) {
+/**
+ * @param {{ persistTo?: string, repair?: boolean, log?: (message: string) => void }} [options]
+ * @returns {{ ok: boolean, drift: object, repaired: boolean, problems?: string[], blocked?: string[], error?: string, backup?: string | null, statements?: string[] }}
+ */
+export function checkLocalDatabase({ persistTo = undefined, repair = false, log = console.log } = {}) {
   const expected = expectedSchema(MIGRATIONS_DIR);
   const actual = schemaFromRows(queryD1(INTROSPECT_SQL, { persistTo }));
   const drift = diffSchema(expected, actual);

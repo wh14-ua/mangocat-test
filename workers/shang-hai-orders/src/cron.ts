@@ -1,5 +1,5 @@
-import { rejectOrder, resolveLock, STALE_LOCK_MS } from "./actions";
-import { acceptanceTimeoutMinutes, reminderMinutes } from "./config";
+import { rejectOrder, resolveLock } from "./actions";
+import { acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config";
 import { setState, updateOrderIf, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
@@ -34,7 +34,7 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
 
   // 1. Locks left by requests that died half-way (accepting / rejecting).
   await step("locks", async () => {
-    for (const order of await rows(env, `SELECT * FROM orders WHERE status IN ('accepting', 'rejecting') AND updated_at <= ? LIMIT ?`, at(STALE_LOCK_MS), BATCH)) {
+    for (const order of await rows(env, `SELECT * FROM orders WHERE status IN ('accepting', 'rejecting') AND updated_at <= ? LIMIT ?`, at(staleLockMs(env)), BATCH)) {
       await resolveLock(env, deps, order, { label: "sistema", source: "system" });
       report.locks += 1;
     }

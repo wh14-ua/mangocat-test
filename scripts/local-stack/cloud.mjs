@@ -5,7 +5,12 @@
 //
 //   PORT=8790 WEBHOOK_URL=http://localhost:8787/api/stripe/webhook WEBHOOK_SECRET=whsec_local \
 //   node scripts/local-stack/cloud.mjs
+//
+// With STATE_DIR set (the local demo), Stripe and Telegram state is persisted there, next to
+// the local D1, so restarting keeps everything consistent. Undelivered webhooks are kept and
+// retried (Stripe retries for days), also across restarts.
 import { createServer } from "node:http";
+import { join } from "node:path";
 import { createFakeStripe, signPayload } from "./fake-stripe.mjs";
 import { createFakeTelegram } from "./fake-telegram.mjs";
 
@@ -14,32 +19,55 @@ const HOST = process.env.HOST ?? "localhost";
 const ORIGIN = `http://${HOST}:${PORT}`;
 const WEBHOOK_URL = process.env.WEBHOOK_URL ?? "http://localhost:8787/api/stripe/webhook";
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET ?? "whsec_local_demo_secret";
+const STATE_DIR = process.env.STATE_DIR || "";
 
-const stripe = createFakeStripe({ hostedBase: `${ORIGIN}/pay` });
-const telegram = createFakeTelegram();
+const stripe = createFakeStripe({ hostedBase: `${ORIGIN}/pay`, persistPath: STATE_DIR ? join(STATE_DIR, "fake-stripe.json") : undefined });
+const telegram = createFakeTelegram({ persistPath: STATE_DIR ? join(STATE_DIR, "fake-telegram.json") : undefined });
 const webhookLog = [];
 
-/** Delivers pending Stripe events to the Worker, signed, retrying like Stripe on non-2xx. */
-async function deliverEvents() {
-  for (const event of stripe.takeEvents()) {
-    const body = JSON.stringify(event);
-    let status = 0;
-    for (let attempt = 0; attempt < 4 && !(status >= 200 && status < 300); attempt++) {
-      if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
-      try {
-        const res = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Stripe-Signature": signPayload(body, WEBHOOK_SECRET) },
-          body,
-        });
-        status = res.status;
-      } catch {
-        status = 0;
-      }
-    }
-    webhookLog.push({ id: event.id, type: event.type, status, at: new Date().toISOString() });
+// Webhook chaos controls (tests): pause delivery (late / never), duplicate, reverse order.
+const webhooks = { paused: false, duplicate: false, reverse: false };
+/** Response delays: { method, path: RegExp, delayMs, after: boolean, times } — `after` = Stripe did the work, the answer is slow. */
+const delays = [];
+let delivering = false;
+
+async function post(event) {
+  const body = JSON.stringify(event);
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Stripe-Signature": signPayload(body, WEBHOOK_SECRET) },
+      body,
+      signal: AbortSignal.timeout(20_000),
+    });
+    return res.status;
+  } catch {
+    return 0;
   }
 }
+
+/** Delivers queued Stripe events to the Worker, signed. Failed ones stay queued and are retried. */
+async function deliverEvents() {
+  if (webhooks.paused || delivering) return;
+  delivering = true;
+  try {
+    let batch = stripe.takeEvents();
+    if (webhooks.reverse) batch = batch.reverse();
+    const failed = [];
+    for (const event of batch) {
+      const copies = webhooks.duplicate ? 2 : 1;
+      let status = 0;
+      for (let i = 0; i < copies; i++) status = await post(event);
+      webhookLog.push({ id: event.id, type: event.type, status, at: new Date().toISOString() });
+      if (!(status >= 200 && status < 300)) failed.push(event);
+    }
+    if (failed.length) stripe.requeueEvents(failed);
+  } finally {
+    delivering = false;
+  }
+}
+// Retry loop for anything that could not be delivered (Worker down, restarting, 5xx).
+setInterval(() => void deliverEvents(), 2_000).unref();
 
 const escape = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const euro = (cents) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -114,13 +142,18 @@ const server = createServer(async (req, res) => {
       const raw = req.method === "POST" ? await readBody(req) : "";
       const params = req.method === "POST" ? new URLSearchParams(raw) : url.searchParams;
       const headers = Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k.toLowerCase(), String(v)]));
+      const delayIndex = delays.findIndex((d) => d.method === req.method && d.path.test(path));
+      const delay = delayIndex === -1 ? null : delays[delayIndex];
+      if (delay && --delay.times <= 0) delays.splice(delayIndex, 1);
+      if (delay && !delay.after) await new Promise((r) => setTimeout(r, delay.delayMs)); // slow before reaching Stripe
       const result = stripe.handle(req.method ?? "GET", path, params, headers);
+      if (delay?.after) await new Promise((r) => setTimeout(r, delay.delayMs)); // done at Stripe, answer slow
       if (result.network) {
         req.socket.destroy(); // like a dropped connection
         void deliverEvents();
         return;
       }
-      send(res, result.status, result.body);
+      if (!res.destroyed && !req.socket.destroyed) send(res, result.status, result.body);
       void deliverEvents();
       return;
     }
@@ -156,12 +189,47 @@ const server = createServer(async (req, res) => {
     // --- Control (tests) --------------------------------------------------------
     if (path === "/__control/state") {
       return send(res, 200, {
+        persisted: Boolean(STATE_DIR),
         sessions: stripe.state.sessions.size,
-        intents: [...stripe.state.intents.values()].map((pi) => ({ id: pi.id, status: pi.status, order: pi.metadata?.order_id })),
-        refunds: [...stripe.state.refunds.values()].map((r) => ({ id: r.id, status: r.status })),
-        webhooks: webhookLog.slice(-50),
+        sessionIds: [...stripe.state.sessions.keys()],
+        intents: [...stripe.state.intents.values()].map((pi) => ({
+          id: pi.id,
+          status: pi.status,
+          order: pi.metadata?.order_id,
+          amount: pi.amount,
+          amountReceived: pi.amount_received,
+          amountCapturable: pi.amount_capturable,
+        })),
+        charges: [...stripe.state.charges.values()].map((c) => ({ id: c.id, pi: c.payment_intent, captured: c.captured, amountCaptured: c.amount_captured, amountRefunded: c.amount_refunded })),
+        refunds: [...stripe.state.refunds.values()].map((r) => ({ id: r.id, status: r.status, amount: r.amount, pi: r.payment_intent })),
+        calls: stripe.state.calls.slice(-200).map((c) => ({ method: c.method, path: c.path, key: c.headers["idempotency-key"] ?? null })),
+        queuedWebhooks: stripe.state.events.length,
+        webhooks: webhookLog.slice(-100),
         telegram: telegram.messages(),
       });
+    }
+    if (path === "/__control/webhooks" && req.method === "POST") {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      for (const k of ["paused", "duplicate", "reverse"]) if (typeof body[k] === "boolean") webhooks[k] = body[k];
+      if (body.drop) stripe.takeEvents(); // "the webhook never arrives"
+      if (!webhooks.paused) await deliverEvents();
+      return send(res, 200, { ok: true, ...webhooks, queued: stripe.state.events.length });
+    }
+    if (path === "/__control/stripe/delay" && req.method === "POST") {
+      const d = JSON.parse(await readBody(req));
+      delays.push({ times: 1, after: false, ...d, path: new RegExp(d.path) });
+      return send(res, 200, { ok: true });
+    }
+    if (path === "/__control/stripe/clear-failures" && req.method === "POST") {
+      stripe.clearFailures();
+      delays.length = 0;
+      return send(res, 200, { ok: true });
+    }
+    if ((m = /^\/__control\/stripe\/settle-refund\/(re_test_[A-Za-z0-9]+)$/.exec(path)) && req.method === "POST") {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      stripe.settleRefund(m[1], body.status ?? "succeeded");
+      await deliverEvents();
+      return send(res, 200, { ok: true });
     }
     if (path === "/__control/stripe/fail" && req.method === "POST") {
       const f = JSON.parse(await readBody(req));
@@ -191,5 +259,8 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Local cloud on ${ORIGIN}  (Stripe API ${ORIGIN}/v1, staff phone ${ORIGIN}/telegram)`);
+  console.log(
+    `Local cloud on ${ORIGIN}  (Stripe API ${ORIGIN}/v1, staff phone ${ORIGIN}/telegram)${STATE_DIR ? ` — state kept in ${STATE_DIR}` : " — in memory"}`,
+  );
+  void deliverEvents(); // events queued before a restart
 });

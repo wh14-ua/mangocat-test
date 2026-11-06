@@ -10,7 +10,7 @@ import {
   type ActionResult,
   type Actor,
 } from "./actions";
-import { prepTimeOptions, resolvePayments, telegramConfig } from "./config";
+import { prepTimeOptions, resolvePayments, staleLockMs, telegramConfig } from "./config";
 import { ORDER_ID_PATTERN } from "./crypto";
 import {
   getItemsForOrders,
@@ -59,7 +59,7 @@ export function columnOf(order: Pick<OrderRow, "status">): BoardColumn | null {
 export type StaffAction = "accept" | "reject" | "ready" | "complete" | "retry";
 
 /** The single source of truth for which buttons a card shows. */
-export function allowedActions(order: OrderRow, now: Date): StaffAction[] {
+export function allowedActions(order: OrderRow, now: Date, staleMs = STALE_LOCK_MS): StaffAction[] {
   const placed = order.payment_status === "authorized" || order.payment_status === "captured";
   switch (order.status) {
     case "awaiting_acceptance":
@@ -68,7 +68,7 @@ export function allowedActions(order: OrderRow, now: Date): StaffAction[] {
       return [...(placed ? (["accept"] as const) : []), "reject", "retry"];
     case "accepting":
     case "rejecting":
-      return now.getTime() - Date.parse(order.updated_at) > STALE_LOCK_MS ? ["retry"] : [];
+      return now.getTime() - Date.parse(order.updated_at) > staleMs ? ["retry"] : [];
     case "preparing":
       return ["ready", "reject"];
     case "ready":
@@ -80,7 +80,7 @@ export function allowedActions(order: OrderRow, now: Date): StaffAction[] {
   }
 }
 
-export function orderCard(order: OrderRow, items: OrderItemRow[], notifications: NotificationRow[] | undefined, now: Date) {
+export function orderCard(order: OrderRow, items: OrderItemRow[], notifications: NotificationRow[] | undefined, now: Date, staleMs = STALE_LOCK_MS) {
   return {
     id: order.id,
     number: order.number,
@@ -115,7 +115,7 @@ export function orderCard(order: OrderRow, items: OrderItemRow[], notifications:
     mode: order.payments_mode,
     captureBefore: order.stripe_capture_before,
     alert: alertSummary(notifications),
-    actions: allowedActions(order, now),
+    actions: allowedActions(order, now, staleMs),
   };
 }
 
@@ -156,7 +156,7 @@ export async function handleBoard(env: Env, deps: Deps): Promise<Response> {
   const columns: Record<BoardColumn, OrderCard[]> = { new: [], preparing: [], ready: [], completed: [], rejected: [] };
   for (const order of orders) {
     const column = columnOf(order);
-    if (column) columns[column].push(orderCard(order, items.get(order.id) ?? [], notifications.get(order.id), now));
+    if (column) columns[column].push(orderCard(order, items.get(order.id) ?? [], notifications.get(order.id), now, staleLockMs(env)));
   }
   // Oldest first where staff work through a queue; newest first in the history columns.
   for (const key of ["new", "preparing", "ready"] as const) columns[key].reverse();
@@ -198,7 +198,7 @@ export async function handleOrderDetail(env: Env, deps: Deps, id: string): Promi
   const rows = notifications.get(id) ?? [];
   return json({
     order: {
-      ...orderCard(order, items.get(id) ?? [], rows, deps.now()),
+      ...orderCard(order, items.get(id) ?? [], rows, deps.now(), staleLockMs(env)),
       email: order.customer_email,
       payment: {
         mode: order.payments_mode,
@@ -221,8 +221,8 @@ export async function handleOrderDetail(env: Env, deps: Deps, id: string): Promi
   });
 }
 
-function actionResponse(result: ActionResult, deps: Deps, items: OrderItemRow[] = []): Response {
-  const card = result.order ? orderCard(result.order, items, undefined, deps.now()) : null;
+function actionResponse(result: ActionResult, env: Env, deps: Deps, items: OrderItemRow[] = []): Response {
+  const card = result.order ? orderCard(result.order, items, undefined, deps.now(), staleLockMs(env)) : null;
   if (result.ok) return json({ ok: true, pending: Boolean(result.pending), message: result.message, order: card }, result.pending ? 202 : 200);
   return json({ ok: false, error: result.error, message: result.message, order: card }, result.status);
 }
@@ -275,7 +275,7 @@ export async function handleStaffAction(
       break;
   }
   const items = result.order ? (await getItemsForOrders(env.DB, [id])).get(id) ?? [] : [];
-  return actionResponse(result, deps, items);
+  return actionResponse(result, env, deps, items);
 }
 
 export function handleSession(env: Env, identity: StaffIdentity): Response {

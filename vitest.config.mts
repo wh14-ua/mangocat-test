@@ -8,6 +8,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts", "workers/**/test/**/*.test.ts"],
-    exclude: ["tests/**/e2e/**", "node_modules/**"],
+    exclude: ["tests/**/e2e/**", "tests/**/e2e-ordering/**", "tests/**/integration/**", "node_modules/**"],
   },
 });

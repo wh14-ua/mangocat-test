@@ -6,183 +6,187 @@
 //   fake Stripe (API + payment page + signed webhooks)      http://localhost:8790/pay/...
 //   fake Telegram ("staff phone")                           http://localhost:8790/telegram
 //
-// Usage:  npm run demo:local            (builds the site once into ./out-local, then starts everything)
-//         npm run demo:local -- --build (forces a rebuild of the site)
-//         npm run demo:local -- --no-site (only Worker + fake cloud, e.g. with `next dev`)
-// Ctrl+C stops everything. Data lives in .local-stack/ (delete it to start from scratch).
-import { spawn, spawnSync } from "node:child_process";
+// Usage:  npm run demo:local                 keeps the previous local state (orders, payments, chats)
+//         npm run demo:local -- --fresh      starts from an empty local state (deletes .local-stack/ only)
+//         npm run demo:local -- --build      forces a rebuild of the site
+//         npm run demo:local -- --no-site    only Worker + fake cloud (e.g. with `next dev`)
+//
+// Before anything starts it checks that (1) the local database has exactly the schema the
+// migrations define — repairing a drifted local database additively, with a backup — and
+// (2) every order in it points at payments the local Stripe knows. See harness.mjs for what
+// keeps state. Ctrl+C stops everything.
+import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkLocalDatabase, queryD1, WORKER_DIR } from "../db/schema.mjs";
+import { createStack, ROOT } from "./harness.mjs";
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const WORKER_DIR = join(ROOT, "workers/shang-hai-orders");
-const STATE_DIR = join(ROOT, process.env.LOCAL_STACK_STATE ?? ".local-stack");
 const args = new Set(process.argv.slice(2));
 
-export const LOCAL = {
-  workerPort: Number(process.env.WORKER_PORT ?? 8787),
-  cloudPort: Number(process.env.CLOUD_PORT ?? 8790),
-  sitePort: Number(process.env.SITE_PORT ?? 4174),
-  webhookSecret: "whsec_local_demo_secret",
-  // Test-mode key FORMAT only: the Worker talks to the local fake Stripe, never to Stripe.
-  stripeKey: "sk_test_local_fake_stripe_not_a_real_key",
-  telegramToken: "1234567890:LOCAL_fake_telegram_token_for_demo_only",
-  staffChats: "100000001,100000002",
-};
-
-const worker = `http://localhost:${LOCAL.workerPort}`;
-const cloud = `http://localhost:${LOCAL.cloudPort}`;
-const site = `http://localhost:${LOCAL.sitePort}`;
-
-export function workerVars() {
-  return {
-    STRIPE_SECRET_KEY: LOCAL.stripeKey,
-    STRIPE_WEBHOOK_SECRET: LOCAL.webhookSecret,
-    STRIPE_TEST_MODE: "true",
-    PAYMENTS_LIVE_ENABLED: "false",
-    STRIPE_API_BASE: `${cloud}/v1`,
-    TELEGRAM_API_BASE: cloud,
-    TELEGRAM_BOT_TOKEN: LOCAL.telegramToken,
-    TELEGRAM_CHAT_IDS: LOCAL.staffChats,
-    PANEL_URL: `${worker}/admin`,
-    CORS_ALLOWED_ORIGIN: `${site},http://localhost:3000`,
-    STRIPE_SUCCESS_URL: `${site}/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}&lang={lang}`,
-    STRIPE_CANCEL_URL: `${site}/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}&lang={lang}`,
-    ACCEPTANCE_REMINDER_MINUTES: process.env.ACCEPTANCE_REMINDER_MINUTES ?? "4",
-    ACCEPTANCE_TIMEOUT_MINUTES: process.env.ACCEPTANCE_TIMEOUT_MINUTES ?? "30",
-    WORKER_ROLE: "all",
-    ACCESS_TEAM_DOMAIN: "",
-    ACCESS_AUD: "",
-  };
+export function stackFromEnv(overrides = {}) {
+  return createStack({
+    stateDir: process.env.LOCAL_STACK_STATE ?? ".local-stack",
+    ports: {
+      worker: Number(process.env.WORKER_PORT ?? 8787),
+      cloud: Number(process.env.CLOUD_PORT ?? 8790),
+      site: Number(process.env.SITE_PORT ?? 4174),
+    },
+    workerVars: {
+      ...(process.env.STRIPE_TIMEOUT_MS ? { STRIPE_TIMEOUT_MS: process.env.STRIPE_TIMEOUT_MS } : {}),
+      ...(process.env.LOCK_STALE_SECONDS ? { LOCK_STALE_SECONDS: process.env.LOCK_STALE_SECONDS } : {}),
+      ...(process.env.LOCK_REVIEW_MINUTES ? { LOCK_REVIEW_MINUTES: process.env.LOCK_REVIEW_MINUTES } : {}),
+    },
+    ...overrides,
+  });
 }
 
-const children = [];
-function start(name, command, argv, options = {}) {
-  const child = spawn(command, argv, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"], ...options });
-  const tag = `[${name}]`;
-  child.stdout.on("data", (d) => process.stdout.write(String(d).replace(/^/gm, `${tag} `)));
-  child.stderr.on("data", (d) => process.stderr.write(String(d).replace(/^/gm, `${tag} `)));
-  child.on("exit", (code) => console.log(`${tag} exited (${code})`));
-  children.push(child);
-  return child;
-}
-
-function stopAll() {
-  for (const c of children) c.kill("SIGTERM");
-  process.exit(0);
-}
-
-async function waitFor(url, label, timeoutMs = 60_000) {
-  const until = Date.now() + timeoutMs;
-  while (Date.now() < until) {
-    try {
-      const res = await fetch(url);
-      if (res.status < 500) return;
-    } catch {
-      /* not up yet */
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  throw new Error(`${label} did not start (${url})`);
-}
-
-export function buildSite() {
+export function buildSite(workerUrl = "http://localhost:8787") {
   console.log("Building the storefronts against the local Worker (out-local/)…");
   const res = spawnSync("npx", ["next", "build"], {
     cwd: ROOT,
     stdio: "inherit",
-    env: { ...process.env, NEXT_PUBLIC_ORDER_API_BASE_URL: worker },
+    env: { ...process.env, NEXT_PUBLIC_ORDER_API_BASE_URL: workerUrl },
   });
   if (res.status !== 0) throw new Error("next build failed");
   rmSync(join(ROOT, "out-local"), { recursive: true, force: true });
   cpSync(join(ROOT, "out"), join(ROOT, "out-local"), { recursive: true });
 }
 
-export function migrate() {
-  mkdirSync(STATE_DIR, { recursive: true });
+export function migrate(stateDir) {
+  mkdirSync(stateDir, { recursive: true });
   const res = spawnSync(
     "npx",
-    ["--no-install", "wrangler", "d1", "migrations", "apply", "shang-hai-orders", "--local", "--persist-to", STATE_DIR],
+    ["--no-install", "wrangler", "d1", "migrations", "apply", "shang-hai-orders", "--local", "--persist-to", stateDir],
     { cwd: WORKER_DIR, stdio: "inherit", env: { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false" } },
   );
   if (res.status !== 0) throw new Error("D1 migrations failed");
 }
 
-export function startWorker() {
-  const vars = Object.entries(workerVars()).flatMap(([k, v]) => ["--var", `${k}:${v}`]);
-  return start(
-    "worker",
-    "npx",
-    ["--no-install", "wrangler", "dev", "--local", "--port", String(LOCAL.workerPort), "--ip", "localhost", "--persist-to", STATE_DIR, "--test-scheduled", ...vars],
-    { cwd: WORKER_DIR, env: { ...process.env, WRANGLER_SEND_METRICS: "false" } },
+/** (1) Schema: the local database must match the migrations; drift is repaired additively. */
+export function ensureSchema(stateDir) {
+  const result = checkLocalDatabase({ persistTo: stateDir, repair: true });
+  if (result.ok) {
+    if (result.repaired) {
+      console.log(`✔ Local database repaired (it had applied an older revision of a migration). Backup: ${relative(ROOT, result.backup ?? "")}`);
+    } else {
+      console.log("✔ Local database schema matches the migrations.");
+    }
+    return;
+  }
+  throw new Error(
+    [
+      "The local database schema does not match the migrations and cannot be repaired automatically:",
+      ...(result.problems ?? []).map((p) => `  - ${p}`),
+      ...(result.blocked ?? []).map((p) => `  ✗ ${p}`),
+      result.error ? `  ${result.error}` : "",
+      "Start a clean local state with:  npm run demo:local -- --fresh   (deletes .local-stack/ only)",
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
 }
 
-export function startCloud() {
-  return start("cloud", process.execPath, [join(ROOT, "scripts/local-stack/cloud.mjs")], {
-    env: { ...process.env, PORT: String(LOCAL.cloudPort), WEBHOOK_URL: `${worker}/api/stripe/webhook`, WEBHOOK_SECRET: LOCAL.webhookSecret },
-  });
+const OPEN_STATUSES = ["pending", "awaiting_acceptance", "accepting", "rejecting", "preparing", "ready", "needs_review"];
+
+/**
+ * (2) D1 ↔ fake Stripe: orders still in play must point at payments the local Stripe knows.
+ * A mismatch means the state comes from an older demo whose Stripe kept no data (or one of the
+ * two was deleted): those orders cannot be charged or refunded and will be flagged EN REVISIÓN.
+ */
+/**
+ * @param {{ stateDir: string, urls: { cloud: string } }} stack
+ * @returns {Promise<{ orphans: { id: string, number: number | null, status: string, stripe_session_id: string | null, stripe_payment_intent_id: string | null }[] }>}
+ */
+export async function checkCoherence(stack) {
+  const rows = queryD1(
+    `SELECT id, number, status, payment_status, stripe_session_id, stripe_payment_intent_id FROM orders
+      WHERE status IN (${OPEN_STATUSES.map((s) => `'${s}'`).join(", ")}) OR payment_status = 'refund_pending'`,
+    { persistTo: stack.stateDir },
+  );
+  const state = await (await fetch(`${stack.urls.cloud}/__control/state`)).json();
+  const intents = new Set(state.intents.map((i) => i.id));
+  const sessions = new Set(state.sessionIds);
+  const orphans = /** @type {any[]} */ (rows).filter((o) => (o.stripe_payment_intent_id ? !intents.has(o.stripe_payment_intent_id) : o.stripe_session_id && !sessions.has(o.stripe_session_id)));
+  if (!orphans.length) {
+    console.log(`✔ Local database and local Stripe are consistent (${rows.length} open orders).`);
+    return { orphans };
+  }
+  console.warn(
+    [
+      `⚠ ${orphans.length} open order(s) point at payments the local Stripe does not know`,
+      "  (state from an older demo whose fake Stripe kept no data, or a deleted state file):",
+      ...orphans.map((o) => `    #${o.number ?? "?"} ${o.status} · ${o.stripe_payment_intent_id ?? o.stripe_session_id}`),
+      "  They will be flagged EN REVISIÓN (nothing can be charged or refunded for them).",
+      "  To start clean:  npm run demo:local -- --fresh",
+    ].join("\n"),
+  );
+  return { orphans };
 }
 
-export function startSite() {
-  return start("site", process.execPath, [join(ROOT, "scripts/serve-static.mjs")], {
-    env: { ...process.env, PORT: String(LOCAL.sitePort), HOST: "localhost", STATIC_ROOT: "out-local" },
-  });
+async function healthCheck(stack) {
+  const res = await fetch(`${stack.urls.worker}/api/health`);
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 503 && body.schema === "outdated") throw new Error("The Worker reports schema-outdated (see the [worker] log for what is missing).");
+  if (!res.ok) throw new Error(`Worker health check failed: ${res.status}`);
 }
 
-/** wrangler dev --test-scheduled exposes /__scheduled: run the cron like Cloudflare does. */
-export function startCronLoop(everyMs = 20_000) {
-  return setInterval(() => {
-    fetch(`${worker}/__scheduled?cron=*+*+*+*+*`).catch(() => undefined);
-  }, everyMs);
+/** Worker + fake cloud (used by the Playwright ordering suite and --backend-only). */
+export async function startBackend(stack, { fresh = false, cronEveryMs = 20_000 } = {}) {
+  if (fresh && stack.hasState()) stack.wipe();
+  migrate(stack.stateDir);
+  ensureSchema(stack.stateDir);
+  await stack.startCloud();
+  await checkCoherence(stack);
+  await stack.startWorker();
+  await healthCheck(stack);
+  if (cronEveryMs > 0) stack.startCron(cronEveryMs);
 }
 
-/** Worker + fake cloud only, with a fresh database (used by the E2E suite). */
-export async function startBackend({ fresh = false, cronEveryMs = 20_000 } = {}) {
-  if (fresh) rmSync(STATE_DIR, { recursive: true, force: true });
-  migrate();
-  startCloud();
-  startWorker();
-  await waitFor(`${cloud}/`, "fake cloud");
-  await waitFor(`${worker}/api/health`, "Worker", 90_000);
-  startCronLoop(cronEveryMs);
+let stack = null;
+
+/** Stops every service (they run in their own process groups) before exiting. */
+async function shutdown(code) {
+  try {
+    await stack?.stopAll();
+  } finally {
+    process.exit(code);
+  }
 }
 
 async function main() {
-  process.on("SIGINT", stopAll);
-  process.on("SIGTERM", stopAll);
+  stack = stackFromEnv();
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => void shutdown(0));
+  process.on("exit", () => stack?.killAllSync());
+
   if (args.has("--build-only")) {
-    buildSite();
+    buildSite(stack.urls.worker);
     return;
   }
+  const fresh = args.has("--fresh");
   if (args.has("--backend-only")) {
-    await startBackend({ fresh: args.has("--fresh"), cronEveryMs: Number(process.env.CRON_EVERY_MS ?? 20_000) });
+    await startBackend(stack, { fresh, cronEveryMs: Number(process.env.CRON_EVERY_MS ?? 20_000) });
     console.log("Backend ready");
     return;
   }
-  if (!args.has("--no-site") && (args.has("--build") || !existsSync(join(ROOT, "out-local")))) buildSite();
-  migrate();
-  startCloud();
-  startWorker();
-  if (!args.has("--no-site")) startSite();
-  await waitFor(`${cloud}/`, "fake cloud");
-  await waitFor(`${worker}/api/health`, "Worker", 90_000);
-  if (!args.has("--no-site")) await waitFor(`${site}/mangocat-test/`, "site");
-  startCronLoop();
+  if (!args.has("--no-site") && (args.has("--build") || !existsSync(join(ROOT, "out-local")))) buildSite(stack.urls.worker);
+  await startBackend(stack, { fresh, cronEveryMs: Number(process.env.CRON_EVERY_MS ?? 20_000) });
+  if (!args.has("--no-site")) await stack.startSite();
   console.log(`
   ┌──────────────────────────────────────────────────────────────────────────────┐
    Local demo ready (test data only, no real money)
-   Storefronts:   ${site}/mangocat-test/showcase/shang-hai/
-   Staff panel:   ${worker}/admin   (sign in: ENVIAR CÓDIGO, then read it on the phone page)
-   Staff phone:   ${cloud}/telegram (Telegram alerts and sign-in codes)
+   Storefronts:   ${stack.urls.site}/mangocat-test/showcase/shang-hai/
+   Staff panel:   ${stack.urls.worker}/admin   (sign in: ENVIAR CÓDIGO, then read it on the phone page)
+   Staff phone:   ${stack.urls.cloud}/telegram (Telegram alerts and sign-in codes)
    Payment page:  opens automatically from the checkout (fake Stripe)
+   State:         ${relative(ROOT, stack.stateDir)}/ — D1, fake Stripe and fake Telegram are kept together.
+                  Start from scratch:  npm run demo:local -- --fresh
   └──────────────────────────────────────────────────────────────────────────────┘`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main().catch((error) => {
-    console.error(error);
-    stopAll();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main().catch(async (error) => {
+    console.error(`\n✗ ${error instanceof Error ? error.message : error}\n`);
+    await shutdown(1);
   });
 }

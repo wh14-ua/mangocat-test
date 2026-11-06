@@ -1,7 +1,7 @@
 import type { OrderStatus } from "../../../src/lib/commerce/types";
 import { cleanText } from "../../../src/lib/commerce/validation";
 import { formatClock } from "../../../src/lib/i18n/format";
-import { PREP_MINUTES_MAX, PREP_MINUTES_MIN } from "./config";
+import { lockReviewMs, PREP_MINUTES_MAX, PREP_MINUTES_MIN } from "./config";
 import { getOrder, lockInfo, updateOrderIf, type EventSource, type OrderPatch, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
@@ -31,7 +31,7 @@ import { missingPaymentNote, stripeClient, stripePatch, syncOrderPayment } from 
  *    and a refund can never exceed what was charged, so a new attempt cannot double anything);
  * 4. finishes with another conditional UPDATE, writing who did what in order_events.
  * If the outcome at Stripe is unknown (timeout, 5xx), the lock stays and the cron resolves it
- * from Stripe's real state; if Stripe still cannot tell after LOCK_REVIEW_AFTER_MS, or does
+ * from Stripe's real state; if Stripe still cannot tell after LOCK_REVIEW_SECONDS, or does
  * not know the payment at all (404), the order goes to EN REVISIÓN with what a person needs
  * to act, and the staff are alerted. The kitchen never sees an unpaid order, and no order
  * stays locked indefinitely.
@@ -252,8 +252,6 @@ async function toReview(env: Env, deps: Deps, order: OrderRow, from: OrderStatus
   return fail(502, "needs-review", `${reason}. El pedido queda EN REVISIÓN.`, updated);
 }
 
-/** A lock Stripe has not let us resolve for this long goes to review (and the staff are alerted). */
-export const LOCK_REVIEW_AFTER_MS = 5 * 60_000;
 
 /**
  * A Stripe call that could not tell what happened, while holding the accept/reject lock:
@@ -281,7 +279,7 @@ async function lockUnresolved(
     return toReview(env, deps, order, from, actor, `Stripe rechaza la consulta del pago ${piId} (${describeFailure(failure)}): revisa la configuración de Stripe`);
   }
   const since = (await lockInfo(env.DB, order.id, from)).since ?? order.updated_at;
-  if (deps.now().getTime() - Date.parse(since) >= LOCK_REVIEW_AFTER_MS) {
+  if (deps.now().getTime() - Date.parse(since) >= lockReviewMs(env)) {
     const at = formatClock(since, "es");
     return toReview(
       env,
@@ -456,7 +454,7 @@ async function simpleStep(
 // Recovery: stale locks and the "retry" button
 // ---------------------------------------------------------------------------
 
-/** A lock older than this means the request that took it never finished. */
+/** Default age after which a lock is considered abandoned (see staleLockMs / LOCK_STALE_SECONDS). */
 export const STALE_LOCK_MS = 90_000;
 
 /**
