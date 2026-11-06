@@ -10,6 +10,7 @@ import {
   d1,
   eventually,
   orderRow,
+  printLogsOnFailure,
   payOnPage,
   placedOrder,
   checkout,
@@ -30,6 +31,7 @@ import {
  */
 
 let stack: Stack;
+printLogsOnFailure(() => stack);
 let cookie: string;
 
 async function startAll(s: Stack) {

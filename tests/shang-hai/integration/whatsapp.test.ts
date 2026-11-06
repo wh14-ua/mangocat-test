@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ensureSchema, migrate } from "../../../scripts/local-stack/run.mjs";
-import { cloudState, d1, eventually, http, placedOrder, staff, staffSignIn, suiteStack, type Stack } from "./stack-client";
+import { cloudState, d1, eventually, http, placedOrder, printLogsOnFailure, staff, staffSignIn, suiteStack, type Stack } from "./stack-client";
 
 /**
  * WhatsApp Cloud API alerts on the real Worker (workerd + local D1) against the fake Cloud API:
@@ -12,6 +12,7 @@ import { cloudState, d1, eventually, http, placedOrder, staff, staffSignIn, suit
 
 let stack: Stack;
 let cookie: string;
+printLogsOnFailure(() => stack);
 
 beforeAll(async () => {
   stack = suiteStack("whatsapp", 8940);
@@ -31,8 +32,16 @@ afterAll(async () => {
 const control = (path: string, body: unknown) =>
   http(`${stack.urls.cloud}/__control/whatsapp/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-const whatsappRow = (orderId: string) =>
-  d1(stack, `SELECT status, delivered_at, read_at, error_code, provider_message_id FROM notifications WHERE order_id = '${orderId}' AND channel = 'whatsapp' AND kind = 'new_order'`)[0];
+type AlertRow = { status: string; lastError: string | null; deliveredAt: string | null; readAt: string | null };
+
+/**
+ * The order's WhatsApp alert as the panel's order detail shows it (read through the Worker, as
+ * the polling loops need: a second process on the SQLite file competes with the Worker's writes).
+ */
+async function whatsappAlert(orderId: string): Promise<AlertRow | undefined> {
+  const order = (await staff(stack, cookie, `/api/admin/orders/${orderId}`)).body.order as { notifications?: (AlertRow & { channel: string; kind: string })[] } | undefined;
+  return order?.notifications?.find((n) => n.channel === "whatsapp" && n.kind === "new_order");
+}
 
 async function board() {
   return (await staff(stack, cookie, "/api/admin/board")).body as unknown as {
@@ -50,7 +59,7 @@ describe("WhatsApp alerts on the real Worker", () => {
     );
     expect(message.to).toBe("34600000001");
     expect(message.button?.url).toBe(`${stack.urls.worker}/admin?pedido=${order.orderId}`);
-    await eventually(async () => Boolean(whatsappRow(order.orderId)?.delivered_at), "the delivery receipt");
+    await eventually(async () => Boolean((await whatsappAlert(order.orderId))?.deliveredAt), "the delivery receipt");
     const card = Object.values((await board()).columns).flat().find((c) => c.id === order.orderId);
     expect(card?.alert).toBe("delivered");
   }, 60_000);
@@ -58,35 +67,40 @@ describe("WhatsApp alerts on the real Worker", () => {
   it("while Meta cannot reach the Worker the alert stays 'sent (unconfirmed)'; the retried webhook confirms it later", async () => {
     await control("webhooks", { paused: true });
     const order = await placedOrder(stack);
-    await eventually(async () => whatsappRow(order.orderId)?.status === "sent", "the API acceptance");
-    expect(whatsappRow(order.orderId).delivered_at).toBeNull();
+    await eventually(async () => (await whatsappAlert(order.orderId))?.status === "sent", "the API acceptance");
+    expect((await whatsappAlert(order.orderId))?.deliveredAt).toBeNull();
     await control("webhooks", { paused: false });
-    await eventually(async () => Boolean(whatsappRow(order.orderId)?.delivered_at), "the late receipt");
+    await eventually(async () => Boolean((await whatsappAlert(order.orderId))?.deliveredAt), "the late receipt");
   }, 60_000);
 
   it("an expired token: the order is on the panel, the panel says WhatsApp needs a new token, and the alert goes out once renewed", async () => {
     await control("token", { expired: true });
-    const order = await placedOrder(stack);
-    await eventually(async () => whatsappRow(order.orderId)?.error_code === "190", "the 190 failure");
-    const before = await board();
-    expect(Object.values(before.columns).flat().some((c) => c.id === order.orderId)).toBe(true);
-    expect(before.health.whatsapp.problem?.kind).toBe("credentials");
-    await control("token", { expired: false });
+    let order;
+    try {
+      order = await placedOrder(stack);
+      const id = order.orderId;
+      await eventually(async () => (await whatsappAlert(id))?.lastError?.startsWith("190:"), "the 190 failure");
+      const before = await board();
+      expect(Object.values(before.columns).flat().some((c) => c.id === id)).toBe(true);
+      expect(before.health.whatsapp.problem?.kind).toBe("credentials");
+    } finally {
+      await control("token", { expired: false }); // even if this test fails, the next one has a valid token
+    }
     // The next attempt is 30 min away: bring it forward, then let the Worker's own cron run.
     d1(stack, `UPDATE notifications SET next_attempt_at = '2000-01-01T00:00:00.000Z' WHERE order_id = '${order.orderId}' AND channel = 'whatsapp'`);
     await eventually(async () => {
       await stack.runCron();
-      return Boolean(whatsappRow(order.orderId)?.delivered_at);
+      return Boolean((await whatsappAlert(order.orderId))?.deliveredAt);
     }, "the alert after the token is renewed", 60_000);
     expect((await board()).health.whatsapp.problem).toBeNull();
   }, 90_000);
 
   it("receipts sent while the Worker restarts are retried by Meta and still arrive", async () => {
     const order = await placedOrder(stack);
-    await eventually(async () => whatsappRow(order.orderId)?.status === "sent", "the API acceptance");
+    await eventually(async () => (await whatsappAlert(order.orderId))?.status === "sent", "the API acceptance");
     await control("webhooks", { paused: true });
     await stack.restartWorker();
     await control("webhooks", { paused: false });
-    await eventually(async () => Boolean(whatsappRow(order.orderId)?.delivered_at), "the receipt after the restart");
+    await eventually(async () => Boolean((await whatsappAlert(order.orderId))?.deliveredAt), "the receipt after the restart");
   }, 120_000);
 });

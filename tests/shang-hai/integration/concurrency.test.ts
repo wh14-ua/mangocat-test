@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ensureSchema, migrate } from "../../../scripts/local-stack/run.mjs";
-import { accept, checkout, cloudState, customerView, d1, eventually, orderRow, payOnPage, reject, staff, staffSignIn, suiteStack, type Placed, type Stack } from "./stack-client";
+import { accept, checkout, cloudState, customerView, d1, eventually, payOnPage, printLogsOnFailure, reject, staff, staffSignIn, suiteStack, type Placed, type Stack } from "./stack-client";
 
 /**
  * Many customers and two phones at once, against the real Worker and its local D1 (bounded,
@@ -9,6 +9,7 @@ import { accept, checkout, cloudState, customerView, d1, eventually, orderRow, p
  */
 
 let stack: Stack;
+printLogsOnFailure(() => stack);
 let cookie: string;
 
 beforeAll(async () => {
@@ -117,7 +118,8 @@ describe("two phones deciding the same orders at once", () => {
     for (const o of outcomes) expect(o.statuses, o.id).toEqual([200, 409]);
     const state = await cloudState(stack);
     for (const o of targets) {
-      const row = orderRow(stack, o.orderId);
+      // Through the Worker: its background alerts are still being written (paced WhatsApp).
+      const row = (await staff(stack, cookie, `/api/admin/orders/${o.orderId}`)).body.order as { status: string };
       const intent = state.intents.find((i) => i.order === o.orderId);
       if (row.status === "preparing") expect(intent).toMatchObject({ status: "succeeded", amountReceived: o.totalCents });
       else expect([row.status, intent?.status]).toEqual(["rejected", "canceled"]);

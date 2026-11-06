@@ -7,10 +7,27 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { afterEach } from "vitest";
 import { queryD1 } from "../../../scripts/db/schema.mjs";
 import { createStack } from "../../../scripts/local-stack/harness.mjs";
 
 export type Stack = ReturnType<typeof createStack>;
+
+/**
+ * When a test fails, prints what the Worker and the fake cloud were doing just before (the
+ * services run quietly; this is the evidence for a failure that does not happen every time,
+ * in CI too). Call once per suite, at the top level.
+ */
+export function printLogsOnFailure(current: () => Stack | undefined, lines = 80) {
+  afterEach(({ task }) => {
+    const stack = current();
+    if (!stack || task.result?.state !== "fail") return;
+    for (const name of ["worker", "cloud"] as const) {
+      const recent = (stack.logs[name] as string[]).slice(-lines);
+      console.error(`\n── ${task.name} — last ${recent.length} ${name} log lines ──\n${recent.join("\n")}`);
+    }
+  });
+}
 
 /**
  * fetch() that retries once when Node's HTTP client reused a keep-alive connection the local
@@ -136,11 +153,19 @@ export async function control(stack: Stack, path: string, body: unknown = {}) {
 
 /**
  * Rows straight from the local D1 (wrangler d1 execute, same files the Worker uses). It is a
- * second process on the same SQLite file: use it when the Worker is not in the middle of a
- * burst of writes (workerd answers SQLITE_BUSY otherwise — a local-only effect).
+ * second process on the same SQLite file, so a write the Worker is doing at that moment (paced
+ * WhatsApp alerts keep it writing in the background) can answer SQLITE_BUSY — a local-only
+ * effect, never seen through the Worker's own binding. The query is then simply run again.
  */
 export function d1(stack: Stack, sql: string): Record<string, unknown>[] {
-  return queryD1(sql, { persistTo: stack.stateDir }) as Record<string, unknown>[];
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return queryD1(sql, { persistTo: stack.stateDir }) as Record<string, unknown>[];
+    } catch (error) {
+      if (attempt >= 8 || !String(error).includes("SQLITE_BUSY")) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250 * attempt);
+    }
+  }
 }
 
 export function orderRow(stack: Stack, id: string) {
