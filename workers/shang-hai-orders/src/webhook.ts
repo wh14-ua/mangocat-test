@@ -173,7 +173,11 @@ async function processEvent(env: Env, deps: Deps, event: StripeEvent & { id: str
 
   const synced = await syncOrderPayment(env, deps, order.id, meta, { paymentIntentId });
   if (!synced.ok) {
-    if (synced.reason === "stripe-unavailable") return { status: "processed", orderId: order.id, outcome: "retry", retry: true };
+    // Stripe unreachable, or payments switched off for a moment (key rotation): answer 5xx so
+    // Stripe delivers the event again later — never store it as handled and lose it.
+    if (synced.reason === "stripe-unavailable" || synced.reason === "payments-disabled") {
+      return { status: "processed", orderId: order.id, outcome: "retry", retry: true };
+    }
     return { status: "ignored", orderId: order.id, outcome: synced.reason };
   }
 

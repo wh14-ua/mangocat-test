@@ -26,7 +26,7 @@ export const DEFAULT_STRIPE_TIMEOUT_MS = 15_000;
 
 /**
  * How certain a failed call's outcome is:
- * - "unknown": no answer (network, timeout) or an answer that does not tell (429, 5xx). The
+ * - "unknown": no answer (network, timeout) or an answer that does not tell (409, 429, 5xx). The
  *   operation may or may not have happened at Stripe: re-read before deciding, never assume.
  * - "missing": 404 — Stripe does not know that object (deleted test data, another account or
  *   mode, a local stand-in that lost its state). Nothing can have happened to it from here.
@@ -35,7 +35,9 @@ export const DEFAULT_STRIPE_TIMEOUT_MS = 15_000;
 export type FailureKind = "unknown" | "missing" | "refused";
 
 export function failureKind(result: { status: number; network: boolean }): FailureKind {
-  if (result.network || result.status === 0 || result.status === 429 || result.status >= 500) return "unknown";
+  // 409: the same idempotency key is still being processed, or the object is locked by another
+  // request — the operation may well complete: unknown, never "refused".
+  if (result.network || result.status === 0 || result.status === 409 || result.status === 429 || result.status >= 500) return "unknown";
   if (result.status === 404) return "missing";
   return "refused";
 }

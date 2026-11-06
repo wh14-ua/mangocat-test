@@ -147,8 +147,10 @@ export function planFromPayment(order: OrderPaymentState, f: PaymentFacts): Paym
     notifyNewOrder: false,
   });
 
+  // Amount / currency / mode / order are checked while the payment is being placed. Once a
+  // person has accepted the order (after reviewing it), its own capture must not bounce it back.
   const mismatch = paymentMismatch(order, f);
-  if (mismatch && order.status !== "completed") return review(mismatch);
+  if (mismatch && ["pending", "failed", "awaiting_acceptance"].includes(order.status)) return review(mismatch);
 
   switch (order.status) {
     case "pending":

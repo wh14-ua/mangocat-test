@@ -154,8 +154,11 @@ export async function handleCheckout(request: Request, env: Env, deps: Deps): Pr
   try {
     await attachStripeSession(env.DB, orderId, created.session.id, deps.now().toISOString());
   } catch (error) {
-    // Not fatal: the webhook matches the session through client_reference_id and stores it.
+    // Without the session on the order, a payment could go unnoticed if its webhook were lost:
+    // the customer is not sent to pay (they can simply try again). The unused session expires
+    // by itself, and the cron closes the order (no session = nothing can have been paid).
     log("checkout.attach-failed", { orderId, message: error instanceof Error ? error.message : "unknown" });
+    return errorJson("server", 503);
   }
   log("checkout.created", {
     orderId,

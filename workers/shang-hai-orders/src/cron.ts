@@ -18,6 +18,11 @@ export const REVIEW_REMINDER_MS = 60 * 60_000;
 /** After a staff decision attempt, the automatic decline waits at least this long. */
 export const DECISION_GRACE_MS = 10 * 60_000;
 
+/** Moves a row to the back of the cron's queues (they are ordered by updated_at). */
+async function bump(env: Env, id: string, now: string) {
+  await env.DB.prepare(`UPDATE orders SET updated_at = ? WHERE id = ?`).bind(now, id).run();
+}
+
 async function rows(env: Env, sql: string, ...params: (string | number)[]): Promise<OrderRow[]> {
   return (await env.DB.prepare(sql).bind(...params).all<OrderRow>()).results;
 }
@@ -110,20 +115,41 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
     });
   }
 
-  // 4. Payments whose webhook never arrived (or failed): ask Stripe directly.
+  // 4. Payments whose webhook never arrived (or failed): ask Stripe directly. Rows rotate
+  //    (ORDER BY updated_at, bumped on every attempt) so a few that never sync cannot starve
+  //    the rest.
   await step("payments", async () => {
+    const expired = Date.parse(at(75 * 60_000));
     for (const order of await rows(
       env,
-      `SELECT * FROM orders WHERE status IN ('pending', 'failed') AND stripe_session_id IS NOT NULL
-         AND created_at <= ? AND created_at >= ? ORDER BY created_at LIMIT ?`,
-      at(2 * 60_000),
+      `SELECT * FROM orders WHERE status IN ('pending', 'failed')
+         AND ((stripe_session_id IS NOT NULL AND created_at >= ?) OR stripe_session_id IS NULL)
+         AND created_at <= ? ORDER BY updated_at LIMIT ?`,
       at(26 * 3_600_000),
+      at(2 * 60_000),
       BATCH,
     )) {
+      if (!order.stripe_session_id) {
+        // Checkout never got a payment session attached: nobody can have paid it.
+        if (Date.parse(order.created_at) <= expired) {
+          await updateOrderIf(env.DB, order.id, order.status, "cancelled", {}, {
+            source: "system",
+            note: "No se llegó a crear el pago; no se ha cobrado nada",
+            now: now.toISOString(),
+          });
+        }
+        continue;
+      }
       const synced = await syncOrderPayment(env, deps, order.id, { source: "system" });
-      if (synced.ok && synced.changed) report.payments += 1;
-      // Sessions last 60 minutes; after that, an unpaid order is closed without charge.
-      if (synced.ok && synced.order.status === order.status && Date.parse(order.created_at) <= now.getTime() - 75 * 60_000) {
+      if (!synced.ok) {
+        await bump(env, order.id, now.toISOString());
+        continue;
+      }
+      if (synced.changed) report.payments += 1;
+      // Sessions last 60 minutes; after that, an unpaid order is closed without charge — unless
+      // a payment is still on its way (processing, or the customer completing 3-D Secure).
+      const settling = synced.facts && !["requires_payment_method", "canceled"].includes(synced.facts.piStatus);
+      if (synced.order.status === order.status && Date.parse(order.created_at) <= expired && !settling) {
         await updateOrderIf(env.DB, order.id, order.status, "cancelled", {}, {
           source: "system",
           note: "La sesión de pago caducó sin completarse; no se ha cobrado nada",
@@ -142,6 +168,7 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
       BATCH,
     )) {
       const synced = await syncOrderPayment(env, deps, order.id, { source: "system" });
+      if (!synced.ok) await bump(env, order.id, now.toISOString()); // next pass, others first
       if (synced.ok && synced.changed) report.refunds += 1;
     }
   });
