@@ -91,9 +91,12 @@ describe("many customers at once", () => {
       expect(whatsapp, o.orderId).toHaveLength(1); // one alert to the owner's WhatsApp, never twice
       expect(whatsapp[0].lastError ?? "", o.orderId).not.toMatch(/131056/); // paced, never refused by the pair rate limit
     }
-    // The owner's WhatsApp receives them one by one (Meta: ~1 message every 6 s to the same number), never twice.
-    const messages = (await cloudState(stack)).whatsapp.filter((m) => m.template === "pedido_nuevo");
-    expect(messages.length).toBeGreaterThan(0);
+    // The owner's WhatsApp receives them one by one (Meta: ~1 message every 6 s to the same number,
+    // counting the sign-in code sent moments ago), never twice.
+    const messages = await eventually(async () => {
+      const list = (await cloudState(stack)).whatsapp.filter((m) => m.template === "pedido_nuevo");
+      return list.length >= 2 ? list : null;
+    }, "the first paced WhatsApp alerts", 45_000);
     expect(new Set(messages.map((m) => m.button?.url)).size).toBe(messages.length);
     const views = await Promise.all(placed.map((o, i) => customerView(stack, o, `198.51.100.${i + 1}`)));
     expect(views.every((v) => v.status === "awaiting_acceptance" && v.paymentStatus === "authorized")).toBe(true);
