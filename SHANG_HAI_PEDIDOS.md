@@ -23,28 +23,36 @@ autorizado (sin cobrar)»                                   ├─ ACEPTAR  ─�
 - **Nunca se cobra un pedido que el restaurante no ha aceptado**, y la cocina no ve como
   aceptado un pedido cuyo cobro no se ha confirmado.
 - Si nadie decide: recordatorio a los 4 min y, a los 30 min, rechazo automático con la reserva
-  anulada (configurable: `ACCEPTANCE_REMINDER_MINUTES`, `ACCEPTANCE_TIMEOUT_MINUTES`).
+  anulada. **Propuesta pendiente de que la confirme el propietario** (`ACCEPTANCE_TIMEOUT_MINUTES`,
+  `0` lo desactiva; `ACCEPTANCE_REMINDER_MINUTES`). Los 30 min cuentan solo desde que consta que
+  el restaurante fue informado (aviso de Telegram entregado o pedido mostrado en el panel): un
+  pedido que nadie pudo ver —Telegram caído, bloqueado o sin configurar y panel cerrado— nunca
+  se rechaza solo; sigue pendiente y visible hasta que una persona decida.
 - El cliente ve el estado real en su pantalla (se actualiza sola): pago pendiente, pendiente de
   aceptación, aceptado con hora estimada, en preparación, listo, entregado, rechazado (con el
   motivo si el restaurante lo indica), reembolso pendiente/completado. La hora solo aparece
   cuando el restaurante la ha indicado.
 
-## 2. Estado real de cada parte
+## 2. Estado real de cada parte (verificado el 2026-11-06)
 
-| Parte | Implementado | Probado con simuladores | Probado con servicios reales (modo test) | Desplegado |
+| Parte | Implementado | Probado con simuladores | Probado con Stripe/Telegram reales (modo test) | Desplegado |
 |---|---|---|---|---|
-| Tres webs en ES/EN, selector, carta traducida | Sí | Sí (unit + E2E) | — | No (rama, sin publicar) |
-| Checkout → Stripe Checkout (autorización, `locale` del cliente) | Sí | Sí: Stripe simulado + `wrangler dev` | **No** (faltan claves de prueba) | No |
-| Webhooks, conciliación, idempotencia | Sí | Sí (69 tests + recorrido en workerd) | **No** | No |
-| Aceptar (cobro) / rechazar (anulación o reembolso) | Sí | Sí | **No** | No |
-| Avisos Telegram, reintentos, recordatorio, caducidad | Sí | Sí: Telegram simulado | **No** (falta el bot) | No |
-| Panel móvil + acceso con código de Telegram | Sí | Sí | **No** | No |
-| Cloudflare Access (opcional) | Sí (verificación JWT) | Sí (JWT firmados en tests) | **No** | No |
-| Fotos de platos (20, IA, ilustrativas) | Sí | Sí | — | No |
+| Tres webs en ES/EN (selector, carta, checkout, estados, fotos opcionales) | Sí | Sí: 90 E2E a 390/768/1440 px + axe | — | No (rama, sin publicar) |
+| Checkout → Stripe Checkout (autorización, idioma del cliente) | Sí | Sí: Worker real (workerd) + Stripe simulado | **No: faltan claves de prueba** | No |
+| Webhooks, conciliación, idempotencia, cron | Sí | Sí: 186 tests unitarios/integración | **No** | No |
+| Aceptar (captura) / rechazar (anulación o reembolso) / listo / entregado | Sí | Sí: API y panel, recorridos completos E2E | **No** | No |
+| Panel móvil SHANG HAI — PEDIDOS (PWA, acceso con código) | Sí | Sí: E2E desde un móvil del personal + axe | **No** | No |
+| Avisos Telegram, reintentos, recordatorio, rechazo automático seguro | Sí | Sí: Telegram simulado (incl. fallos) | **No: falta el bot** | No |
+| Cloudflare Access (opcional) | Sí (JWT verificado) | Sí (JWT firmados en tests) | **No** | No |
 | Pagos reales | **Desactivados a propósito** | — | — | — |
 
-No hay nada desplegado: ni Worker ni base de datos en Cloudflare (se comprobó que no existen),
-y GitHub Pages sigue sirviendo la versión anterior hasta que se fusione la rama.
+Recorridos E2E sobre la pila local (12, todos en verde): móvil del cliente → Stripe → aviso →
+panel: ACEPTAR 20 min → LISTO → ENTREGADO (el móvil del cliente sigue cada paso) en Bento Club,
+Ink House y Wok After Dark; RECHAZAR con motivo desde el panel; cliente en inglés rechazado;
+tarjeta rechazada y reintento; pago cancelado; dos ACEPTAR a la vez (un solo cobro); Telegram
+caído (el pedido sigue en el panel y no se rechaza solo); reembolso fallido (EN REVISIÓN y
+reintento); pérdida de conexión del cliente. Nada está desplegado (no existe Worker ni D1 en
+Cloudflare) y GitHub Pages sigue sirviendo la versión anterior.
 
 ## 3. Credenciales que tienes que configurar (lista corta)
 
@@ -130,6 +138,10 @@ de pago y webhooks firmados, un Telegram simulado («móvil del personal») y la
   soportado: si se configura, el panel acepta su JWT (verificado en el servidor).
 - Si dos personas pulsan ACEPTAR a la vez, solo una operación cuenta; la otra ve «Este pedido
   ya estaba aceptado». Todo queda en el historial con quién lo hizo.
+- Un código cada 30 s como máximo: si dos móviles entran a la vez, el segundo usa el código
+  que ya llegó a Telegram o espera 30 s.
+- El reparto a domicilio está desactivado; si se activa, habrá que mostrar la dirección en las
+  tarjetas del panel (hoy solo se muestra «Recogida en el local»).
 
 ## 7. Pagos: qué está habilitado y por qué
 
@@ -149,7 +161,7 @@ de pago y webhooks firmados, un Telegram simulado («móvil del personal») y la
 
 | Situación | Qué pasa |
 |---|---|
-| Telegram no entrega | El pedido está igualmente en el panel; reintentos con espera creciente; el fallo se ve en «Estado del sistema» |
+| Telegram no entrega | El pedido está igualmente en el panel; reintentos con espera creciente; el fallo se ve en «Estado del sistema»; no corre el plazo de rechazo automático hasta que alguien lo ve en el panel |
 | Stripe no responde al aceptar | El pedido queda «Procesando…», no se prepara; un minuto después el sistema mira el estado real en Stripe y lo termina o lo devuelve a pendientes |
 | La autorización caducó | ACEPTAR responde «NO prepares este pedido; no se ha cobrado nada» y el pedido se cancela |
 | Falla un reembolso | El pedido queda **EN REVISIÓN** (rojo) con el motivo y un aviso por Telegram; RECHAZAR de nuevo lo reintenta |
