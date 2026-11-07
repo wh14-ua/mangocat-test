@@ -40,7 +40,16 @@ ejecuta las comprobaciones rápidas, la integración y las E2E en cada pull requ
 
 ## 3. Última ejecución completa
 
-**Ejecución más reciente (con WhatsApp y los turnos por destinatario), 2026-11-06 17:17 UTC:
+**Ejecución más reciente (límite máximo independiente de WhatsApp y entorno de demo), 2026-11-07:**
+los 12 pasos sin navegador de `npm run qa:full` en verde en local — 368 pruebas unitarias, del
+Worker y de propiedades con `PROPERTY_RUNS=300` (374 al añadir después las 6 de la configuración
+de despliegue, también en verde) y 28 de integración con el Worker real —. Los 4
+pasos E2E no pudieron ejecutarse en local porque otra sesión tenía ocupados los puertos
+8787/8790/4174 con su propia copia de la demo (no se detuvo); se ejecutaron en GitHub Actions
+sobre el mismo commit (8caa773; ejecuciones 42372411336 y 42372414654, las 3 tareas en verde en
+ambas): 374 unitarias · 28 de integración · 90 E2E del modo demo · 20 E2E del sistema real = 512 pruebas.
+
+**Ejecución completa anterior (con WhatsApp y los turnos por destinatario), 2026-11-06 17:17 UTC:
 `npm run qa:full` → los 16 pasos en verde, 478 pruebas:** 341 unitarias, del Worker y de
 propiedades · 27 de integración con el Worker real (reinicios, migraciones, concurrencia,
 WhatsApp) · 90 E2E del modo demo · 20 E2E del sistema real (incluidos el aviso de WhatsApp →
