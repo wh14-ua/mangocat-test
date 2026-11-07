@@ -4,7 +4,9 @@
 // store it with `wrangler secret put STRIPE_WEBHOOK_SECRET` (never in a file in the repo).
 //
 //   STRIPE_SECRET_KEY=sk_test_... node scripts/setup/stripe-webhook.mjs https://<worker-host> --save
-// With --save the secret goes straight into `wrangler secret put` (stdin) and is never printed.
+// With --save the secret goes straight into `wrangler secret put` (stdin) and is never printed;
+// --env <name> stores it in that wrangler environment's Worker (e.g. the demo); --replace first
+// deletes the test-mode endpoints with exactly the same URL (re-running never duplicates deliveries).
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
@@ -35,6 +37,31 @@ form.set("api_version", apiVersion);
 form.set("description", "Shang Hai orders (test mode)");
 for (const e of events) form.append("enabled_events[]", e);
 
+const envAt = process.argv.indexOf("--env");
+const wranglerEnv = envAt === -1 ? null : process.argv[envAt + 1];
+if (envAt !== -1 && !/^[a-z][a-z0-9-]*$/.test(wranglerEnv ?? "")) {
+  console.error("--env needs a wrangler environment name, e.g. --env demo");
+  process.exit(1);
+}
+const stripeHeaders = { Authorization: `Bearer ${key}`, "Stripe-Version": apiVersion };
+
+if (process.argv.includes("--replace")) {
+  const existing = await fetch("https://api.stripe.com/v1/webhook_endpoints?limit=100", { headers: stripeHeaders });
+  const list = await existing.json();
+  if (!existing.ok) {
+    console.error(`Stripe answered ${existing.status}: ${list.error?.message ?? "error"}`);
+    process.exit(1);
+  }
+  for (const endpoint of (list.data ?? []).filter((e) => e.url === form.get("url") && !e.livemode)) {
+    const removed = await fetch(`https://api.stripe.com/v1/webhook_endpoints/${endpoint.id}`, { method: "DELETE", headers: stripeHeaders });
+    if (!removed.ok) {
+      console.error(`Could not delete the previous endpoint ${endpoint.id} (${removed.status}).`);
+      process.exit(1);
+    }
+    console.log(`Previous endpoint for the same URL deleted: ${endpoint.id}`);
+  }
+}
+
 const res = await fetch("https://api.stripe.com/v1/webhook_endpoints", {
   method: "POST",
   headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/x-www-form-urlencoded", "Stripe-Version": apiVersion },
@@ -48,7 +75,7 @@ if (!res.ok) {
 console.log(`Webhook endpoint created: ${body.id} -> ${body.url}`);
 console.log(`API version ${apiVersion}; ${events.length} events: ${events.join(", ")}`);
 if (process.argv.includes("--save")) {
-  const saved = spawnSync("npx", ["--no-install", "wrangler", "secret", "put", "STRIPE_WEBHOOK_SECRET"], {
+  const saved = spawnSync("npx", ["--no-install", "wrangler", "secret", "put", "STRIPE_WEBHOOK_SECRET", ...(wranglerEnv ? ["--env", wranglerEnv] : [])], {
     cwd: new URL("../../workers/shang-hai-orders/", import.meta.url),
     input: `${body.secret}\n`,
     stdio: ["pipe", "inherit", "inherit"],
@@ -56,5 +83,5 @@ if (process.argv.includes("--save")) {
   process.exit(saved.status ?? 1);
 }
 console.log("\nNow run, and paste this signing secret when asked (it is shown only now):\n");
-console.log("  cd workers/shang-hai-orders && npx wrangler secret put STRIPE_WEBHOOK_SECRET\n");
+console.log(`  cd workers/shang-hai-orders && npx wrangler secret put STRIPE_WEBHOOK_SECRET${wranglerEnv ? ` --env ${wranglerEnv}` : ""}\n`);
 console.log(`  ${body.secret}\n`);

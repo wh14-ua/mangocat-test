@@ -68,5 +68,6 @@ node_modules/
 
 # local end-to-end stack (scripts/local-stack)
 /out-local/
+/out-demo/
 /.local-stack/
 /.local-stack-e2e/
