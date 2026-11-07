@@ -1,18 +1,14 @@
 import type { MenuCategory, MenuItem } from "@/lib/commerce/types";
 import { getOrderability } from "@/lib/commerce/catalog";
-import {
-  MENU_SECTIONS,
-  categoryDisplayName,
-  sectionOfCategory,
-  shangHaiCatalog,
-  type MenuSectionId,
-} from "@/lib/shang-hai/catalog";
+import { MENU_SECTIONS, sectionOfCategory, shangHaiCatalog, type MenuSectionId } from "@/lib/shang-hai/catalog";
+import type { BentoText, Span } from "@/lib/shang-hai/i18n/bento-club";
 import { shangHaiPhotos } from "@/data/shang-hai/photos";
 import type { PhotoLike } from "@/components/shang-hai/shared/ShPhoto";
 
 /**
  * BENTO CLUB — derived, presentation-only data. Every number shown on the page is
- * computed from the shared catalog (never typed by hand).
+ * computed from the shared catalog (never typed by hand). Words come from the
+ * dictionaries (bento-club.ts, menu-i18n.ts) in the visitor's language.
  */
 
 export type SectionKey = MenuSectionId | "otros";
@@ -26,33 +22,35 @@ export const SECTION_TONE: Record<SectionKey, "butter" | "tomato" | "lime" | "cr
   otros: "cream",
 };
 
-const shareLine = (() => {
-  const combos = shangHaiCatalog.sections.find((s) => s.category.id === "combos")?.items ?? [];
-  const menus = shangHaiCatalog.sections.find((s) => s.category.id === "menus")?.items ?? [];
-  const pieces = combos.map((i) => i.pieces?.count).filter((n): n is number => Boolean(n));
-  const people = menus
-    .map((i) => Number(i.name.match(/para (\d+) personas/i)?.[1]))
-    .filter((n) => Number.isFinite(n) && n > 0);
-  const combosPart = pieces.length
-    ? `Combos de ${Math.min(...pieces)} a ${Math.max(...pieces)} piezas`
-    : "Combos";
-  const menusPart = people.length
-    ? `menús para ${Math.min(...people)} a ${Math.max(...people)} personas`
-    : "menús para compartir";
-  return `${combosPart} y ${menusPart}.`;
-})();
+function span(values: number[]): Span | null {
+  return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
+}
 
-export const SECTION_LINE: Record<SectionKey, string> = {
-  "para-compartir": shareLine,
-  "cocina-china": "Entrantes, sopas, dim sum, pato, pollo, ternera, marisco, arroces y tallarines.",
-  sushi: "Nigiris, makis, uramakis, temakis, gunkan y bowls.",
-  bebidas: "Cerveza, refrescos, agua, zumos, cava y vinos.",
-  otros: "",
-};
+const itemsOf = (categoryId: string) =>
+  shangHaiCatalog.sections.find((s) => s.category.id === categoryId)?.items ?? [];
+
+/** Pieces in the combos ("de 14 a 33 piezas"). */
+export const COMBO_PIECES = span(
+  itemsOf("combos")
+    .map((i) => i.pieces?.count)
+    .filter((n): n is number => Boolean(n)),
+);
+
+/** People per set menu, read from the published names ("Menú para 2 Personas A"). */
+export const MENU_PEOPLE = span(
+  itemsOf("menus")
+    .map((i) => Number(i.name.match(/para (\d+) personas/i)?.[1]))
+    .filter((n) => Number.isFinite(n) && n > 0),
+);
+
+/** The one-line summary printed on each section band. */
+export function sectionLine(section: SectionKey, t: BentoText): string {
+  if (section === "para-compartir") return t.menu.shareLine(COMBO_PIECES, MENU_PEOPLE);
+  return section === "otros" ? "" : t.menu.sectionLine[section];
+}
 
 export type BentoCategory = {
   category: MenuCategory;
-  label: string;
   items: MenuItem[];
   section: SectionKey;
   domId: string;
@@ -60,8 +58,6 @@ export type BentoCategory = {
 
 export type BentoSection = {
   id: SectionKey;
-  name: string;
-  line: string;
   tone: (typeof SECTION_TONE)[SectionKey];
   categories: BentoCategory[];
   itemCount: number;
@@ -78,15 +74,12 @@ export const BENTO_SECTIONS: BentoSection[] = MENU_SECTIONS.map((section) => {
     .filter((s): s is NonNullable<typeof s> => Boolean(s))
     .map((s) => ({
       category: s.category,
-      label: categoryDisplayName(s.category.id, s.category.name),
       items: s.items,
       section: section.id,
       domId: categoryDomId(s.category.id),
     }));
   return {
     id: section.id,
-    name: section.name,
-    line: SECTION_LINE[section.id],
     tone: SECTION_TONE[section.id],
     categories,
     itemCount: categories.reduce((n, c) => n + c.items.length, 0),
@@ -125,14 +118,21 @@ export const CHEAPEST_MENU = (byCategory.get("menus")?.items ?? [])
 
 const P = shangHaiPhotos.bentoClub;
 
-export const HERO_PHOTO: PhotoLike = P.sushi;
+export type BentoPhotoKey = keyof typeof P;
+
+export const HERO_PHOTO_KEY: BentoPhotoKey = "sushi";
+export const HERO_PHOTO: PhotoLike = P[HERO_PHOTO_KEY];
 
 /** Photo compartments that open a category ("Imagen ilustrativa"). */
-export const CATEGORY_PHOTO: Partial<Record<string, PhotoLike>> = {
-  entrantes: P.springrolls,
-  "dim-sum": P.dumplings,
-  acompanamientos: P.rice,
-  bowls: P.poke,
+export const CATEGORY_PHOTO: Partial<Record<string, BentoPhotoKey>> = {
+  entrantes: "springrolls",
+  "dim-sum": "dumplings",
+  acompanamientos: "rice",
+  bowls: "poke",
 };
+
+export function bentoPhoto(key: BentoPhotoKey): PhotoLike {
+  return P[key];
+}
 
 export const POPULAR_CATEGORY_IDS = ["combos", "makis", "dim-sum", "pollo", "menus"];

@@ -12,7 +12,8 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)), "out");
+// STATIC_ROOT=out-local serves the build made for the local end-to-end stack.
+const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)), process.env.STATIC_ROOT ?? "out");
 const BASE = "/mangocat-test";
 const PORT = Number(process.env.PORT ?? 4173);
 const HOST = process.env.HOST ?? "127.0.0.1";

@@ -1,6 +1,7 @@
 import type { CheckoutRequest, OrderStatus, OrderSummary } from "../types";
 import type { FieldErrors } from "../validation";
 import type { QuoteIssue } from "../pricing";
+import { CHECKOUT_ERROR_TEXT } from "../messages";
 
 export type PaymentsMode = "demo" | "stripe-test" | "stripe-live" | "disabled";
 
@@ -37,6 +38,13 @@ export interface OrderGateway {
   getOrder(orderId: string, orderToken: string): Promise<OrderLookup>;
 }
 
+/** What the simulated restaurant can do with a demo order (mirrors the real staff panel). */
+export type DemoRestaurantAction =
+  | { type: "accept"; prepMinutes: number }
+  | { type: "reject"; reason?: string }
+  | { type: "ready" }
+  | { type: "complete" };
+
 /** Extra controls only the demo simulator offers (never available against the API). */
 export interface DemoControls {
   simulatePayment(
@@ -44,18 +52,10 @@ export interface DemoControls {
     orderToken: string,
     outcome: "approve" | "decline" | "cancel",
   ): Promise<OrderLookup>;
-  advanceDemoOrder(orderId: string, orderToken: string): Promise<OrderLookup>;
+  simulateRestaurant(orderId: string, orderToken: string, action: DemoRestaurantAction): Promise<OrderLookup>;
 }
 
-export const CHECKOUT_ERROR_COPY: Record<CheckoutFailure["error"], string> = {
-  invalid: "Revisa los datos marcados.",
-  "not-payable": "Hay productos en el pedido que no se pueden pagar online ahora mismo.",
-  "price-changed": "Los precios han cambiado desde que abriste la carta. Revisa el total antes de continuar.",
-  "age-confirmation-required": "El pedido incluye bebidas alcohólicas: confirma que eres mayor de 18 años.",
-  "payments-disabled": "El pago online no está disponible en este momento. Puedes llamar al restaurante para hacer tu pedido.",
-  "rate-limited": "Demasiados intentos seguidos. Espera un minuto y vuelve a intentarlo.",
-  network: "No hay conexión con el servidor de pedidos. Comprueba tu conexión y vuelve a intentarlo.",
-  server: "El servidor de pedidos no ha podido guardar el pedido. No se ha realizado ningún cargo. Inténtalo de nuevo en unos minutos.",
-};
+/** Spanish wording, kept for existing imports. Localized: CHECKOUT_ERROR_TEXT in messages.ts. */
+export const CHECKOUT_ERROR_COPY: Record<CheckoutFailure["error"], string> = CHECKOUT_ERROR_TEXT.es;
 
-export const TERMINAL_STATUSES: readonly OrderStatus[] = ["completed", "cancelled"];
+export const TERMINAL_STATUSES: readonly OrderStatus[] = ["completed", "cancelled", "rejected"];

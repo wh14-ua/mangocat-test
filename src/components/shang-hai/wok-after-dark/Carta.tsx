@@ -2,32 +2,30 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import type { MenuItem } from "@/lib/commerce/types";
-import {
-  categoryDisplayName,
-  MENU_SECTIONS,
-  shangHaiCatalog,
-} from "@/lib/shang-hai/catalog";
+import type { MenuCategory, MenuItem } from "@/lib/commerce/types";
+import type { Photo } from "@/data/shang-hai/photos";
+import { MENU_SECTIONS, sectionOfCategory, shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { categoryName, sectionName } from "@/lib/shang-hai/menu-i18n";
+import { COMMON_TEXT } from "@/lib/shang-hai/i18n/common";
+import type { WokCountKind } from "@/lib/shang-hai/i18n/wok-after-dark";
 import { useMenuSearch } from "@/hooks/shang-hai/useMenuSearch";
-import { ShPhoto, type PhotoLike } from "@/components/shang-hai/shared/ShPhoto";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
+import { ShPhoto } from "@/components/shang-hai/shared/ShPhoto";
 import { TicketCard } from "./TicketCard";
 import { CategoryTicker } from "./CategoryTicker";
 import { useQuantities } from "./cart-actions";
 import { useWokUIActions } from "./WokUI";
+import { useWokText } from "./WokLanguage";
 import { wokPhotos } from "./photos";
 
-const SECTION_PHOTOS: Partial<Record<string, PhotoLike | undefined>> = {
+const SECTION_PHOTOS: Partial<Record<string, Photo | undefined>> = {
   "cocina-china": wokPhotos.noodles,
   sushi: wokPhotos.sushi,
 };
 
-/** One factual line per section, written from the published categories. */
-const SECTION_LINES: Record<string, string> = {
-  "para-compartir": "Menús cerrados de 2 a 6 personas y combos de sushi de 14 a 33 piezas.",
-  "cocina-china": "Entrantes, dim sum, sopas, pato, pollo, ternera, marisco, arroces y tallarines.",
-  sushi: "Nigiris, makis, uramakis, sashimi, temakis, gunkan y poke bowls.",
-  bebidas: "Cerveza, refrescos, agua, zumos, cava y vinos de la casa y de bodega.",
-};
+/** English counts drinks as drinks (the Spanish copy says "platos" for the whole carta). */
+const countKind = (categoryId: string): WokCountKind =>
+  sectionOfCategory(categoryId) === "bebidas" ? "drink" : "dish";
 
 const sectionData = MENU_SECTIONS.map((section) => {
   const categories = shangHaiCatalog.sections.filter((s) =>
@@ -75,15 +73,18 @@ function SectionPoster({
   index: number;
   categories: number;
   dishes: number;
-  photo?: PhotoLike;
+  photo?: Photo;
   firstCategoryId?: string;
 }) {
   const reduce = useReducedMotion();
+  const { locale } = useLocale();
+  const t = useWokText();
+  const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <header data-cat={firstCategoryId} className="relative grid gap-6 border-t-4 border-[var(--wok-orange)] pt-4 md:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] md:items-end lg:gap-10">
       <div className="wok-poster-title min-w-0">
         <p className="wok-cond text-[0.8125rem] text-[var(--wok-orange)]">
-          Sección {String(index + 1).padStart(2, "0")} de {String(MENU_SECTIONS.length).padStart(2, "0")}
+          {t.carta.sectionOf(pad(index + 1), pad(MENU_SECTIONS.length))}
         </p>
         <motion.h2
           id={`sec-${id}-title`}
@@ -101,14 +102,21 @@ function SectionPoster({
         {photo && (
           <figure className="mb-5 hidden md:block">
             <div className="wok-slant aspect-[4/5] overflow-hidden bg-[var(--wok-petrol-3)]">
-              <ShPhoto photo={photo} sizes="(min-width: 1024px) 304px, 40vw" className="h-full w-full object-cover" />
+              <ShPhoto
+                photo={photo}
+                alt={t.photos.alt(photo)}
+                sizes="(min-width: 1024px) 304px, 40vw"
+                className="h-full w-full object-cover"
+              />
             </div>
-            <figcaption className="wok-cond wok-muted mt-2 text-right text-[0.6875rem]">Imagen ilustrativa</figcaption>
+            <figcaption className="wok-cond wok-muted mt-2 text-right text-[0.6875rem]">
+              {COMMON_TEXT[locale].photos.illustrative}
+            </figcaption>
           </figure>
         )}
-        <p className="text-[1.0625rem] leading-snug md:text-[1.125rem]">{SECTION_LINES[id]}</p>
+        <p className="text-[1.0625rem] leading-snug md:text-[1.125rem]">{t.carta.sectionLines[id]}</p>
         <p className="wok-cond wok-muted mt-3 text-[0.8125rem]">
-          {categories} {categories === 1 ? "categoría" : "categorías"} / {dishes} platos
+          {t.carta.sectionCounts({ categories, dishes, kind: id === "bebidas" ? "drink" : "dish" })}
         </p>
       </div>
     </header>
@@ -116,23 +124,31 @@ function SectionPoster({
 }
 
 function CategoryBlock({
-  categoryId,
-  name,
-  nameEn,
+  category,
   items,
   quantities,
 }: {
-  categoryId: string;
-  name: string;
-  nameEn?: string;
+  category: MenuCategory;
   items: MenuItem[];
   quantities: Quantities;
 }) {
+  const { locale } = useLocale();
+  const t = useWokText();
+  const categoryId = category.id;
+  const name = categoryName(category, locale);
+  // The Spanish carta also shows the English name the restaurant publishes for some
+  // categories (now in its reviewed wording); the English carta needs no second name.
+  const altName = locale === "es" && category.nameEn ? categoryName(category, "en") : null;
   const photo = categoryId === "dim-sum" ? wokPhotos.dumplings : undefined;
   const meta = (
     <p className="wok-cond wok-muted text-[0.8125rem]">
-      {nameEn ? `${nameEn} / ` : ""}
-      {items.length} {items.length === 1 ? "plato" : "platos"}
+      {altName ? (
+        <>
+          <span lang="en">{altName}</span>
+          {" / "}
+        </>
+      ) : null}
+      {t.carta.categoryCount({ count: items.length, kind: countKind(categoryId) })}
     </p>
   );
   return (
@@ -140,19 +156,26 @@ function CategoryBlock({
       {photo ? (
         <div className="mb-4 grid gap-4 border-b-2 border-[var(--wok-metal)] pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] sm:items-end">
           <div className="min-w-0">
-            <h3 className="wok-display text-[clamp(2.5rem,8vw,4.75rem)]">{categoryDisplayName(categoryId, name)}</h3>
+            <h3 className="wok-display text-[clamp(2.5rem,8vw,4.75rem)]">{name}</h3>
             <div className="mt-3">{meta}</div>
           </div>
           <figure className="min-w-0">
             <div className="wok-slant aspect-[16/7] overflow-hidden bg-[var(--wok-petrol-3)]">
-              <ShPhoto photo={photo} sizes="(min-width: 1024px) 680px, 92vw" className="h-full w-full object-cover" />
+              <ShPhoto
+                photo={photo}
+                alt={t.photos.alt(photo)}
+                sizes="(min-width: 1024px) 680px, 92vw"
+                className="h-full w-full object-cover"
+              />
             </div>
-            <figcaption className="wok-cond wok-muted mt-2 text-right text-[0.6875rem]">Imagen ilustrativa</figcaption>
+            <figcaption className="wok-cond wok-muted mt-2 text-right text-[0.6875rem]">
+              {COMMON_TEXT[locale].photos.illustrative}
+            </figcaption>
           </figure>
         </div>
       ) : (
         <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-1 border-b-2 border-[var(--wok-metal)] pb-3">
-          <h3 className="wok-display text-[clamp(2.5rem,8vw,4.75rem)]">{categoryDisplayName(categoryId, name)}</h3>
+          <h3 className="wok-display text-[clamp(2.5rem,8vw,4.75rem)]">{name}</h3>
           {meta}
         </div>
       )}
@@ -186,19 +209,21 @@ export function Carta() {
   const { query, setQuery, results, active } = useMenuSearch();
   const quantities = useQuantities();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { locale } = useLocale();
+  const t = useWokText();
   useActiveCategoryTracking(!active);
 
   const resultsLabel = useMemo(() => {
     if (!active) return "";
-    if (results.length === 0) return `Sin resultados para «${query.trim()}»`;
-    return `${results.length} ${results.length === 1 ? "plato encontrado" : "platos encontrados"}`;
-  }, [active, results.length, query]);
+    if (results.length === 0) return t.carta.noResultsStatus(query.trim());
+    return t.carta.resultsStatus(results.length);
+  }, [active, results.length, query, t]);
 
   return (
-    <section id="carta" aria-label="Carta" className="relative px-4 pb-16 pt-14 sm:px-6 lg:px-12 lg:pt-20">
+    <section id="carta" aria-label={t.carta.region} className="relative px-4 pb-16 pt-14 sm:px-6 lg:px-12 lg:pt-20">
       <div className="max-w-[60rem]">
         <label htmlFor="wok-search" className="wok-cond block text-[0.875rem] text-[var(--wok-orange)]">
-          Busca un plato
+          {t.carta.searchLabel}
         </label>
         <div className="relative mt-2">
           <input
@@ -207,7 +232,7 @@ export function Carta() {
             type="search"
             data-testid="menu-search"
             className="wok-search"
-            placeholder="Gyozas, pato, maki…"
+            placeholder={t.carta.searchPlaceholder}
             autoComplete="off"
             enterKeyHint="search"
             value={query}
@@ -216,7 +241,7 @@ export function Carta() {
           {query && (
             <button
               type="button"
-              aria-label="Borrar la búsqueda"
+              aria-label={t.carta.clearSearch}
               onClick={() => {
                 setQuery("");
                 inputRef.current?.focus();
@@ -228,8 +253,7 @@ export function Carta() {
           )}
         </div>
         <p className="wok-muted mt-3 text-[0.875rem]">
-          {shangHaiCatalog.visibleItems.length} platos en {shangHaiCatalog.catalog.categories.length} categorías.
-          Carta y precios según la ficha pública del restaurante (29/10/2026).
+          {t.carta.summary(shangHaiCatalog.visibleItems.length, shangHaiCatalog.catalog.categories.length)}
         </p>
       </div>
 
@@ -242,11 +266,10 @@ export function Carta() {
           <h2 id="wok-results-title" className="wok-display text-[clamp(2.75rem,9vw,5.5rem)]">
             {results.length ? (
               <>
-                <span className="text-[var(--wok-orange)]">{results.length}</span>{" "}
-                {results.length === 1 ? "resultado" : "resultados"}
+                <span className="text-[var(--wok-orange)]">{results.length}</span> {t.carta.resultsWord(results.length)}
               </>
             ) : (
-              "Nada por aquí"
+              t.carta.nothingHere
             )}
           </h2>
           {results.length ? (
@@ -255,11 +278,9 @@ export function Carta() {
             </div>
           ) : (
             <div className="mt-6 max-w-[38rem]">
-              <p className="text-[1.125rem]">
-                No hay platos que coincidan con «{query.trim()}». Prueba con «pato», «maki» o «gyozas».
-              </p>
+              <p className="text-[1.125rem]">{t.carta.noMatch(query.trim())}</p>
               <button type="button" className="wok-btn wok-btn--line mt-6" onClick={() => setQuery("")}>
-                Ver toda la carta
+                {t.carta.seeAll}
               </button>
             </div>
           )}
@@ -276,7 +297,7 @@ export function Carta() {
             >
               <SectionPoster
                 id={section.id}
-                name={section.name}
+                name={sectionName(section.id, locale)}
                 index={i}
                 categories={section.categories.length}
                 dishes={section.dishCount}
@@ -284,14 +305,7 @@ export function Carta() {
                 firstCategoryId={section.categories[0]?.category.id}
               />
               {section.categories.map(({ category, items }) => (
-                <CategoryBlock
-                  key={category.id}
-                  categoryId={category.id}
-                  name={category.name}
-                  nameEn={category.nameEn}
-                  items={items}
-                  quantities={quantities}
-                />
+                <CategoryBlock key={category.id} category={category} items={items} quantities={quantities} />
               ))}
             </section>
           ))}

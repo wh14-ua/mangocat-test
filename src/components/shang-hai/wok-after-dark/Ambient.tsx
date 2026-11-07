@@ -1,9 +1,12 @@
 "use client";
 
 import { motion, useScroll } from "motion/react";
-import { formatCents } from "@/lib/commerce/money";
+import { formatMoney } from "@/lib/i18n/format";
 import { useCart } from "@/hooks/shang-hai/useCart";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { shangHaiCatalog } from "@/lib/shang-hai/catalog";
+import { itemName } from "@/lib/shang-hai/menu-i18n";
+import { useWokText } from "./WokLanguage";
 
 /** Thin orange bar that tracks how far down the poster you are. */
 export function ScrollProgress() {
@@ -14,17 +17,20 @@ export function ScrollProgress() {
 /** Screen-reader announcements for cart changes (derived, no extra state). */
 export function CartAnnouncer() {
   const { lastEvent, itemCount, totalCents } = useCart();
+  const { locale } = useLocale();
+  const t = useWokText();
   let message = "";
   if (lastEvent?.type === "added") {
-    const name = shangHaiCatalog.byId.get(lastEvent.itemId)?.name ?? "plato";
-    message = `Añadido: ${name}. Tu ticket: ${itemCount} ${itemCount === 1 ? "producto" : "productos"}, ${formatCents(totalCents)}.`;
+    const item = shangHaiCatalog.byId.get(lastEvent.itemId);
+    const name = item ? itemName(item, locale) : t.announce.dishFallback;
+    message = t.announce.added(name, itemCount, formatMoney(totalCents, locale));
   } else if (lastEvent?.type === "rejected") {
     message =
       lastEvent.error === "quantity-limit" || lastEvent.error === "order-limit"
-        ? "Has llegado al máximo de unidades para un pedido online."
-        : "Este plato no se puede añadir ahora mismo.";
+        ? t.announce.limit
+        : t.announce.unavailable;
   } else if (lastEvent?.type === "removed") {
-    message = `Plato quitado. Tu ticket: ${itemCount} ${itemCount === 1 ? "producto" : "productos"}.`;
+    message = t.announce.removed(itemCount);
   }
   return (
     <p aria-live="polite" className="wok-sr">

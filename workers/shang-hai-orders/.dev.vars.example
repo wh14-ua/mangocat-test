@@ -4,8 +4,21 @@ STRIPE_SECRET_KEY=sk_test_replace_me
 # Printed by `stripe listen --forward-to localhost:8787/api/stripe/webhook`
 # (or the signing secret of the test webhook endpoint in the Stripe Dashboard).
 STRIPE_WEBHOOK_SECRET=whsec_replace_me
+# WhatsApp Cloud API (primary alert + sign-in channel). Token: a System User token with
+# whatsapp_business_messaging (Business settings > System users). App secret: App settings > Basic.
+# Verify token: any random string, the same one you type in the app's webhook configuration.
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_APP_SECRET=
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+# The owner's WhatsApp number(s), international format. Never the sender number itself.
+WHATSAPP_RECIPIENTS=
+# Telegram bot token from @BotFather (alternative channel). Optional.
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_IDS=
 
 # Optional overrides for local development
 CORS_ALLOWED_ORIGIN=http://localhost:3000
-STRIPE_SUCCESS_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}
-STRIPE_CANCEL_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}
+PANEL_URL=http://localhost:8787/admin
+STRIPE_SUCCESS_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}&lang={lang}
+STRIPE_CANCEL_URL=http://localhost:3000/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}&lang={lang}

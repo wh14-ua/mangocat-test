@@ -5,6 +5,7 @@ import { InkUIProvider } from "@/components/shang-hai/ink-house/InkUI";
 import { InkCartDrawer } from "@/components/shang-hai/ink-house/InkCartDrawer";
 import { InkOptionDialog } from "@/components/shang-hai/ink-house/InkOptionDialog";
 import { InkDefs } from "@/components/shang-hai/ink-house/Seal";
+import { INK_TEXT } from "@/lib/shang-hai/i18n/ink-house";
 import "@/components/shang-hai/ink-house/ink.css";
 
 /** Display face: high-contrast editorial serif for the brand, chapters and numerals. */
@@ -24,7 +25,7 @@ const albert = Albert_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { absolute: "SHANG HAI · Restaurante Asiático en Orihuela — Propuesta 01 · Ink House" },
+  title: { absolute: INK_TEXT.es.meta.home },
   description:
     "Propuesta 01 de MangoCat Studios para SHANG HAI, restaurante asiático en Orihuela: la carta completa como un libro editorial y pedidos online para recoger.",
 };

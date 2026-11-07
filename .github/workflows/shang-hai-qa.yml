@@ -1,0 +1,88 @@
+name: Shang Hai QA
+
+# Quality gate for the ordering system (storefronts, order Worker, staff panel).
+# Runs on every pull request and on pushes to the ordering branch; can be run by hand.
+# Everything is local to the runner: fake Stripe, WhatsApp and Telegram; no secrets, no real money.
+on:
+  pull_request:
+  push:
+    branches: [feat/shang-hai-ordering]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shang-hai-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Static checks, unit and property tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            workers/shang-hai-orders/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix workers/shang-hai-orders
+      - name: Quick gate (types, lint, migrations lock, secrets, audit, menu, panel bundle, unit + property tests)
+        run: npm run qa:quick
+        env:
+          PROPERTY_RUNS: "150"
+
+  integration:
+    name: Integration (real Worker + local D1)
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            workers/shang-hai-orders/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix workers/shang-hai-orders
+      - name: Worker bundle (wrangler dry run)
+        run: npm --prefix workers/shang-hai-orders run build:dry-run
+      - name: Restarts, migrations, concurrency and WhatsApp (real Worker + D1)
+        run: npm run test:integration
+
+  e2e:
+    name: Browser E2E (demo storefronts + real ordering flow)
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            workers/shang-hai-orders/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix workers/shang-hai-orders
+      - run: npx playwright install --with-deps chromium
+      - name: Storefronts in demo mode (90 tests)
+        run: npm run test:e2e:demo
+      - name: Real ordering flow (Worker + D1 + fake Stripe/WhatsApp/Telegram)
+        run: npm run test:e2e:ordering
+      - name: Keep traces of failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7

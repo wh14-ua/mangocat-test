@@ -6,6 +6,8 @@ import type {
   OptionSelections,
   OrderLimits,
 } from "./types";
+import { DEFAULT_LOCALE, parseLocale, type Locale } from "../i18n/locale";
+import { VALIDATION_TEXT } from "./messages";
 
 export type FieldErrors = Partial<Record<string, string>>;
 
@@ -43,21 +45,23 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@.]+(\.[^\s@.]+)+$/;
 export function validateCustomer(
   input: Partial<CustomerDetails> | undefined,
   limits: Pick<OrderLimits, "maxNotesLength">,
+  locale: Locale = DEFAULT_LOCALE,
 ): ParseResult<CustomerDetails> {
+  const t = VALIDATION_TEXT[locale];
   const errors: FieldErrors = {};
   const name = cleanText(input?.name, 80);
   const phoneRaw = cleanText(input?.phone, 32);
   const email = cleanText(input?.email, 120).toLowerCase();
   const notes = cleanText(input?.notes, limits.maxNotesLength + 1, true);
 
-  if (name.length < 2) errors.name = "Escribe tu nombre para que podamos identificar el pedido.";
+  if (name.length < 2) errors.name = t.name;
   const phone = normalizePhone(phoneRaw);
-  if (!phoneRaw) errors.phone = "Necesitamos un teléfono por si hay que confirmar algo del pedido.";
-  else if (!phone) errors.phone = "Revisa el teléfono: por ejemplo 612 345 678.";
-  if (!email) errors.email = "Escribe un correo para enviarte la confirmación.";
-  else if (!EMAIL.test(email)) errors.email = "Revisa el correo: falta algo como nombre@dominio.es.";
+  if (!phoneRaw) errors.phone = t.phoneRequired;
+  else if (!phone) errors.phone = t.phoneInvalid;
+  if (!email) errors.email = t.emailRequired;
+  else if (!EMAIL.test(email)) errors.email = t.emailInvalid;
   if (notes.length > limits.maxNotesLength) {
-    errors.notes = `Los comentarios admiten hasta ${limits.maxNotesLength} caracteres.`;
+    errors.notes = t.notesTooLong(limits.maxNotesLength);
   }
 
   if (Object.keys(errors).length) return { ok: false, errors };
@@ -69,15 +73,17 @@ export function validateCustomer(
 
 export function validateDeliveryAddress(
   input: Partial<DeliveryAddress> | undefined,
+  locale: Locale = DEFAULT_LOCALE,
 ): ParseResult<DeliveryAddress> {
+  const t = VALIDATION_TEXT[locale];
   const errors: FieldErrors = {};
   const street = cleanText(input?.street, 160);
   const postalCode = cleanText(input?.postalCode, 5);
   const city = cleanText(input?.city, 80);
   const notes = cleanText(input?.notes, 200, true);
-  if (street.length < 5) errors.street = "Escribe la dirección completa (calle y número).";
-  if (!/^\d{5}$/.test(postalCode)) errors.postalCode = "El código postal tiene 5 cifras.";
-  if (city.length < 2) errors.city = "Escribe el municipio.";
+  if (street.length < 5) errors.street = t.street;
+  if (!/^\d{5}$/.test(postalCode)) errors.postalCode = t.postalCode;
+  if (city.length < 2) errors.city = t.city;
   if (Object.keys(errors).length) return { ok: false, errors };
   return { ok: true, value: { street, postalCode, city, ...(notes ? { notes } : {}) } };
 }
@@ -108,29 +114,32 @@ export function parseCheckoutRequest(
   limits: OrderLimits,
   allowedStorefronts: readonly string[],
 ): ParseResult<CheckoutRequest> {
-  const errors: FieldErrors = {};
   if (!input || typeof input !== "object" || Array.isArray(input)) {
-    return { ok: false, errors: { body: "Petición no válida." } };
+    return { ok: false, errors: { body: VALIDATION_TEXT[DEFAULT_LOCALE].body } };
   }
   const body = input as Record<string, unknown>;
+  // The language only changes wording; an unknown value falls back to Spanish.
+  const locale = parseLocale(body.locale) ?? DEFAULT_LOCALE;
+  const t = VALIDATION_TEXT[locale];
+  const errors: FieldErrors = {};
 
   const catalogId = typeof body.catalogId === "string" ? body.catalogId : "";
-  if (!ID.test(catalogId)) errors.catalogId = "Catálogo no válido.";
+  if (!ID.test(catalogId)) errors.catalogId = t.catalogId;
 
   const storefront = typeof body.storefront === "string" ? body.storefront : "";
-  if (!allowedStorefronts.includes(storefront)) errors.storefront = "Tienda no válida.";
+  if (!allowedStorefronts.includes(storefront)) errors.storefront = t.storefront;
 
   const fulfillment = body.fulfillment as FulfillmentType;
   if (fulfillment !== "pickup" && fulfillment !== "delivery") {
-    errors.fulfillment = "Elige recogida o reparto.";
+    errors.fulfillment = t.fulfillment;
   }
 
   const linesRaw = body.lines;
   const lines: CheckoutRequest["lines"] = [];
   if (!Array.isArray(linesRaw) || linesRaw.length === 0) {
-    errors.lines = "El pedido está vacío.";
+    errors.lines = t.linesEmpty;
   } else if (linesRaw.length > limits.maxLines) {
-    errors.lines = "El pedido tiene demasiados productos distintos.";
+    errors.lines = t.linesTooMany;
   } else {
     for (const raw of linesRaw) {
       const line = raw as Record<string, unknown>;
@@ -145,21 +154,21 @@ export function parseCheckoutRequest(
         quantity > limits.maxQuantityPerLine ||
         selections === null
       ) {
-        errors.lines = "Revisa las cantidades del pedido.";
+        errors.lines = t.linesQuantity;
         break;
       }
       lines.push({ itemId, quantity, selections });
     }
   }
 
-  const customer = validateCustomer(body.customer as Partial<CustomerDetails>, limits);
+  const customer = validateCustomer(body.customer as Partial<CustomerDetails>, limits, locale);
   if (!customer.ok) {
     for (const [k, v] of Object.entries(customer.errors)) errors[`customer.${k}`] = v;
   }
 
   let delivery: DeliveryAddress | undefined;
   if (fulfillment === "delivery") {
-    const address = validateDeliveryAddress(body.delivery as Partial<DeliveryAddress>);
+    const address = validateDeliveryAddress(body.delivery as Partial<DeliveryAddress>, locale);
     if (!address.ok) {
       for (const [k, v] of Object.entries(address.errors)) errors[`delivery.${k}`] = v;
     } else delivery = address.value;
@@ -170,7 +179,7 @@ export function parseCheckoutRequest(
     expected !== undefined &&
     (typeof expected !== "number" || !Number.isSafeInteger(expected) || expected < 0)
   ) {
-    errors.expectedTotalCents = "Importe no válido.";
+    errors.expectedTotalCents = t.expectedTotal;
   }
 
   const catalogVersion =
@@ -189,6 +198,7 @@ export function parseCheckoutRequest(
       ...(delivery ? { delivery } : {}),
       ageConfirmed: body.ageConfirmed === true,
       ...(typeof expected === "number" ? { expectedTotalCents: expected } : {}),
+      locale,
     },
   };
 }

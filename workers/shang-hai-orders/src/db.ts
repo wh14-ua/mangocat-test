@@ -1,13 +1,16 @@
-import type { OrderStatus, PricedLine } from "../../../src/lib/commerce/types";
+import type { OrderStatus, PaymentStatus, PricedLine } from "../../../src/lib/commerce/types";
 import { canTransition } from "../../../src/lib/commerce/orders";
-import type { D1Like } from "./env";
+import type { D1Like, D1Statement } from "./env";
 
 /** Row shapes as stored in D1 (snake_case, integers for booleans). */
 export type OrderRow = {
   id: string;
+  number: number | null;
   token_hash: string;
   status: OrderStatus;
+  payment_status: PaymentStatus;
   storefront: string;
+  locale: "es" | "en";
   fulfillment: "pickup" | "delivery";
   catalog_id: string;
   catalog_version: string;
@@ -30,9 +33,27 @@ export type OrderRow = {
   stripe_payment_status: string | null;
   stripe_amount_total: number | null;
   stripe_livemode: number | null;
+  stripe_capture_before: string | null;
+  stripe_refund_id: string | null;
+  stripe_refund_status: string | null;
+  refund_attempts: number;
+  prep_minutes: number | null;
+  rejection_reason: string | null;
+  review_reason: string | null;
+  staff_seen_at: string | null;
+  /** Owner of the current accept/reject lock (migration 0003); null when not locked. */
+  lock_token: string | null;
+  /** After this time the lock is considered abandoned and recovery may take it over. */
+  lock_expires_at: string | null;
   created_at: string;
   updated_at: string;
+  authorized_at: string | null;
   paid_at: string | null;
+  accepted_at: string | null;
+  ready_by: string | null;
+  ready_at: string | null;
+  completed_at: string | null;
+  rejected_at: string | null;
 };
 
 export type OrderItemRow = {
@@ -48,42 +69,71 @@ export type OrderItemRow = {
   age_restricted: number;
 };
 
+export type EventSource = "checkout" | "stripe" | "staff" | "system";
+
 export type OrderEventRow = {
   id: number;
   order_id: string;
-  from_status: OrderStatus | null;
-  to_status: OrderStatus;
-  source: "checkout" | "stripe" | "staff" | "system";
+  from_status: string | null;
+  to_status: string;
+  source: EventSource;
   actor: string | null;
   stripe_event_id: string | null;
   note: string | null;
   created_at: string;
 };
 
-export type NewOrder = Omit<
+export type NewOrder = Pick<
   OrderRow,
-  | "stripe_session_id"
-  | "stripe_payment_intent_id"
-  | "stripe_payment_status"
-  | "stripe_amount_total"
-  | "stripe_livemode"
-  | "paid_at"
+  | "id"
+  | "token_hash"
+  | "storefront"
+  | "locale"
+  | "fulfillment"
+  | "catalog_id"
+  | "catalog_version"
+  | "currency"
+  | "subtotal_cents"
+  | "delivery_fee_cents"
+  | "total_cents"
+  | "customer_name"
+  | "customer_phone"
+  | "customer_email"
+  | "customer_notes"
+  | "delivery_street"
+  | "delivery_postal_code"
+  | "delivery_city"
+  | "delivery_notes"
+  | "age_confirmed"
+  | "payments_mode"
+  | "created_at"
+  | "updated_at"
 >;
 
-export async function insertOrder(db: D1Like, order: NewOrder, lines: PricedLine[]): Promise<void> {
+/** First counter number. Numbers are global and never reused (#1001, #1002…). */
+export const FIRST_ORDER_NUMBER = 1001;
+
+/**
+ * Stores a pending order with its lines in one transaction and returns its counter
+ * number. The number is computed inside the INSERT (MAX + 1) and protected by a UNIQUE
+ * index; D1 runs writes one at a time, so two checkouts never get the same number.
+ */
+export async function insertOrder(db: D1Like, order: NewOrder, lines: PricedLine[]): Promise<number> {
   const insert = db
     .prepare(
-      `INSERT INTO orders (id, token_hash, status, storefront, fulfillment, catalog_id, catalog_version,
-        currency, subtotal_cents, delivery_fee_cents, total_cents, customer_name, customer_phone,
-        customer_email, customer_notes, delivery_street, delivery_postal_code, delivery_city,
-        delivery_notes, age_confirmed, payments_mode, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO orders (id, number, token_hash, status, payment_status, storefront, locale, fulfillment,
+        catalog_id, catalog_version, currency, subtotal_cents, delivery_fee_cents, total_cents,
+        customer_name, customer_phone, customer_email, customer_notes, delivery_street,
+        delivery_postal_code, delivery_city, delivery_notes, age_confirmed, payments_mode,
+        created_at, updated_at)
+       VALUES (?, (SELECT COALESCE(MAX(number), ${FIRST_ORDER_NUMBER - 1}) + 1 FROM orders), ?, 'pending', 'unpaid',
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       order.id,
       order.token_hash,
-      order.status,
       order.storefront,
+      order.locale,
       order.fulfillment,
       order.catalog_id,
       order.catalog_version,
@@ -132,10 +182,16 @@ export async function insertOrder(db: D1Like, order: NewOrder, lines: PricedLine
     .bind(order.id, order.created_at);
   // D1 batches run in a single transaction: the order is stored completely or not at all.
   await db.batch([insert, ...items, event]);
+  const row = await db.prepare(`SELECT number FROM orders WHERE id = ?`).bind(order.id).first<{ number: number }>();
+  return row?.number ?? 0;
 }
 
 export async function getOrder(db: D1Like, id: string): Promise<OrderRow | null> {
   return db.prepare(`SELECT * FROM orders WHERE id = ?`).bind(id).first<OrderRow>();
+}
+
+export async function getOrderByPaymentIntent(db: D1Like, paymentIntentId: string): Promise<OrderRow | null> {
+  return db.prepare(`SELECT * FROM orders WHERE stripe_payment_intent_id = ?`).bind(paymentIntentId).first<OrderRow>();
 }
 
 export async function getOrderItems(db: D1Like, id: string): Promise<OrderItemRow[]> {
@@ -146,6 +202,22 @@ export async function getOrderItems(db: D1Like, id: string): Promise<OrderItemRo
   return res.results;
 }
 
+export async function getItemsForOrders(db: D1Like, ids: string[]): Promise<Map<string, OrderItemRow[]>> {
+  const out = new Map<string, OrderItemRow[]>();
+  if (!ids.length) return out;
+  const placeholders = ids.map(() => "?").join(", ");
+  const res = await db
+    .prepare(`SELECT * FROM order_items WHERE order_id IN (${placeholders}) ORDER BY order_id, position`)
+    .bind(...ids)
+    .all<OrderItemRow>();
+  for (const item of res.results) {
+    const list = out.get(item.order_id) ?? [];
+    list.push(item);
+    out.set(item.order_id, list);
+  }
+  return out;
+}
+
 export async function getOrderEvents(db: D1Like, id: string): Promise<OrderEventRow[]> {
   const res = await db
     .prepare(`SELECT * FROM order_events WHERE order_id = ? ORDER BY id`)
@@ -154,17 +226,28 @@ export async function getOrderEvents(db: D1Like, id: string): Promise<OrderEvent
   return res.results;
 }
 
-export async function listOrders(
-  db: D1Like,
-  options: { status?: OrderStatus; limit: number },
-): Promise<(OrderRow & { item_count: number })[]> {
-  const where = options.status ? `WHERE o.status = ?` : "";
-  const sql = `SELECT o.*, COALESCE((SELECT SUM(quantity) FROM order_items i WHERE i.order_id = o.id), 0) AS item_count
-               FROM orders o ${where} ORDER BY o.created_at DESC LIMIT ?`;
-  const stmt = options.status
-    ? db.prepare(sql).bind(options.status, options.limit)
-    : db.prepare(sql).bind(options.limit);
-  return (await stmt.all<OrderRow & { item_count: number }>()).results;
+/**
+ * Orders for the staff board: EVERY order that still needs someone (never cut off by the
+ * history), plus today's finished ones (most recent first, bounded).
+ */
+export async function listBoardOrders(db: D1Like, since: string, historyLimit = 100): Promise<OrderRow[]> {
+  const active = await db
+    .prepare(
+      `SELECT * FROM orders
+        WHERE status IN ('awaiting_acceptance', 'accepting', 'rejecting', 'needs_review', 'preparing', 'ready')
+        ORDER BY created_at DESC`,
+    )
+    .all<OrderRow>();
+  const finished = await db
+    .prepare(
+      `SELECT * FROM orders
+        WHERE (status IN ('completed', 'rejected') AND updated_at >= ?)
+           OR (status = 'cancelled' AND authorized_at IS NOT NULL AND updated_at >= ?)
+        ORDER BY updated_at DESC LIMIT ?`,
+    )
+    .bind(since, since, historyLimit)
+    .all<OrderRow>();
+  return [...active.results, ...finished.results];
 }
 
 export async function attachStripeSession(db: D1Like, id: string, sessionId: string, now: string) {
@@ -174,94 +257,193 @@ export async function attachStripeSession(db: D1Like, id: string, sessionId: str
     .run();
 }
 
-export type StripeFields = Partial<
+/** Columns a status change may set together with the status. */
+export type OrderPatch = Partial<
   Pick<
     OrderRow,
+    | "payment_status"
     | "stripe_session_id"
     | "stripe_payment_intent_id"
     | "stripe_payment_status"
     | "stripe_amount_total"
     | "stripe_livemode"
+    | "stripe_capture_before"
+    | "stripe_refund_id"
+    | "stripe_refund_status"
+    | "refund_attempts"
+    | "prep_minutes"
+    | "rejection_reason"
+    | "review_reason"
+    | "authorized_at"
+    | "paid_at"
+    | "accepted_at"
+    | "ready_by"
+    | "ready_at"
+    | "completed_at"
+    | "rejected_at"
+    | "lock_token"
+    | "lock_expires_at"
   >
 >;
 
-export async function updateStripeFields(db: D1Like, id: string, fields: StripeFields, now: string) {
-  const entries = Object.entries(fields).filter(([, v]) => v !== undefined) as [string, string | number | null][];
-  if (!entries.length) return;
-  const sets = entries.map(([k]) => `${k} = ?`).join(", ");
-  await db
-    .prepare(`UPDATE orders SET ${sets}, updated_at = ? WHERE id = ?`)
-    .bind(...entries.map(([, v]) => v), now, id)
+const PATCH_COLUMNS = new Set<string>([
+  "lock_token",
+  "lock_expires_at",
+  "payment_status",
+  "stripe_session_id",
+  "stripe_payment_intent_id",
+  "stripe_payment_status",
+  "stripe_amount_total",
+  "stripe_livemode",
+  "stripe_capture_before",
+  "stripe_refund_id",
+  "stripe_refund_status",
+  "refund_attempts",
+  "prep_minutes",
+  "rejection_reason",
+  "review_reason",
+  "authorized_at",
+  "paid_at",
+  "accepted_at",
+  "ready_by",
+  "ready_at",
+  "completed_at",
+  "rejected_at",
+]);
+
+export type EventMeta = {
+  source: EventSource;
+  actor?: string | null;
+  stripeEventId?: string | null;
+  note?: string | null;
+  now: string;
+};
+
+function eventStatement(db: D1Like, id: string, from: string | null, to: string, meta: EventMeta): D1Statement {
+  return db
+    .prepare(
+      `INSERT INTO order_events (order_id, from_status, to_status, source, actor, stripe_event_id, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(id, from, to, meta.source, meta.actor ?? null, meta.stripeEventId ?? null, meta.note ?? null, meta.now);
+}
+
+export type UpdateResult = { ok: true; changed: boolean } | { ok: false; reason: "conflict" };
+
+/**
+ * Conditional update: applies `to` (or keeps the status when null) and `patch` ONLY if the
+ * order is still in `from`. This is the concurrency guard of the whole system: two staff
+ * phones tapping ACEPTAR, or a webhook racing a staff action, can never both win. The
+ * history row is written in the same transaction.
+ */
+export async function updateOrderIf(
+  db: D1Like,
+  id: string,
+  from: OrderStatus,
+  to: OrderStatus | null,
+  patch: OrderPatch,
+  meta: EventMeta | null,
+  now?: string,
+  /** Only the owner of the accept/reject lock may change a locked order's status. */
+  lockToken?: string | null,
+): Promise<UpdateResult> {
+  const entries = Object.entries(patch).filter(([k, v]) => PATCH_COLUMNS.has(k) && v !== undefined) as [
+    string,
+    string | number | null,
+  ][];
+  const sets = [...(to ? ["status = ?"] : []), ...entries.map(([k]) => `${k} = ?`), "updated_at = ?"];
+  const values: (string | number | null)[] = [...(to ? [to] : []), ...entries.map(([, v]) => v), meta?.now ?? now ?? new Date().toISOString()];
+  const guarded = lockToken !== undefined;
+  const update = db
+    .prepare(`UPDATE orders SET ${sets.join(", ")} WHERE id = ? AND status = ?${guarded ? " AND lock_token IS ?" : ""}`)
+    .bind(...values, id, from, ...(guarded ? [lockToken] : []));
+  if (!meta) {
+    const res = await update.run();
+    return res.meta.changes ? { ok: true, changed: true } : { ok: false, reason: "conflict" };
+  }
+  // The event insert only happens if the UPDATE matched (same transaction, guarded by status).
+  const event = db
+    .prepare(
+      `INSERT INTO order_events (order_id, from_status, to_status, source, actor, stripe_event_id, note, created_at)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE changes() > 0`,
+    )
+    .bind(id, from, to ?? from, meta.source, meta.actor ?? null, meta.stripeEventId ?? null, meta.note ?? null, meta.now);
+  const [res] = await db.batch([update, event]);
+  return res.meta.changes ? { ok: true, changed: true } : { ok: false, reason: "conflict" };
+}
+
+/**
+ * The accept/reject lock an order is in: how many times one was taken (each attempt gets its
+ * own Stripe idempotency key), when the current one was taken (for the review deadline), the
+ * status it was taken from (where an attempt that charged nothing goes back to) and who took it.
+ */
+export async function lockInfo(
+  db: D1Like,
+  orderId: string,
+  status: "accepting" | "rejecting",
+): Promise<{ attempts: number; since: string | null; origin: OrderStatus | null; originSource: EventSource | null }> {
+  const row = await db
+    .prepare(
+      `SELECT COUNT(*) AS n, MAX(created_at) AS since,
+              (SELECT e2.from_status FROM order_events e2
+                WHERE e2.order_id = ? AND e2.to_status = ? AND e2.from_status IS NOT NULL AND e2.from_status <> e2.to_status
+                ORDER BY e2.id DESC LIMIT 1) AS origin,
+              (SELECT e3.source FROM order_events e3
+                WHERE e3.order_id = ? AND e3.to_status = ? AND e3.from_status IS NOT NULL AND e3.from_status <> e3.to_status
+                ORDER BY e3.id DESC LIMIT 1) AS origin_source
+         FROM order_events
+        WHERE order_id = ? AND to_status = ? AND from_status IS NOT NULL AND from_status <> to_status`,
+    )
+    .bind(orderId, status, orderId, status, orderId, status)
+    .first<{ n: number; since: string | null; origin: OrderStatus | null; origin_source: EventSource | null }>();
+  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null, origin: row?.origin ?? null, originSource: row?.origin_source ?? null };
+}
+
+/**
+ * Takes over an abandoned lock (recovery: cron or REINTENTAR). Succeeds only if the lock is
+ * exactly as it was read — same owner, same expiry — so two recoverers, or a recoverer and a
+ * late owner, can never both act on it.
+ */
+export async function takeOverLock(
+  db: D1Like,
+  order: Pick<OrderRow, "id" | "status" | "lock_token" | "lock_expires_at">,
+  token: string,
+  expiresAt: string,
+  now: string,
+): Promise<boolean> {
+  const res = await db
+    .prepare(
+      `UPDATE orders SET lock_token = ?, lock_expires_at = ?, updated_at = ?
+        WHERE id = ? AND status = ? AND lock_token IS ? AND lock_expires_at IS ?`,
+    )
+    .bind(token, expiresAt, now, order.id, order.status, order.lock_token, order.lock_expires_at)
     .run();
+  return Boolean(res.meta.changes);
 }
 
 export type TransitionResult =
   | { ok: true; from: OrderStatus; to: OrderStatus; changed: boolean }
   | { ok: false; reason: "not-found" | "not-allowed" | "conflict"; from?: OrderStatus };
 
-/**
- * Moves an order to `to` if the lifecycle allows it. The UPDATE is conditional on the
- * status we read, so two concurrent writers cannot both apply a transition.
- */
+/** Moves an order to `to` if the lifecycle allows it (conditional on the status read). */
 export async function transitionOrder(
   db: D1Like,
   id: string,
   to: OrderStatus,
-  meta: {
-    source: OrderEventRow["source"];
-    actor?: string | null;
-    stripeEventId?: string | null;
-    note?: string | null;
-    now: string;
-  },
+  meta: EventMeta,
+  patch: OrderPatch = {},
 ): Promise<TransitionResult> {
   const order = await getOrder(db, id);
   if (!order) return { ok: false, reason: "not-found" };
   if (order.status === to) return { ok: true, from: order.status, to, changed: false };
   if (!canTransition(order.status, to)) return { ok: false, reason: "not-allowed", from: order.status };
-
-  const paidAt = to === "paid" ? meta.now : null;
-  const res = await db
-    .prepare(
-      `UPDATE orders SET status = ?, updated_at = ?, paid_at = COALESCE(paid_at, ?)
-       WHERE id = ? AND status = ?`,
-    )
-    .bind(to, meta.now, paidAt, id, order.status)
-    .run();
-  if (!res.meta.changes) return { ok: false, reason: "conflict", from: order.status };
-
-  await db
-    .prepare(
-      `INSERT INTO order_events (order_id, from_status, to_status, source, actor, stripe_event_id, note, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .bind(
-      id,
-      order.status,
-      to,
-      meta.source,
-      meta.actor ?? null,
-      meta.stripeEventId ?? null,
-      meta.note ?? null,
-      meta.now,
-    )
-    .run();
+  const res = await updateOrderIf(db, id, order.status, to, patch, meta);
+  if (!res.ok) return { ok: false, reason: "conflict", from: order.status };
   return { ok: true, from: order.status, to, changed: true };
 }
 
-export async function recordNote(
-  db: D1Like,
-  id: string,
-  status: OrderStatus,
-  meta: { source: OrderEventRow["source"]; stripeEventId?: string | null; note: string; now: string },
-) {
-  await db
-    .prepare(
-      `INSERT INTO order_events (order_id, from_status, to_status, source, stripe_event_id, note, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .bind(id, status, status, meta.source, meta.stripeEventId ?? null, meta.note, meta.now)
-    .run();
+export async function recordNote(db: D1Like, id: string, status: OrderStatus, meta: EventMeta & { note: string }) {
+  await eventStatement(db, id, status, status, meta).run();
 }
 
 // ---------------------------------------------------------------------------
@@ -306,5 +488,33 @@ export async function finishStripeEvent(
   await db
     .prepare(`UPDATE stripe_events SET status = ?, order_id = COALESCE(?, order_id), processed_at = ? WHERE id = ?`)
     .bind(status, orderId, now, id)
+    .run();
+}
+
+// ---------------------------------------------------------------------------
+// System state (health of webhooks, cron and notifications)
+// ---------------------------------------------------------------------------
+
+export async function setState(db: D1Like, key: string, value: string, now: string) {
+  await db
+    .prepare(
+      `INSERT INTO system_state (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    )
+    .bind(key, value, now)
+    .run();
+}
+
+export async function getStates(db: D1Like): Promise<Record<string, { value: string; updatedAt: string }>> {
+  const res = await db.prepare(`SELECT key, value, updated_at FROM system_state`).all<{ key: string; value: string; updated_at: string }>();
+  return Object.fromEntries(res.results.map((r) => [r.key, { value: r.value, updatedAt: r.updated_at }]));
+}
+
+/** Records that staff have had these orders on screen (first time only). */
+export async function markSeenByStaff(db: D1Like, ids: string[], now: string) {
+  if (!ids.length) return;
+  await db
+    .prepare(`UPDATE orders SET staff_seen_at = ? WHERE staff_seen_at IS NULL AND id IN (${ids.map(() => "?").join(", ")})`)
+    .bind(now, ...ids)
     .run();
 }

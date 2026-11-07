@@ -32,19 +32,71 @@ export interface Env {
   DB: D1Like;
   CHECKOUT_LIMITER?: RateLimiterLike;
   LOOKUP_LIMITER?: RateLimiterLike;
+  LOGIN_LIMITER?: RateLimiterLike;
 
   // Secrets (wrangler secret put)
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  TELEGRAM_BOT_TOKEN?: string;
+  /** WhatsApp Cloud API: a System User access token (whatsapp_business_messaging). */
+  WHATSAPP_ACCESS_TOKEN?: string;
+  /** Meta app secret: verifies the X-Hub-Signature-256 of WhatsApp webhooks. */
+  WHATSAPP_APP_SECRET?: string;
+  /** Any random string; Meta echoes it when the webhook URL is registered. */
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN?: string;
+  /** Optional dedicated secret for staff sign-in codes (else derived from a channel token). */
+  STAFF_CODE_SECRET?: string;
 
   // Vars (wrangler.jsonc)
   STRIPE_TEST_MODE?: string;
   PAYMENTS_LIVE_ENABLED?: string;
+  /** "manual" (default): every payment method must support authorise-then-capture.
+   *  "per-method": card/Link/wallets are authorised; methods without manual capture are
+   *  charged at once and refunded if the restaurant rejects. */
+  STRIPE_CAPTURE_MODE?: string;
+  /** Per-request timeout for Stripe API calls in ms (default 15000). */
+  STRIPE_TIMEOUT_MS?: string;
+  /** Seconds after which an accept/reject lock is considered abandoned (default 90). */
+  LOCK_STALE_SECONDS?: string;
+  /** Seconds after which a lock Stripe cannot resolve goes to review (default 300). */
+  LOCK_REVIEW_SECONDS?: string;
   CORS_ALLOWED_ORIGIN?: string;
   STRIPE_SUCCESS_URL?: string;
   STRIPE_CANCEL_URL?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** Restaurant name shown in alerts (default "SHANG HAI"). */
+  RESTAURANT_NAME?: string;
+  /** Comma-separated Telegram chat ids allowed to receive order alerts. */
+  TELEGRAM_CHAT_IDS?: string;
+  /** WhatsApp sender: the phone number id of the business number (WhatsApp Manager / API setup). */
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  /** Comma-separated WhatsApp numbers (E.164, e.g. +34612345678) allowed to receive alerts and codes. */
+  WHATSAPP_RECIPIENTS?: string;
+  /** Graph API version for WhatsApp calls (default v26.0). */
+  WHATSAPP_API_VERSION?: string;
+  /** Language code of the approved templates (default "es"). */
+  WHATSAPP_TEMPLATE_LANGUAGE?: string;
+  /** Test mode only: base URL of a local fake WhatsApp (never honoured in live mode). */
+  WHATSAPP_API_BASE?: string;
+  /** Public URL of the staff panel (the button in Telegram alerts opens it). */
+  PANEL_URL?: string;
+  /** Preparation times offered to staff when accepting, e.g. "15,20,30,45". */
+  PREP_TIME_OPTIONS?: string;
+  /** Minutes without a decision before a reminder alert (0 = never). */
+  ACCEPTANCE_REMINDER_MINUTES?: string;
+  /** Minutes without a decision, counted from when the restaurant was told, before the order is
+   *  declined and the hold released (0 = only the hard limit below applies). */
+  ACCEPTANCE_TIMEOUT_MINUTES?: string;
+  /** Hard limit in minutes from the payment, whatever the alerts did (default 60; cannot be 0). */
+  ACCEPTANCE_DEADLINE_MINUTES?: string;
+  /** "all" (default), "api" (storefront API + webhook + cron) or "panel" (staff panel only). */
+  WORKER_ROLE?: string;
+
+  // Local end-to-end stack only. Ignored unless test mode is on AND the URL is localhost.
+  STRIPE_API_BASE?: string;
+  TELEGRAM_API_BASE?: string;
+  ACCESS_CERTS_URL?: string;
 }
 
 export type JwksCache = Map<string, { keys: JsonWebKeyWithKid[]; fetchedAt: number }>;
@@ -55,14 +107,23 @@ export interface Deps {
   fetch: typeof fetch;
   now: () => Date;
   jwksCache: JwksCache;
+  /** Work allowed to finish after the response (ctx.waitUntil on Cloudflare). */
+  waitUntil: (promise: Promise<unknown>) => void;
+  /** Waits (wall-clock time; tests move their clock instead). */
+  sleep: (ms: number) => Promise<void>;
 }
 
 const sharedJwksCache: JwksCache = new Map();
 
-export function defaultDeps(): Deps {
+export function defaultDeps(ctx?: { waitUntil(promise: Promise<unknown>): void }): Deps {
   return {
     fetch: (input, init) => fetch(input, init),
     now: () => new Date(),
     jwksCache: sharedJwksCache,
+    waitUntil: (promise) => {
+      const guarded = promise.catch(() => undefined);
+      if (ctx) ctx.waitUntil(guarded);
+    },
+    sleep: (ms) => new Promise((done) => setTimeout(done, ms)),
   };
 }

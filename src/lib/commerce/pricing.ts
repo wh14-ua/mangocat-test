@@ -8,6 +8,7 @@ import type {
 import { getOrderability, itemFullName, type CatalogIndex } from "./catalog";
 import { lineKey, normalizeSelections } from "./cart";
 import { multiplyCents, sumCents } from "./money";
+import { QUOTE_ISSUE_TEXT } from "./messages";
 
 export type QuoteIssue =
   | { code: "unknown-item"; itemId: string }
@@ -139,15 +140,5 @@ export function quoteLines(index: CatalogIndex, input: LineInput[], ctx: QuoteCo
   };
 }
 
-export const QUOTE_ISSUE_COPY: Record<QuoteIssue["code"], string> = {
-  "unknown-item": "Un producto ya no está en la carta.",
-  "not-orderable": "Un producto no se puede pedir ahora mismo.",
-  "invalid-options": "Revisa las opciones elegidas de un producto.",
-  "invalid-quantity": "Revisa las cantidades del pedido.",
-  "too-many-lines": "El pedido tiene demasiados productos distintos.",
-  "too-many-items": "El pedido supera el número máximo de unidades.",
-  "order-total-limit": "El importe supera el máximo para pedidos online. Llama al restaurante.",
-  empty: "El pedido está vacío.",
-  "delivery-unavailable": "El reparto a domicilio propio no está disponible.",
-  "delivery-minimum": "No se alcanza el pedido mínimo para reparto.",
-};
+/** Spanish wording, kept for existing imports. Localized: QUOTE_ISSUE_TEXT in messages.ts. */
+export const QUOTE_ISSUE_COPY: Record<QuoteIssue["code"], string> = QUOTE_ISSUE_TEXT.es;

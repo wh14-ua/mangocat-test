@@ -54,24 +54,31 @@ export function allowedOrigins(env: Env): string[] {
 }
 
 const DEFAULT_SUCCESS_URL =
-  "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}";
+  "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/estado/?pedido={orderId}&t={token}&lang={lang}";
 const DEFAULT_CANCEL_URL =
-  "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}";
+  "https://wh14-ua.github.io/mangocat-test/showcase/shang-hai/{storefront}/pedido/?cancelado=1&pedido={orderId}&lang={lang}";
 
 /**
- * Fills {storefront}, {orderId} and {token} in the configured return URL templates.
- * Stripe's own {CHECKOUT_SESSION_ID} placeholder is left untouched for Stripe to fill.
- * Only https URLs (or http://localhost for development) are accepted.
+ * Fills {storefront}, {orderId}, {token} and {lang} in the configured return URL templates.
+ * Templates written before the language existed get `lang=` appended, so the customer
+ * comes back from Stripe in the language they paid in. Stripe's own {CHECKOUT_SESSION_ID}
+ * placeholder is left untouched for Stripe to fill. Only https URLs (or http://localhost
+ * for development) are accepted.
  */
 export function buildReturnUrls(
   env: Env,
-  values: { storefront: string; orderId: string; token: string },
+  values: { storefront: string; orderId: string; token: string; locale?: "es" | "en" },
 ): { successUrl: string; cancelUrl: string } | null {
-  const fill = (template: string) =>
-    template
+  const lang = values.locale ?? "es";
+  const fill = (template: string) => {
+    const filled = template
       .replaceAll("{storefront}", encodeURIComponent(values.storefront))
       .replaceAll("{orderId}", encodeURIComponent(values.orderId))
-      .replaceAll("{token}", encodeURIComponent(values.token));
+      .replaceAll("{token}", encodeURIComponent(values.token))
+      .replaceAll("{lang}", lang);
+    if (template.includes("{lang}")) return filled;
+    return `${filled}${filled.includes("?") ? "&" : "?"}lang=${lang}`;
+  };
   const successUrl = fill(env.STRIPE_SUCCESS_URL?.trim() || DEFAULT_SUCCESS_URL);
   const cancelUrl = fill(env.STRIPE_CANCEL_URL?.trim() || DEFAULT_CANCEL_URL);
   return isSafeReturnUrl(successUrl) && isSafeReturnUrl(cancelUrl) ? { successUrl, cancelUrl } : null;
@@ -93,4 +100,207 @@ export function accessConfig(env: Env): { teamDomain: string; aud: string } | nu
   if (!raw || !aud) return null;
   const teamDomain = raw.replace(/^https?:\/\//, "").replace(/\/+$/, "");
   return { teamDomain, aud };
+}
+
+// ---------------------------------------------------------------------------
+// Acceptance flow, notifications and deployment shape
+// ---------------------------------------------------------------------------
+
+export type WorkerRole = "all" | "api" | "panel";
+
+/**
+ * One codebase, two possible deployments: everything on one Worker ("all"), or the
+ * public API + webhook + cron on one Worker ("api") and the staff panel on another
+ * ("panel") whose whole hostname sits behind Cloudflare Access. Both share the D1 database.
+ */
+export function workerRole(env: Env): WorkerRole {
+  const role = (env.WORKER_ROLE ?? "all").trim().toLowerCase();
+  return role === "api" || role === "panel" ? role : "all";
+}
+
+export function isTestMode(env: Env): boolean {
+  return (env.STRIPE_TEST_MODE ?? "true").trim().toLowerCase() !== "false";
+}
+
+export function isLocalUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && (url.hostname === "localhost" || url.hostname === "127.0.0.1");
+  } catch {
+    return false;
+  }
+}
+
+/** A localhost override, honoured only in test mode (the local mock stack). */
+function localOverride(env: Env, value: string | undefined): string | null {
+  const v = value?.trim().replace(/\/+$/, "");
+  return v && isTestMode(env) && isLocalUrl(v) ? v : null;
+}
+
+/** A lock older than this means the request that took it never finished (LOCK_STALE_SECONDS, default 90). */
+export function staleLockMs(env: Env): number {
+  const n = Number(env.LOCK_STALE_SECONDS);
+  return Number.isFinite(n) && n >= 5 && n <= 600 ? Math.round(n * 1000) : 90_000;
+}
+
+/**
+ * How long an accept/reject lock belongs to the request that took it. Never shorter than the
+ * longest a request can spend on Stripe (four calls, each with its own timeout) plus margin:
+ * recovery must not take over a lock whose owner is still working.
+ */
+export function lockTtlMs(env: Env): number {
+  return Math.max(staleLockMs(env), 4 * stripeTimeoutMs(env) + 10_000);
+}
+
+/** A lock Stripe does not let us resolve goes to review after this long (LOCK_REVIEW_SECONDS, default 300). */
+export function lockReviewMs(env: Env): number {
+  const n = Number(env.LOCK_REVIEW_SECONDS);
+  return Number.isFinite(n) && n >= 10 && n <= 7200 ? Math.round(n * 1000) : 5 * 60_000;
+}
+
+/** STRIPE_TIMEOUT_MS (default 15 s), bounded so a typo can neither disable nor stall it. */
+export function stripeTimeoutMs(env: Env): number {
+  const n = Number(env.STRIPE_TIMEOUT_MS);
+  return Number.isFinite(n) && n > 0 ? Math.min(Math.max(Math.round(n), 10), 60_000) : 15_000;
+}
+
+export function stripeApiBase(env: Env): string {
+  return localOverride(env, env.STRIPE_API_BASE) ?? "https://api.stripe.com/v1";
+}
+
+export function telegramApiBase(env: Env): string {
+  return localOverride(env, env.TELEGRAM_API_BASE) ?? "https://api.telegram.org";
+}
+
+export function accessCertsUrl(env: Env, teamDomain: string): string {
+  return localOverride(env, env.ACCESS_CERTS_URL) ?? `https://${teamDomain}/cdn-cgi/access/certs`;
+}
+
+/** Only genuine Stripe-hosted Checkout pages (or the local mock's, in test mode). */
+export function isAllowedCheckoutUrl(env: Env, url: string): boolean {
+  if (url.startsWith("https://checkout.stripe.com/")) return true;
+  const local = localOverride(env, env.STRIPE_API_BASE);
+  return local !== null && url.startsWith(new URL(local).origin + "/");
+}
+
+export type CaptureMode = "manual" | "per-method";
+
+export function captureMode(env: Env): CaptureMode {
+  return (env.STRIPE_CAPTURE_MODE ?? "").trim().toLowerCase() === "per-method" ? "per-method" : "manual";
+}
+
+export const PREP_MINUTES_MIN = 5;
+export const PREP_MINUTES_MAX = 180;
+const DEFAULT_PREP_OPTIONS = [15, 20, 30, 45];
+
+/** The quick choices offered to staff; any whole number within 5–180 is also accepted. */
+export function prepTimeOptions(env: Env): number[] {
+  const parsed = (env.PREP_TIME_OPTIONS ?? "")
+    .split(",")
+    .map((v) => Number(v.trim()))
+    .filter((n) => Number.isInteger(n) && n >= PREP_MINUTES_MIN && n <= PREP_MINUTES_MAX);
+  const unique = [...new Set(parsed)].sort((a, b) => a - b).slice(0, 8);
+  return unique.length ? unique : DEFAULT_PREP_OPTIONS;
+}
+
+function minutesVar(value: string | undefined, fallback: number, max: number): number {
+  if (value === undefined || value.trim() === "") return fallback;
+  const n = Number(value.trim());
+  return Number.isInteger(n) && n >= 0 && n <= max ? n : fallback;
+}
+
+/** Reminder alert when an order waits this long for a decision (0 disables it). */
+export function reminderMinutes(env: Env): number {
+  return minutesVar(env.ACCEPTANCE_REMINDER_MINUTES, 4, 120);
+}
+
+/**
+ * Without a decision for this long after the restaurant was told (alert delivered, or the panel
+ * showed it), the order is declined automatically and the hold on the customer's card released
+ * (0 switches this clock off; the hard limit, acceptanceDeadlineMinutes, still applies).
+ */
+export function acceptanceTimeoutMinutes(env: Env): number {
+  return minutesVar(env.ACCEPTANCE_TIMEOUT_MINUTES, 30, 24 * 60);
+}
+
+const DEFAULT_DEADLINE_MINUTES = 60;
+
+/**
+ * The hard limit, counted from the payment and independent of every alert channel: an order
+ * nobody decided this long after the customer paid is declined and the money released, even if
+ * WhatsApp (or Telegram, or the panel) never showed it to anyone. It cannot be switched off
+ * (0 means the default) and is never shorter than the acceptance timeout. Default 60, max 24 h.
+ */
+export function acceptanceDeadlineMinutes(env: Env): number {
+  const configured = minutesVar(env.ACCEPTANCE_DEADLINE_MINUTES, DEFAULT_DEADLINE_MINUTES, 24 * 60) || DEFAULT_DEADLINE_MINUTES;
+  return Math.max(configured, acceptanceTimeoutMinutes(env));
+}
+
+export type TelegramConfig = { token: string; chatIds: string[] };
+
+/** Telegram alerts need a bot token (secret) and at least one authorised chat id. */
+export function telegramConfig(env: Env): TelegramConfig | null {
+  const token = env.TELEGRAM_BOT_TOKEN?.trim() ?? "";
+  const chatIds = (env.TELEGRAM_CHAT_IDS ?? "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter((c) => /^-?\d{1,20}$/.test(c));
+  if (!/^\d{5,16}:[A-Za-z0-9_-]{20,}$/.test(token) || chatIds.length === 0) return null;
+  return { token, chatIds: [...new Set(chatIds)] };
+}
+
+export type WhatsAppConfig = {
+  token: string;
+  phoneNumberId: string;
+  /** Digits only (E.164 without "+"), deduplicated. */
+  recipients: string[];
+  apiBase: string;
+  version: string;
+  language: string;
+};
+
+/** E.164 number → digits ("+34 612 345 678" → "34612345678"); null if it is not a plausible number. */
+export function normalizeWhatsAppNumber(raw: string): string | null {
+  const digits = raw.replace(/[\s().-]/g, "").replace(/^\+/, "");
+  return /^[1-9]\d{7,14}$/.test(digits) ? digits : null;
+}
+
+/**
+ * WhatsApp Cloud API, the primary alert channel. Configured only when the token, the sender's
+ * phone number id and at least one authorised recipient are all present; alerts and sign-in
+ * codes only ever go to WHATSAPP_RECIPIENTS.
+ */
+export function whatsappConfig(env: Env): WhatsAppConfig | null {
+  const token = env.WHATSAPP_ACCESS_TOKEN?.trim() ?? "";
+  const phoneNumberId = env.WHATSAPP_PHONE_NUMBER_ID?.trim() ?? "";
+  const recipients = [
+    ...new Set(
+      (env.WHATSAPP_RECIPIENTS ?? "")
+        .split(",")
+        .map((r) => normalizeWhatsAppNumber(r.trim()))
+        .filter((r): r is string => Boolean(r)),
+    ),
+  ];
+  if (token.length < 20 || !/^\d{6,20}$/.test(phoneNumberId) || recipients.length === 0) return null;
+  const version = /^v\d{2,3}\.\d$/.test(env.WHATSAPP_API_VERSION?.trim() ?? "") ? (env.WHATSAPP_API_VERSION as string).trim() : "v26.0";
+  const language = /^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE?.trim() ?? "") ? (env.WHATSAPP_TEMPLATE_LANGUAGE as string).trim() : "es";
+  return { token, phoneNumberId, recipients, apiBase: localOverride(env, env.WHATSAPP_API_BASE) ?? "https://graph.facebook.com", version, language };
+}
+
+/** Channels that can deliver staff sign-in codes, in order of preference. */
+export function codeChannels(env: Env): ("whatsapp" | "telegram")[] {
+  return [...(whatsappConfig(env) ? (["whatsapp"] as const) : []), ...(telegramConfig(env) ? (["telegram"] as const) : [])];
+}
+
+/** The staff panel's public URL (https, or localhost for the mock stack). */
+export function panelUrl(env: Env): string | null {
+  const raw = env.PANEL_URL?.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "https:" || isLocalUrl(raw)) return url.href.replace(/#.*$/, "");
+  } catch {
+    /* invalid */
+  }
+  return null;
 }

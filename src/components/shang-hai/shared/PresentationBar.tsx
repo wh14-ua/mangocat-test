@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { SHANG_HAI_BASE_PATH, STOREFRONTS, storefrontRoutes, type StorefrontId } from "@/lib/shang-hai/storefronts";
 
 const subscribe = () => () => {};
@@ -18,10 +19,15 @@ const readHidden = () =>
  */
 export function PresentationBar({ current }: { current: StorefrontId }) {
   const hidden = useSyncExternalStore(subscribe, readHidden, () => false);
+  const { locale } = useLocale();
+  const t =
+    locale === "en"
+      ? { nav: "MangoCat Studios proposals for Shang Hai", title: " · Proposals for Shang Hai", compare: "Compare proposals" }
+      : { nav: "Propuestas de MangoCat Studios para Shang Hai", title: " · Propuestas para Shang Hai", compare: "Comparar propuestas" };
   if (hidden) return null;
   return (
     <nav
-      aria-label="Propuestas de MangoCat Studios para Shang Hai"
+      aria-label={t.nav}
       className="relative z-[70] flex h-9 items-center gap-3 overflow-x-auto bg-[#1c1c1e] px-3 font-sans text-[12px] leading-none text-white/70 [scrollbar-width:none] sm:px-4"
       style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" }}
     >
@@ -31,7 +37,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
         className="shrink-0 whitespace-nowrap rounded px-1.5 py-1 text-white/85 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#E8812B]"
       >
         <span className="font-semibold text-[#E8812B]">MangoCat</span>
-        <span className="hidden sm:inline"> · Propuestas para Shang Hai</span>
+        <span className="hidden sm:inline">{t.title}</span>
       </Link>
       <span aria-hidden className="h-4 w-px shrink-0 bg-white/15" />
       <ul className="flex shrink-0 items-center gap-1">
@@ -60,7 +66,7 @@ export function PresentationBar({ current }: { current: StorefrontId }) {
         href={`${SHANG_HAI_BASE_PATH}/`}
         className="ml-auto hidden shrink-0 whitespace-nowrap rounded px-2 py-1.5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E8812B] md:block"
       >
-        Comparar propuestas
+        {t.compare}
       </Link>
     </nav>
   );

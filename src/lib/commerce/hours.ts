@@ -31,15 +31,21 @@ export function isOpenAt(hours: WeeklyHours[], date: Date, timeZone: string): bo
   );
 }
 
-const DAY_NAMES_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const DAY_NAMES = {
+  es: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+  en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+} as const;
 
-/** Monday-first rows for display, e.g. { day: "Lunes", text: "12:00–16:00 · 19:30–23:30" }. */
-export function formatWeek(hours: WeeklyHours[]): { day: string; text: string }[] {
+const CLOSED = { es: "Cerrado", en: "Closed" } as const;
+const AND = { es: " y ", en: " and " } as const;
+
+/** Monday-first rows for display, e.g. { day: "Lunes", text: "12:00–16:00 y 19:30–23:30" }. */
+export function formatWeek(hours: WeeklyHours[], locale: "es" | "en" = "es"): { day: string; text: string }[] {
   return [1, 2, 3, 4, 5, 6, 0].map((d) => {
     const ranges = hours.find((h) => h.day === d)?.ranges ?? [];
     return {
-      day: DAY_NAMES_ES[d],
-      text: ranges.length ? ranges.map((r) => `${r.from}–${r.to}`).join(" y ") : "Cerrado",
+      day: DAY_NAMES[locale][d],
+      text: ranges.length ? ranges.map((r) => `${r.from}–${r.to}`).join(AND[locale]) : CLOSED[locale],
     };
   });
 }

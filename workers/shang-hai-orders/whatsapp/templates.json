@@ -1,0 +1,84 @@
+{
+  "_comment": "WhatsApp message templates (Meta format). The single source of truth for the Worker (names, parameter counts), the fake WhatsApp (validation) and scripts/setup/whatsapp-templates.mjs (creation at Meta). {{PANEL_URL}} is replaced by the deployment's panel URL when the templates are created: the buttons open the panel, they never act on an order. No customer data in any parameter.",
+  "language": "es",
+  "templates": [
+    {
+      "name": "pedido_nuevo",
+      "kind": "new_order",
+      "category": "UTILITY",
+      "parameter_format": "POSITIONAL",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Nuevo pedido {{1}} en {{2}}.\nImporte: {{3}}\nProductos: {{4}}\nEntrega: {{5}}\nPago: {{6}}\n\nÁbrelo en el panel para aceptarlo o rechazarlo.",
+          "example": { "body_text": [["#1042", "SHANG HAI", "38,80 €", "3× Gyozas de pollo a la plancha, 1× Combo A", "Recogida en el local", "autorizado, se cobra al aceptar"]] }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [{ "type": "URL", "text": "Ver pedido", "url": "{{PANEL_URL}}?pedido={{1}}", "example": ["{{PANEL_URL}}?pedido=SH-261106-AB12CD"] }]
+        }
+      ]
+    },
+    {
+      "name": "pedido_sin_aceptar",
+      "kind": "reminder",
+      "category": "UTILITY",
+      "parameter_format": "POSITIONAL",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "El pedido {{1}} de {{2}} lleva {{3}} minutos sin aceptar. El cliente todavía no sabe si lo vais a preparar.\n\nÁbrelo en el panel para aceptarlo o rechazarlo.",
+          "example": { "body_text": [["#1042", "SHANG HAI", "4"]] }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [{ "type": "URL", "text": "Ver pedido", "url": "{{PANEL_URL}}?pedido={{1}}", "example": ["{{PANEL_URL}}?pedido=SH-261106-AB12CD"] }]
+        }
+      ]
+    },
+    {
+      "name": "pedido_revision",
+      "kind": "needs_review",
+      "category": "UTILITY",
+      "parameter_format": "POSITIONAL",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "El pedido {{1}} de {{2}} necesita revisión: {{3}}\n\nÁbrelo en el panel para ver qué hacer.",
+          "example": { "body_text": [["#1042", "SHANG HAI", "la devolución ha fallado en Stripe"]] }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [{ "type": "URL", "text": "Ver pedido", "url": "{{PANEL_URL}}?pedido={{1}}", "example": ["{{PANEL_URL}}?pedido=SH-261106-AB12CD"] }]
+        }
+      ]
+    },
+    {
+      "name": "pedido_cancelado",
+      "kind": "auto_cancelled",
+      "category": "UTILITY",
+      "parameter_format": "POSITIONAL",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "El pedido {{1}} de {{2}} se ha cancelado automáticamente porque nadie lo aceptó en {{3}} minutos. {{4}}\n\nPuedes verlo en el panel.",
+          "example": { "body_text": [["#1042", "SHANG HAI", "30", "Se ha anulado el pago: no se ha cobrado nada."]] }
+        },
+        {
+          "type": "BUTTONS",
+          "buttons": [{ "type": "URL", "text": "Ver pedido", "url": "{{PANEL_URL}}?pedido={{1}}", "example": ["{{PANEL_URL}}?pedido=SH-261106-AB12CD"] }]
+        }
+      ]
+    },
+    {
+      "name": "codigo_acceso",
+      "kind": "login_code",
+      "category": "AUTHENTICATION",
+      "components": [
+        { "type": "BODY", "add_security_recommendation": true },
+        { "type": "FOOTER", "code_expiration_minutes": 10 },
+        { "type": "BUTTONS", "buttons": [{ "type": "OTP", "otp_type": "COPY_CODE", "text": "Copiar código" }] }
+      ]
+    }
+  ]
+}

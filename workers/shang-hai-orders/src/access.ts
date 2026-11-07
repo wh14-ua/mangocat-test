@@ -39,8 +39,7 @@ function decodeJson<T>(segment: string): T | null {
   }
 }
 
-async function loadKeys(teamDomain: string, deps: Deps, force: boolean): Promise<JsonWebKeyWithKid[]> {
-  const url = `https://${teamDomain}/cdn-cgi/access/certs`;
+async function loadKeys(url: string, deps: Deps, force: boolean): Promise<JsonWebKeyWithKid[]> {
   const cached = deps.jwksCache.get(url);
   if (!force && cached && deps.now().getTime() - cached.fetchedAt < JWKS_TTL_MS) return cached.keys;
   try {
@@ -57,9 +56,10 @@ async function loadKeys(teamDomain: string, deps: Deps, force: boolean): Promise
 
 export async function verifyAccessJwt(
   token: string | null,
-  config: { teamDomain: string; aud: string },
+  config: { teamDomain: string; aud: string; certsUrl?: string },
   deps: Deps,
 ): Promise<AccessCheck> {
+  const certsUrl = config.certsUrl ?? `https://${config.teamDomain}/cdn-cgi/access/certs`;
   if (!token) return { ok: false, status: 401, reason: "missing-token" };
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false, status: 403, reason: "malformed-token" };
@@ -70,11 +70,11 @@ export async function verifyAccessJwt(
   if (!header || !payload || !signature) return { ok: false, status: 403, reason: "malformed-token" };
   if (header.alg !== "RS256" || !header.kid) return { ok: false, status: 403, reason: "unsupported-alg" };
 
-  let keys = await loadKeys(config.teamDomain, deps, false);
+  let keys = await loadKeys(certsUrl, deps, false);
   let jwk = keys.find((k) => k.kid === header.kid);
   if (!jwk) {
     // Keys rotate: refresh once when an unknown kid shows up.
-    keys = await loadKeys(config.teamDomain, deps, true);
+    keys = await loadKeys(certsUrl, deps, true);
     jwk = keys.find((k) => k.kid === header.kid);
   }
   if (!jwk) return { ok: false, status: 403, reason: "unknown-key" };

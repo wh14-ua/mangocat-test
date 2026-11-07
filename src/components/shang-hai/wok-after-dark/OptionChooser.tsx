@@ -3,16 +3,22 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { MenuItem, OptionSelections } from "@/lib/commerce/types";
-import { formatCents } from "@/lib/commerce/money";
+import { formatMoney } from "@/lib/i18n/format";
+import { choiceName, itemDescription, itemName, optionName } from "@/lib/shang-hai/menu-i18n";
 import { useDialog } from "@/hooks/shang-hai/useDialog";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { useWokUI } from "./WokUI";
 import { useWokCartActions } from "./cart-actions";
 import { useIsDesktop } from "./CartTicket";
+import { useWokText } from "./WokLanguage";
 
 function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
   const actions = useWokCartActions();
+  const { locale } = useLocale();
+  const t = useWokText();
   const [picked, setPicked] = useState<OptionSelections>({});
-  const [error, setError] = useState<string | null>(null);
+  // Error kinds, not text: the message follows the language if it changes meanwhile.
+  const [error, setError] = useState<"missing" | "failed" | null>(null);
   const options = item.options ?? [];
   const extra = options.reduce(
     (sum, o) =>
@@ -37,11 +43,11 @@ function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
     e.preventDefault();
     const missing = options.find((o) => (picked[o.id]?.length ?? 0) < o.minChoices);
     if (missing) {
-      setError("Elige una de las opciones para añadir este menú.");
+      setError("missing");
       return;
     }
     if (actions.add(item, picked)) onDone();
-    else setError("No se ha podido añadir. Revisa la opción elegida.");
+    else setError("failed");
   };
 
   return (
@@ -51,8 +57,8 @@ function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
         return (
           <fieldset key={o.id} className="mt-6" aria-describedby={error ? "wok-chooser-error" : undefined}>
             <legend className="wok-label">
-              {o.name === "Elige" ? "Elige una opción" : o.name}
-              {o.minChoices > 0 ? " (obligatorio)" : ""}
+              {o.name === "Elige" ? t.chooser.chooseOne : optionName(o, locale)}
+              {o.minChoices > 0 ? t.chooser.required : ""}
             </legend>
             <div className="mt-2 grid gap-2">
               {o.choices.map((c) => {
@@ -75,9 +81,9 @@ function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
                       onChange={() => toggle(o.id, c.id, single)}
                       className={single ? "wok-radio" : "wok-check"}
                     />
-                    <span className="wok-cond-tight flex-1 text-[1.0625rem]">{c.name}</span>
+                    <span className="wok-cond-tight flex-1 text-[1.0625rem]">{choiceName(c, locale)}</span>
                     {c.priceDeltaCents > 0 && (
-                      <span className="wok-nums text-[var(--wok-orange)]">+{formatCents(c.priceDeltaCents)}</span>
+                      <span className="wok-nums text-[var(--wok-orange)]">+{formatMoney(c.priceDeltaCents, locale)}</span>
                     )}
                   </label>
                 );
@@ -88,12 +94,12 @@ function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
       })}
       {error && (
         <p id="wok-chooser-error" role="alert" className="wok-error-text">
-          {error}
+          {t.chooser[error]}
         </p>
       )}
       <button type="submit" className="wok-btn wok-btn--hot mt-7 h-16 w-full justify-between text-[1.125rem]">
-        <span>Añadir al ticket</span>
-        <span className="wok-nums">{formatCents((item.priceCents ?? 0) + extra)}</span>
+        <span>{t.chooser.submit}</span>
+        <span className="wok-nums">{formatMoney((item.priceCents ?? 0) + extra, locale)}</span>
       </button>
     </form>
   );
@@ -102,6 +108,8 @@ function ChooserBody({ item, onDone }: { item: MenuItem; onDone: () => void }) {
 /** Option chooser for dishes with real options (the 6-person set menus). */
 export function OptionChooser() {
   const { chooserItem, closeChooser } = useWokUI();
+  const { locale } = useLocale();
+  const t = useWokText();
   const reduce = useReducedMotion();
   const desktop = useIsDesktop();
   const ref = useDialog<HTMLDivElement>(Boolean(chooserItem), closeChooser);
@@ -133,9 +141,9 @@ export function OptionChooser() {
           >
             <div className="flex items-start justify-between gap-4 px-1">
               <div className="min-w-0">
-                <p className="wok-cond text-[0.75rem] text-[var(--wok-orange)]">Elige tu opción</p>
+                <p className="wok-cond text-[0.75rem] text-[var(--wok-orange)]">{t.chooser.kicker}</p>
                 <h2 id="wok-chooser-title" className="wok-display mt-2 text-[2.6rem]">
-                  {chooserItem.name}
+                  {itemName(chooserItem, locale)}
                 </h2>
               </div>
               <button
@@ -143,11 +151,11 @@ export function OptionChooser() {
                 onClick={closeChooser}
                 className="wok-cond -mr-2 flex h-11 shrink-0 items-center px-2 text-[0.875rem]"
               >
-                Cerrar
+                {t.chooser.close}
               </button>
             </div>
-            {chooserItem.description && (
-              <p className="wok-muted mt-3 px-1 text-[0.9375rem]">{chooserItem.description}</p>
+            {itemDescription(chooserItem, locale) && (
+              <p className="wok-muted mt-3 px-1 text-[0.9375rem]">{itemDescription(chooserItem, locale)}</p>
             )}
             <div className="px-1">
               <ChooserBody key={chooserItem.id} item={chooserItem} onDone={closeChooser} />

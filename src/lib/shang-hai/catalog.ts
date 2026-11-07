@@ -1,10 +1,17 @@
 import menu from "../../data/shang-hai/menu.json";
+import { MENU_EN } from "../../data/shang-hai/menu-translations";
 import { shangHaiRestaurant } from "../../data/shang-hai/restaurant";
 import { createCatalogIndex } from "../commerce/catalog";
 import type { MenuCatalog } from "../commerce/types";
 
-/** The one Shang Hai catalog, shared by the three storefronts and the order Worker. */
-export const shangHaiCatalog = createCatalogIndex(menu as MenuCatalog);
+/**
+ * The one Shang Hai catalog, shared by the three storefronts and the order Worker.
+ * Searchable in Spanish and English ("duck" finds "Pato a la Pekinesa").
+ */
+export const shangHaiCatalog = createCatalogIndex(menu as MenuCatalog, {
+  searchNames: (item) => [MENU_EN.items[item.id]?.name],
+  searchText: (item) => [MENU_EN.items[item.id]?.description, MENU_EN.categories[item.categoryId]],
+});
 
 export const shangHaiOrdering = shangHaiRestaurant.ordering;
 

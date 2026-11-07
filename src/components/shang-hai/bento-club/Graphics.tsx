@@ -113,8 +113,8 @@ export function SectionArt({ section, className }: { section: string; className?
   }
 }
 
-/** Round packaging sticker with text set on a circle. */
-export function PickupSticker({ className }: ArtProps) {
+/** Round packaging sticker with text set on a circle (`label`, in the visitor's language). */
+export function PickupSticker({ className, label }: ArtProps & { label: string }) {
   const id = useId().replace(/:/g, "");
   return (
     <svg viewBox="0 0 120 120" className={className} aria-hidden focusable="false">
@@ -128,7 +128,7 @@ export function PickupSticker({ className }: ArtProps) {
         style={{ fontFamily: "var(--bc-text)", fontWeight: 800, fontSize: 12.5, letterSpacing: "0.12em" }}
       >
         <textPath href={`#bc-ring-${id}`} startOffset="0">
-          RECOGIDA EN EL LOCAL · ORIHUELA ·
+          {label}
         </textPath>
       </text>
       <path d="M48 56h24l-3 18H51z" fill={BUTTER} stroke={INK} strokeWidth="3" strokeLinejoin="round" />

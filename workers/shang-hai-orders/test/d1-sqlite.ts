@@ -1,17 +1,26 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import type { D1Like, D1Result, D1Statement } from "../src/env";
 
-const MIGRATION = new URL("../migrations/0001_init.sql", import.meta.url);
+const MIGRATIONS_DIR = new URL("../migrations/", import.meta.url);
+
+export const MIGRATIONS = readdirSync(MIGRATIONS_DIR)
+  .filter((f) => /^\d{4}_.+\.sql$/.test(f))
+  .sort();
+
+export function applyMigrations(db: DatabaseSync, upTo = MIGRATIONS.length) {
+  for (const file of MIGRATIONS.slice(0, upTo)) db.exec(readFileSync(new URL(file, MIGRATIONS_DIR), "utf8"));
+}
 
 /**
- * Minimal D1-compatible adapter over node:sqlite for tests. It applies the real
- * migration file, so the SQL and constraints under test are the production ones.
+ * Minimal D1-compatible adapter over node:sqlite for tests. It applies the real migration
+ * files (foreign keys ON, like D1), so the SQL and constraints under test are the
+ * production ones. `migrations` limits how many are applied (migration tests).
  */
-export function createTestD1(): D1Like & { raw: DatabaseSync } {
+export function createTestD1(options: { migrations?: number } = {}): D1Like & { raw: DatabaseSync } {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON;");
-  db.exec(readFileSync(MIGRATION, "utf8"));
+  applyMigrations(db, options.migrations);
 
   class Statement implements D1Statement {
     constructor(

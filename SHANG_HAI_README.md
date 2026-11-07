@@ -40,9 +40,16 @@ Order backend: [`workers/shang-hai-orders/README.md`](./workers/shang-hai-orders
   survives reloads (re-validated against the current catalog), pickup checkout with
   validation, payment and an order status page fed by the backend.
 - **Payments** — a demo simulator that charges nothing, and a Cloudflare Worker + D1 backend
-  that creates Stripe Checkout sessions in **test mode**, verifies signed webhooks
-  idempotently and stores orders. Live payments are disabled by design.
-- **Staff panel** — `/admin` on the Worker, behind Cloudflare Access (no fake login).
+  that creates Stripe Checkout sessions in **test mode** with *authorise now, capture on
+  acceptance*: the restaurant accepts (capture) or rejects (hold released / refund). Live
+  payments are disabled by design.
+- **Restaurant on the phone** — Telegram alerts and the mobile panel *SHANG HAI — PEDIDOS*
+  (`/admin`, installable) to accept with a preparation time, reject with a reason, and mark
+  ready/collected; sign-in with a Telegram one-time code (or Cloudflare Access).
+- **ES / EN** — every storefront in Spanish and English (selector in each identity, curated
+  English menu, Stripe Checkout in the customer's language).
+- **Optional dish photos** — 20 illustrative AI photos behind `?fotos=1`
+  ([`SHANG_HAI_DISH_PHOTOS.md`](./SHANG_HAI_DISH_PHOTOS.md)).
 
 ## 2. Running it
 
@@ -115,31 +122,24 @@ the entry (size, alt text describing the photo, focal point, credit) and remove 
 "Imagen ilustrativa" captions in that proposal once the photos are real. Product-level
 photos can be attached later through `MenuItem.image`.
 
-## 7. Configuring Stripe (test mode)
+## 7. Real ordering: setup, demo and status
 
-1. Create the D1 database and deploy the Worker (`workers/shang-hai-orders/README.md`).
-2. `wrangler secret put STRIPE_SECRET_KEY` with a **test** key (`sk_test_…`) and
-   `wrangler secret put STRIPE_WEBHOOK_SECRET` after creating the webhook endpoint
-   `https://<worker>/api/stripe/webhook` in the Stripe dashboard (test mode) with the
-   checkout.session events listed in the Worker README.
-3. Set `CORS_ALLOWED_ORIGIN`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL` (see `.env.example`).
-4. Build the site with `NEXT_PUBLIC_ORDER_API_BASE_URL=https://<worker>` and redeploy.
-   The checkout then redirects to Stripe Checkout (test cards such as 4242 4242 4242 4242);
-   orders are marked paid only by verified webhooks.
+Everything about the ordering system (credentials, step-by-step test-mode setup, the
+two-phone demo, `npm run demo:local`, what is verified and what is pending) is in
+[`SHANG_HAI_PEDIDOS.md`](./SHANG_HAI_PEDIDOS.md); the backend reference is the
+[Worker README](./workers/shang-hai-orders/README.md).
 
 `NEXT_PUBLIC_ORDER_API_BASE_URL` empty ⇒ **demo mode** (the default and what GitHub Pages
-serves today): the same validation and pricing run in the browser, the payment step is a
-clearly labelled simulator ("Demostración — no se realizará ningún cargo") and nothing
-reaches the restaurant. **Live payments** require `STRIPE_TEST_MODE=false` *and*
-`PAYMENTS_LIVE_ENABLED=true` on the Worker plus the owner's Stripe account; do not enable
-them without the owner's explicit approval.
+serves today): same validation and pricing in the browser, a clearly labelled payment
+simulator and a "restaurant simulator" on the status page; nothing reaches a restaurant.
 
 ## 8. Tests
 
 ```bash
 npm run check            # typecheck + lint:shang-hai + unit tests + menu:check
-npm test                 # vitest: 113 tests — engine, catalog integrity, SEO (71) + Worker (42:
-                         #   D1 via node:sqlite, mocked Stripe API, real webhook signatures/JWTs)
+npm test                 # vitest: engine, i18n, catalog, photos + Worker (D1 via node:sqlite,
+                         #   fake Stripe/Telegram, real webhook signatures/JWTs)
+npm run test:e2e:ordering   # real Worker (wrangler dev) + fake Stripe/Telegram, phone viewport
 npm run build && npm run test:e2e   # Playwright (system Chrome) at 390 / 768 / 1440 px: 54 tests
 node scripts/capture-shang-hai-previews.mjs [--qa]  # comparison previews (+ QA captures)
 node scripts/capture-shang-hai-journey.mjs          # journey screenshots for decks/QA
@@ -192,3 +192,5 @@ shared pages with axe-core (WCAG 2.1 A/AA) and fails on serious or critical viol
 6. Whether to sell wine and beer online (age confirmation is already in the checkout).
 7. Their own photography, logo/brand assets and preferred proposal.
 8. Their Stripe account (only when they decide to accept real payments).
+
+- Avisos por WhatsApp (Cloud API), configuración en Meta, coexistencia con el número actual y costes: [`SHANG_HAI_WHATSAPP.md`](SHANG_HAI_WHATSAPP.md).

@@ -18,7 +18,8 @@ export default defineConfig({
   outputDir: "test-results",
   use: {
     baseURL: `http://127.0.0.1:${PORT}/mangocat-test/`,
-    channel: "chrome",
+    // System Chrome locally; CI installs Playwright's Chromium (PW_CHANNEL unset there).
+    ...(process.env.CI && !process.env.PW_CHANNEL ? {} : { channel: process.env.PW_CHANNEL ?? "chrome" }),
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     locale: "es-ES",

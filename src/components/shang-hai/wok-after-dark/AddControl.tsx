@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { MenuItem } from "@/lib/commerce/types";
-import { getOrderability, NOT_ORDERABLE_COPY } from "@/lib/commerce/catalog";
+import { getOrderability } from "@/lib/commerce/catalog";
+import { NOT_ORDERABLE_TEXT } from "@/lib/commerce/messages";
 import { shangHaiOrdering } from "@/lib/shang-hai/catalog";
+import { itemName } from "@/lib/shang-hai/menu-i18n";
+import { useLocale } from "@/hooks/shang-hai/useLocale";
 import { useWokUIActions } from "./WokUI";
 import { useWokCartActions } from "./cart-actions";
+import { useWokText } from "./WokLanguage";
 
 const SPARKS = [
   { x: -34, y: -30, r: 25 },
@@ -51,11 +55,15 @@ export function AddControl({
   const ui = useWokUIActions();
   const reduce = useReducedMotion();
   const [bursts, setBursts] = useState<number[]>([]);
+  const { locale } = useLocale();
+  const t = useWokText();
   const orderability = getOrderability(item);
 
   if (!orderability.orderable) {
-    return <p className="wok-pending">{NOT_ORDERABLE_COPY[orderability.reason]}</p>;
+    return <p className="wok-pending">{NOT_ORDERABLE_TEXT[locale][orderability.reason]}</p>;
   }
+
+  const name = itemName(item, locale);
 
   const needsOptions = Boolean(item.options?.length);
   const burst = () => {
@@ -73,10 +81,10 @@ export function AddControl({
   if (qty > 0 && lineKey && !needsOptions) {
     const atMax = qty >= shangHaiOrdering.limits.maxQuantityPerLine;
     return (
-      <div className="wok-stepper relative" role="group" aria-label={`Cantidad de ${item.name}`}>
+      <div className="wok-stepper relative" role="group" aria-label={t.card.quantityOf(name)}>
         <button
           type="button"
-          aria-label={`Quitar una unidad de ${item.name}`}
+          aria-label={t.card.removeOne(name)}
           onClick={() => actions.decrement(lineKey)}
         >
           <span className="wok-minus" aria-hidden />
@@ -85,7 +93,7 @@ export function AddControl({
         <button
           type="button"
           data-testid={`add-${item.id}`}
-          aria-label={`Añadir otra unidad de ${item.name}`}
+          aria-label={t.card.addAnother(name)}
           disabled={atMax}
           className="relative disabled:opacity-40"
           onClick={() => {
@@ -105,7 +113,7 @@ export function AddControl({
       type="button"
       className="wok-add"
       data-testid={`add-${item.id}`}
-      aria-label={needsOptions ? `Añadir ${item.name} (elegir opción)` : `Añadir ${item.name}`}
+      aria-label={needsOptions ? t.card.addWithOptions(name) : t.card.add(name)}
       aria-haspopup={needsOptions ? "dialog" : undefined}
       onClick={() => {
         if (needsOptions) {

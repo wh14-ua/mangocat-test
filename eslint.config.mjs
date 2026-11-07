@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // wrangler dev / dry-run bundles of the order Worker (generated, git-ignored)
+    "**/.wrangler/**",
+    "out-local/**",
   ]),
 ]);
 
