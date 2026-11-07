@@ -224,6 +224,26 @@ export function count(env: TestEnv, sql: string, ...params: (string | number)[])
   return Number((env.DB.raw.prepare(sql).get(...params) as { n: number }).n);
 }
 
+/** Holds the first Stripe request matching `match` until release(): a slow or hanging Stripe call. */
+export function gateStripe(w: World, match: (url: string) => boolean) {
+  const inner = w.deps.fetch;
+  let release!: () => void;
+  let reached!: () => void;
+  const opened = new Promise<void>((r) => (release = r));
+  const arrived = new Promise<void>((r) => (reached = r));
+  let armed = true;
+  w.deps.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (armed && match(url)) {
+      armed = false;
+      reached();
+      await opened;
+    }
+    return inner(input, init);
+  }) as typeof fetch;
+  return { release, arrived };
+}
+
 export function runCron(w: World) {
   return runScheduled(w.env, w.deps).then(async (report) => {
     await w.deps.flush();

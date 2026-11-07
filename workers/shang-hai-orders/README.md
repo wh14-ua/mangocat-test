@@ -83,7 +83,14 @@ existing order, line and event (`paid` → `awaiting_acceptance` + `captured`).
   truth.
 - **Acceptance timeout** (`ACCEPTANCE_TIMEOUT_MINUTES`, default 30, `0` = off — policy to be
   confirmed by the owner): counts only from when the restaurant was demonstrably informed (alert
-  delivered or order shown on the panel). Orders nobody could see are never declined automatically.
+  delivered or order shown on the panel).
+- **Hard limit** (`ACCEPTANCE_DEADLINE_MINUTES`, default 60, cannot be switched off, never below
+  the timeout): counted from the payment, independent of every alert channel. An order nobody
+  decided by then — WhatsApp failing for good, nobody opening the panel — is declined and the
+  money released; a hold left EN REVISIÓN is released that long after the incident began. Stripe
+  is read before anything is done (unreachable → the order stays as it is until the next run);
+  from review only a hold is released, never a charge refunded; a staff decision in the last
+  10 min holds both clocks back; the decline acts only on the status it selected.
 - **Payments modes**: no key or no webhook secret → disabled; `STRIPE_TEST_MODE` defaults to
   `"true"` (only test keys); live keys need `STRIPE_TEST_MODE="false"` and
   `PAYMENTS_LIVE_ENABLED="true"`. `STRIPE_API_BASE`, `TELEGRAM_API_BASE` and `ACCESS_CERTS_URL`
@@ -101,11 +108,15 @@ with exactly this list and the pinned API version (`2026-09-30.endive`).
 
 ## Configuration
 
+Public TEST environment (own Worker + D1, Stripe test mode, Meta's WhatsApp test number):
+`env.demo` in `wrangler.jsonc`, managed with `node scripts/setup/demo.mjs deploy | secrets |
+token | templates | status` — see [`SHANG_HAI_DEMO.md`](../../SHANG_HAI_DEMO.md).
+
 Secrets (`wrangler secret put`): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `TELEGRAM_BOT_TOKEN`.
 Vars (`wrangler.jsonc`): `STRIPE_TEST_MODE`, `PAYMENTS_LIVE_ENABLED`, `STRIPE_CAPTURE_MODE`
 (`manual` | `per-method`), `CORS_ALLOWED_ORIGIN`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`
 (placeholders `{storefront} {orderId} {token} {lang}`), `PANEL_URL`, `TELEGRAM_CHAT_IDS`,
-`PREP_TIME_OPTIONS`, `ACCEPTANCE_REMINDER_MINUTES`, `ACCEPTANCE_TIMEOUT_MINUTES`,
+`PREP_TIME_OPTIONS`, `ACCEPTANCE_REMINDER_MINUTES`, `ACCEPTANCE_TIMEOUT_MINUTES`, `ACCEPTANCE_DEADLINE_MINUTES`,
 `WORKER_ROLE` (`all` | `api` | `panel`: split the public API and an Access-protected panel
 into two Workers sharing the D1 database), `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`.
 

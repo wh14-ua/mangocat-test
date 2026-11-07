@@ -514,28 +514,55 @@ async function releaseAndFinish(env: Env, deps: Deps, order: OrderRow, actor: Ac
     return finishReject(env, deps, order, actor, {}, "Pedido rechazado. No había ningún pago que anular.");
   }
   if (!stripe || !piId) return toReview(env, deps, order, "rejecting", actor, "No hay un pago de Stripe asociado a este pedido");
-  if (order.payment_status !== "authorized") return refundAndFinish(env, deps, stripe, order, actor);
+  const lock = await lockInfo(env.DB, order.id, "rejecting");
+  // The hard limit releasing a hold left EN REVISIÓN (cron.ts) only ever releases a hold — also
+  // when this is the recovery of that release: money Stripe shows as charged is left to a person.
+  const holdOnly = lock.origin === "needs_review" && lock.originSource === "system";
+  if (order.payment_status !== "authorized") {
+    return holdOnly ? leaveChargeToPerson(env, deps, order, actor) : refundAndFinish(env, deps, stripe, order, actor);
+  }
 
   const before = await retrievePaymentIntent(stripe, piId);
   if (!before.ok) return lockUnresolved(env, deps, order, actor, before, "rejecting");
-  if (before.body.status !== "requires_capture") return settleRelease(env, deps, stripe, order, actor, before.body);
+  if (before.body.status !== "requires_capture") return settleRelease(env, deps, stripe, order, actor, before.body, holdOnly);
 
-  const { attempts } = await lockInfo(env.DB, order.id, "rejecting");
-  const cancel = await cancelPaymentIntent(stripe, piId, `cancel-${order.id}-${Math.max(attempts, 1)}`);
-  if (cancel.ok && cancel.body.status === "canceled") return settleRelease(env, deps, stripe, order, actor, cancel.body);
+  const cancel = await cancelPaymentIntent(stripe, piId, `cancel-${order.id}-${Math.max(lock.attempts, 1)}`);
+  if (cancel.ok && cancel.body.status === "canceled") return settleRelease(env, deps, stripe, order, actor, cancel.body, holdOnly);
   if (!cancel.ok) log("order.cancel-failed", { orderId: order.id, stripe: describeFailure(cancel) });
   const fresh = await retrievePaymentIntent(stripe, piId);
   if (!fresh.ok) return lockUnresolved(env, deps, order, actor, fresh, "rejecting");
-  return settleRelease(env, deps, stripe, order, actor, fresh.body);
+  return settleRelease(env, deps, stripe, order, actor, fresh.body, holdOnly);
 }
 
-async function settleRelease(env: Env, deps: Deps, stripe: StripeClient, order: OrderRow, actor: Actor, pi: Parameters<typeof factsFromIntent>[0]): Promise<ActionResult> {
+/** A system release from review found the money charged: back to review, nothing refunded. */
+function leaveChargeToPerson(env: Env, deps: Deps, order: OrderRow, actor: Actor, patch: OrderPatch = {}): Promise<ActionResult> {
+  return toReview(
+    env,
+    deps,
+    order,
+    "rejecting",
+    actor,
+    "El pago está cobrado en Stripe y nadie ha confirmado el pedido: el sistema no lo devuelve por su cuenta. Decide si se prepara (ACEPTAR) o se devuelve (RECHAZAR)",
+    patch,
+  );
+}
+
+async function settleRelease(
+  env: Env,
+  deps: Deps,
+  stripe: StripeClient,
+  order: OrderRow,
+  actor: Actor,
+  pi: Parameters<typeof factsFromIntent>[0],
+  holdOnly = false,
+): Promise<ActionResult> {
   const facts = factsFromIntent(pi);
   const now = deps.now().toISOString();
   switch (pi.status) {
     case "canceled":
       return finishReject(env, deps, order, actor, stripePatch(order, facts, "canceled", now), "Pedido rechazado. Autorización anulada: no se ha cobrado nada al cliente.");
     case "succeeded":
+      if (holdOnly) return leaveChargeToPerson(env, deps, order, actor, stripePatch(order, facts, derivePaymentStatus(facts), now));
       // Captured meanwhile (an earlier acceptance, or the Dashboard): refund instead.
       return refundAndFinish(env, deps, stripe, { ...order, payment_status: "captured" }, actor);
     default:

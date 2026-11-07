@@ -162,6 +162,16 @@ export function composeMessage(
   }
 }
 
+/**
+ * How long a declined order waited for a decision, from the payment (the automatic-decline alert
+ * says so: either clock of the cron may have declined it). Whole minutes, never rounded up.
+ */
+export function minutesWaited(order: Pick<OrderRow, "authorized_at" | "created_at" | "rejected_at">): number | undefined {
+  const from = Date.parse(order.authorized_at ?? order.created_at);
+  const to = Date.parse(order.rejected_at ?? "");
+  return Number.isFinite(from) && Number.isFinite(to) && to >= from ? Math.floor((to - from) / 60_000) : undefined;
+}
+
 /** What happened to the money, from the order's payment status when the alert goes out. */
 export function autoCancelPaymentText(payment: OrderRow["payment_status"]): string {
   switch (payment) {
@@ -344,7 +354,10 @@ async function sendTelegramRow(
   const now = deps.now();
   const nowIso = now.toISOString();
   const lines = await orderLines(env, order.id);
-  const html = composeMessage(row.kind, order, lines.reduce((n, l) => n + l.quantity, 0), options);
+  const html = composeMessage(row.kind, order, lines.reduce((n, l) => n + l.quantity, 0), {
+    reminderMinutes: options.reminderMinutes,
+    timeoutMinutes: minutesWaited(order) ?? options.timeoutMinutes,
+  });
   const result = await sendTelegramMessage(deps.fetch, {
     apiBase: telegramApiBase(env),
     token: telegram.token,
@@ -419,7 +432,7 @@ async function sendWhatsAppRow(
   const message = whatsappMessageFor(row.kind, order, await orderLines(env, order.id), {
     restaurant: restaurantName(env),
     reminderMinutes: options.reminderMinutes,
-    timeoutMinutes: options.timeoutMinutes,
+    timeoutMinutes: minutesWaited(order) ?? options.timeoutMinutes,
     autoCancelText: autoCancelPaymentText(order.payment_status),
   });
   const attempts = row.attempts + 1;

@@ -374,26 +374,29 @@ export async function updateOrderIf(
 
 /**
  * The accept/reject lock an order is in: how many times one was taken (each attempt gets its
- * own Stripe idempotency key), when the current one was taken (for the review deadline) and
- * the status it was taken from (where an attempt that charged nothing goes back to).
+ * own Stripe idempotency key), when the current one was taken (for the review deadline), the
+ * status it was taken from (where an attempt that charged nothing goes back to) and who took it.
  */
 export async function lockInfo(
   db: D1Like,
   orderId: string,
   status: "accepting" | "rejecting",
-): Promise<{ attempts: number; since: string | null; origin: OrderStatus | null }> {
+): Promise<{ attempts: number; since: string | null; origin: OrderStatus | null; originSource: EventSource | null }> {
   const row = await db
     .prepare(
       `SELECT COUNT(*) AS n, MAX(created_at) AS since,
               (SELECT e2.from_status FROM order_events e2
                 WHERE e2.order_id = ? AND e2.to_status = ? AND e2.from_status IS NOT NULL AND e2.from_status <> e2.to_status
-                ORDER BY e2.id DESC LIMIT 1) AS origin
+                ORDER BY e2.id DESC LIMIT 1) AS origin,
+              (SELECT e3.source FROM order_events e3
+                WHERE e3.order_id = ? AND e3.to_status = ? AND e3.from_status IS NOT NULL AND e3.from_status <> e3.to_status
+                ORDER BY e3.id DESC LIMIT 1) AS origin_source
          FROM order_events
         WHERE order_id = ? AND to_status = ? AND from_status IS NOT NULL AND from_status <> to_status`,
     )
-    .bind(orderId, status, orderId, status)
-    .first<{ n: number; since: string | null; origin: OrderStatus | null }>();
-  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null, origin: row?.origin ?? null };
+    .bind(orderId, status, orderId, status, orderId, status)
+    .first<{ n: number; since: string | null; origin: OrderStatus | null; origin_source: EventSource | null }>();
+  return { attempts: Number(row?.n ?? 0), since: row?.since ?? null, origin: row?.origin ?? null, originSource: row?.origin_source ?? null };
 }
 
 /**

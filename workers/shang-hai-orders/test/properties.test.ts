@@ -13,6 +13,7 @@ import {
   staffAction,
   staffCookie,
   validCheckout,
+  WHATSAPP_ENV,
   world,
   WORKER_ORIGIN,
   type World,
@@ -24,7 +25,8 @@ import {
  * answer lost after Stripe acted), late / duplicated / reordered / lost webhooks, refunds that
  * stay pending or fail, and expired authorisations. After every step the financial safety
  * invariants are checked against the fake Stripe and D1; at the end, once everything calms
- * down, the liveness ones (no stuck lock, no forgotten refund, D1 agrees with Stripe).
+ * down, the liveness ones (no stuck lock, no forgotten refund, no hold left on a card — even when
+ * no alert ever reaches the restaurant —, D1 agrees with Stripe).
  *
  * Failures print a seed and a path: rerun exactly with PROPERTY_SEED=<seed> PROPERTY_PATH=<path>.
  * PROPERTY_RUNS sets how many sequences run (default 40; `npm run qa:full` uses more).
@@ -70,7 +72,8 @@ const command = fc.oneof(
 );
 type Command = typeof command extends fc.Arbitrary<infer C> ? C : never;
 
-type Run = { w: World; ids: string[]; cookies: string[]; serverErrors: string[] };
+/** alertsDown: WhatsApp is the only channel and fails for good (expired token) — nobody is ever told. */
+type Run = { w: World; ids: string[]; cookies: string[]; serverErrors: string[]; alertsDown: boolean };
 
 const row = (w: World, id: string) => w.env.DB.raw.prepare("SELECT * FROM orders WHERE id = ?").get(id) as Record<string, string | number | null>;
 
@@ -210,12 +213,15 @@ async function settleAndCheck(run: Run) {
     if (s.pi?.status === "requires_capture" && ["rejected", "cancelled"].includes(String(r.status))) {
       throw new Error(`hold left on the card for a declined order — ${at}`);
     }
-    // Every incident that needs a person has been alerted.
+    // Nobody decided, or nobody could: three hours later no hold is left on the customer's card
+    // (accepted ⇒ charged; otherwise released by the automatic decline or the hard limit).
+    expect(s.pi?.status, `hold still on the card after settling — ${at}`).not.toBe("requires_capture");
+    // Every incident that needs a person has been alerted (when an alert channel exists at all).
     if (r.status === "needs_review") {
       const alerted = w.env.DB.raw
         .prepare("SELECT COUNT(*) AS n FROM notifications WHERE order_id = ? AND kind = 'needs_review' AND status IN ('sent', 'pending', 'sending')")
         .get(id) as { n: number };
-      expect(Number(alerted.n), `incident never alerted — ${at}`).toBeGreaterThan(0);
+      if (!run.alertsDown) expect(Number(alerted.n), `incident never alerted — ${at}`).toBeGreaterThan(0);
     } else if (s.pi) {
       // Outside review, D1 says what Stripe says.
       const expected =
@@ -237,11 +243,17 @@ describe("order lifecycle under random concurrency and failures (property)", () 
   for (const mode of ["manual", "per-method"] as const) {
     it(`keeps every money invariant (${mode} capture)`, async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 3 }), fc.array(command, { minLength: 1, maxLength: 28 }), async (orders, commands) => {
-          const w = world({ STRIPE_CAPTURE_MODE: mode, ACCEPTANCE_TIMEOUT_MINUTES: "30", ACCEPTANCE_REMINDER_MINUTES: "4" });
+        fc.asyncProperty(fc.integer({ min: 1, max: 3 }), fc.boolean(), fc.array(command, { minLength: 1, maxLength: 28 }), async (orders, alertsDown, commands) => {
+          const w = world({
+            STRIPE_CAPTURE_MODE: mode,
+            ACCEPTANCE_TIMEOUT_MINUTES: "30",
+            ACCEPTANCE_REMINDER_MINUTES: "4",
+            ...(alertsDown ? WHATSAPP_ENV : {}),
+          });
+          if (alertsDown) w.whatsapp.expireToken(); // Meta refuses every alert; the panel still works
           const ids: string[] = [];
           for (let i = 0; i < orders; i++) ids.push((await placedOrder(w, {}, mode === "manual" ? "authorize" : "capture")).orderId);
-          const run: Run = { w, ids, cookies: [await staffCookie(w.env, "Móvil A", w.now()), await staffCookie(w.env, "Móvil B", w.now())], serverErrors: [] };
+          const run: Run = { w, ids, cookies: [await staffCookie(w.env, "Móvil A", w.now()), await staffCookie(w.env, "Móvil B", w.now())], serverErrors: [], alertsDown };
           for (const [i, c] of commands.entries()) {
             await apply(run, c);
             await w.deps.flush();

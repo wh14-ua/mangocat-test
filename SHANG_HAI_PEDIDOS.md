@@ -25,9 +25,16 @@ autorizado (sin cobrar)»                                   ├─ ACEPTAR  ─�
 - Si nadie decide: recordatorio a los 4 min y, a los 30 min, rechazo automático con la reserva
   anulada. **Propuesta pendiente de que la confirme el propietario** (`ACCEPTANCE_TIMEOUT_MINUTES`,
   `0` lo desactiva; `ACCEPTANCE_REMINDER_MINUTES`). Los 30 min cuentan solo desde que consta que
-  el restaurante fue informado (aviso de Telegram entregado o pedido mostrado en el panel): un
-  pedido que nadie pudo ver —Telegram caído, bloqueado o sin configurar y panel cerrado— nunca
-  se rechaza solo; sigue pendiente y visible hasta que una persona decida.
+  el restaurante fue informado (aviso de WhatsApp entregado, de Telegram enviado, o pedido
+  mostrado en el panel).
+- **Límite máximo, independiente de WhatsApp:** 60 min después del pago
+  (`ACCEPTANCE_DEADLINE_MINUTES`; no se puede desactivar) un pedido que nadie ha decidido se
+  rechaza y se libera el dinero, aunque ningún aviso haya llegado nunca (token caducado, plantilla
+  sin aprobar, número no autorizado, webhook sin suscribir) y nadie haya abierto el panel. Antes
+  de tocar el dinero se consulta a Stripe; si Stripe no responde, el pedido queda tal cual (se
+  puede seguir aceptando) y se reintenta en el siguiente minuto. Un pedido EN REVISIÓN con el
+  dinero solo retenido se libera 60 min después de empezar la incidencia; si Stripe muestra el
+  dinero cobrado, el sistema no lo devuelve por su cuenta: lo decide una persona.
 - El cliente ve el estado real en su pantalla (se actualiza sola): pago pendiente, pendiente de
   aceptación, aceptado con hora estimada, en preparación, listo, entregado, rechazado (con el
   motivo si el restaurante lo indica), reembolso pendiente/completado. La hora solo aparece
@@ -189,7 +196,7 @@ no guardan nada. Para empezar de cero: `npm run demo:local -- --fresh` (borra so
 
 | Situación | Qué pasa |
 |---|---|
-| WhatsApp o Telegram no entregan | El pedido está igualmente en el panel; reintentos según el error (detalle en `SHANG_HAI_WHATSAPP.md`); el fallo se ve en «Estado del sistema»; no corre el plazo de rechazo automático hasta que WhatsApp confirma la entrega o alguien lo ve en el panel |
+| WhatsApp o Telegram no entregan | El pedido está igualmente en el panel; reintentos según el error (detalle en `SHANG_HAI_WHATSAPP.md`); el fallo se ve en «Estado del sistema»; el plazo de 30 min no corre hasta que WhatsApp confirma la entrega o alguien lo ve en el panel, pero a los 60 min del pago el pedido se rechaza igualmente y se libera el dinero (Stripe se consulta antes) |
 | Stripe no responde al aceptar | El pedido queda «Procesando…» (con la hora en que se pulsó) y no se prepara. Cuando caduca el bloqueo, el sistema lee el estado real en Stripe: si se cobró, pasa a EN PREPARACIÓN; si no, pasa a **EN REVISIÓN** («no llegó a cobrarse; pulsa ACEPTAR de nuevo»). Si Stripe sigue sin responder 5 min, EN REVISIÓN con el pago a comprobar. Nunca se queda bloqueado |
 | Stripe no conoce el pago (404) | EN REVISIÓN al momento, con el id del pago y qué comprobar (clave/modo de Stripe; en la demo, datos de una demo anterior) |
 | Stripe devuelve un error 500 | No se ha cobrado nada; ACEPTAR/RECHAZAR se pueden repetir (cada intento usa su propia clave de idempotencia) |
@@ -206,7 +213,7 @@ no guardan nada. Para empezar de cero: `npm run demo:local -- --fresh` (borra so
 ## 9. Qué debe confirmar el restaurante antes de usarlo
 
 1. Tiempos de preparación que quiere ofrecer (por defecto 15/20/30/45 min) y la regla de
-   caducidad (30 min sin respuesta → rechazo automático).
+   caducidad (30 min sin respuesta → rechazo automático; límite máximo de 60 min desde el pago).
 2. Revisión de las traducciones al inglés (`src/data/shang-hai/menu-translations.ts`; tres
    puntos marcados para confirmar: «sepia», fideos Singapur, y textos publicados corregidos).
 3. Si quiere fotos en la carta y si aprueba las 20 ilustrativas o prefiere fotos propias.

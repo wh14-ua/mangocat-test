@@ -1,10 +1,10 @@
-import { recoverLock, rejectOrder } from "./actions";
-import { acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config";
+import { recoverLock, rejectOrder, type Actor } from "./actions";
+import { acceptanceDeadlineMinutes, acceptanceTimeoutMinutes, reminderMinutes, staleLockMs } from "./config";
 import { setState, updateOrderIf, type OrderRow } from "./db";
 import type { Deps, Env } from "./env";
 import { log } from "./log";
 import { alertRecipients, CRON_PACE_MS, deliverDue, enqueueNotification } from "./notifications";
-import { syncOrderPayment } from "./sync";
+import { fetchPaymentFacts, stripeClient, syncOrderPayment } from "./sync";
 
 /** Reason shown to the customer when nobody accepted in time. */
 export const TIMEOUT_REASON = "El restaurante no ha podido confirmar el pedido a tiempo";
@@ -26,6 +26,48 @@ async function rows(env: Env, sql: string, ...params: (string | number)[]): Prom
   return (await env.DB.prepare(sql).bind(...params).all<OrderRow>()).results;
 }
 
+/** A staff decision (ACEPTAR / RECHAZAR) on order `o` after the bound time. */
+const STAFF_DECIDED_SINCE = `EXISTS (SELECT 1 FROM order_events e
+                    WHERE e.order_id = o.id AND e.source = 'staff'
+                      AND e.to_status IN ('accepting', 'rejecting') AND e.created_at > ?)`;
+
+/**
+ * Declines an order nobody decided and releases the customer's money (both clocks of step 2).
+ * Stripe is read FIRST, before anything changes: a payment Stripe cannot show right now leaves
+ * the order exactly as it is — still acceptable from the panel — until the next run. It acts
+ * only on the status the order was selected in, and not once a staff decision has begun
+ * meanwhile: a phone that accepted it a second ago wins (it used to be declined and refunded).
+ * From EN REVISIÓN only a hold is released; money Stripe shows as charged is left to a person.
+ */
+async function declineUndecided(env: Env, deps: Deps, selected: OrderRow, actor: Actor, graceFrom: string, now: string): Promise<boolean> {
+  if (selected.payment_status === "authorized" || selected.payment_status === "captured") {
+    const client = stripeClient(env, deps);
+    if (!client) return false; // payments switched off: nothing can be released now (the panel says so)
+    const read = await fetchPaymentFacts(client, selected);
+    if (!read.ok) {
+      await bump(env, selected.id, now); // Stripe did not answer: next run, the others first
+      return false;
+    }
+    const held = read.facts?.piStatus;
+    if (selected.status === "needs_review" && held !== "requires_capture" && held !== "canceled") {
+      // Charged after all (or unknown to Stripe): for a person. D1 learns what Stripe says.
+      if (read.facts) await syncOrderPayment(env, deps, selected.id, { source: "system" });
+      else await bump(env, selected.id, now);
+      return false;
+    }
+  }
+  const still = await env.DB.prepare(`SELECT 1 AS ok FROM orders o WHERE o.id = ? AND o.status = ? AND NOT ${STAFF_DECIDED_SINCE}`)
+    .bind(selected.id, selected.status, graceFrom)
+    .first();
+  if (!still) return false;
+  const result = await rejectOrder(env, deps, selected.id, TIMEOUT_REASON, actor, selected.status);
+  // Alert once the decline is done (its wording comes from the final payment status). If
+  // Stripe could not confirm, the lock's recovery finishes it or puts it in review — alerted then.
+  if (!result.ok || result.pending) return false;
+  await enqueueNotification(env, selected.id, "auto_cancelled", now);
+  return true;
+}
+
 /**
  * Runs every minute (Cron Trigger). Each step is bounded and independent, so one failure
  * never blocks the others, and running it twice at once is harmless (every write is a
@@ -34,7 +76,7 @@ async function rows(env: Env, sql: string, ...params: (string | number)[]): Prom
 export async function runScheduled(env: Env, deps: Deps): Promise<Record<string, number>> {
   const now = deps.now();
   const at = (msAgo: number) => new Date(now.getTime() - msAgo).toISOString();
-  const report: Record<string, number> = { reminders: 0, timeouts: 0, locks: 0, payments: 0, refunds: 0, alerts: 0, sent: 0, failed: 0 };
+  const report: Record<string, number> = { reminders: 0, timeouts: 0, deadlines: 0, locks: 0, payments: 0, refunds: 0, alerts: 0, sent: 0, failed: 0 };
   const step = async (name: string, fn: () => Promise<void>) => {
     try {
       await fn();
@@ -64,15 +106,20 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
   });
 
   // 2. Nobody decided in time: decline and release the hold so the customer is not left waiting.
-  //    A staff decision (ACEPTAR / RECHAZAR) in the last DECISION_GRACE_MS also stops the clock:
+  //    Two clocks; whichever ends first declines (declineUndecided: Stripe is read first):
+  //    a) ACCEPTANCE_TIMEOUT_MINUTES from the moment the restaurant is known to have been told
+  //       about the order: a WhatsApp alert the phone confirmed as delivered (accepted by the API
+  //       is not enough), a Telegram alert sent, or a signed-in device that showed it;
+  //    b) the hard limit, ACCEPTANCE_DEADLINE_MINUTES from the payment, whatever the alerts did.
+  //       If WhatsApp fails for good (expired token, template not approved, number not allowed,
+  //       webhook never subscribed) and nobody opens the panel, clock (a) never starts — and the
+  //       customer's money must not stay held for days. It also releases a hold left EN REVISIÓN
+  //       that long after the incident began (a person has had that long to act on it).
+  //    A staff decision (ACEPTAR / RECHAZAR) in the last DECISION_GRACE_MS stops both clocks:
   //    an acceptance that could not be charged a moment ago must not be declined behind the
   //    back of the person who is retrying it.
-  //    The clock only starts once the restaurant is known to have been told about the order
-  //    (a WhatsApp alert the phone confirmed as delivered — accepted by the API is not enough —,
-  //    a Telegram alert sent, or a signed-in device that showed it). An order nobody was
-  //    able to see — Telegram down, blocked or not configured, panel closed — is never declined
-  //    automatically: it stays pending (and visible) until a person decides.
   const timeout = acceptanceTimeoutMinutes(env);
+  const graceFrom = at(DECISION_GRACE_MS);
   if (timeout > 0) {
     await step("timeouts", async () => {
       for (const order of await rows(
@@ -87,24 +134,41 @@ export async function runScheduled(env: Env, deps: Deps): Promise<Record<string,
                            AND ((n.channel = 'whatsapp' AND COALESCE(n.delivered_at, n.read_at) IS NOT NULL)
                                 OR (n.channel <> 'whatsapp' AND n.status = 'sent'))), '9999')
             ) <= ?
-            AND NOT EXISTS (SELECT 1 FROM order_events e
-                             WHERE e.order_id = o.id AND e.source = 'staff'
-                               AND e.to_status IN ('accepting', 'rejecting') AND e.created_at > ?)
-          LIMIT ?`,
+            AND NOT ${STAFF_DECIDED_SINCE}
+          ORDER BY o.updated_at LIMIT ?`,
         at(timeout * 60_000),
-        at(DECISION_GRACE_MS),
+        graceFrom,
         BATCH,
       )) {
-        const result = await rejectOrder(env, deps, order.id, TIMEOUT_REASON, { label: "sistema (sin respuesta a tiempo)", source: "system" });
-        // Alert once the decline is done (its wording comes from the final payment status). If
-        // Stripe could not confirm, the lock's recovery finishes it or puts it in review — alerted then.
-        if (result.ok && !result.pending) {
-          await enqueueNotification(env, order.id, "auto_cancelled", now.toISOString());
+        if (await declineUndecided(env, deps, order, { label: "sistema (sin respuesta a tiempo)", source: "system" }, graceFrom, now.toISOString())) {
           report.timeouts += 1;
         }
       }
     });
   }
+  const deadline = acceptanceDeadlineMinutes(env);
+  await step("deadlines", async () => {
+    for (const order of await rows(
+      env,
+      `SELECT o.* FROM orders o
+        WHERE ((o.status = 'awaiting_acceptance' AND COALESCE(o.authorized_at, o.created_at) <= ?)
+            OR (o.status = 'needs_review' AND o.payment_status = 'authorized'
+                AND MAX(COALESCE(o.authorized_at, o.created_at),
+                        COALESCE((SELECT MAX(r.created_at) FROM order_events r
+                                   WHERE r.order_id = o.id AND r.to_status = 'needs_review'
+                                     AND r.from_status IS NOT 'needs_review'), '')) <= ?))
+          AND NOT ${STAFF_DECIDED_SINCE}
+        ORDER BY o.updated_at LIMIT ?`,
+      at(deadline * 60_000),
+      at(deadline * 60_000),
+      graceFrom,
+      BATCH,
+    )) {
+      if (await declineUndecided(env, deps, order, { label: `sistema (límite de espera: ${deadline} min)`, source: "system" }, graceFrom, now.toISOString())) {
+        report.deadlines += 1;
+      }
+    }
+  });
 
   // 3. Reminders for orders still waiting.
   const reminder = reminderMinutes(env);

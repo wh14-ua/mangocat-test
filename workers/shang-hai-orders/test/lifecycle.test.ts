@@ -306,20 +306,40 @@ describe("timeouts and reminders (cron)", () => {
     expect(w.telegram.messages().filter((m) => m.text.includes("cancelado automáticamente"))).toHaveLength(2);
   });
 
-  it("never declines an order the restaurant could not see (alerts failed, panel not opened)", async () => {
+  it("alerts failed and the panel not opened: the 30-minute clock never starts — only the hard limit, 60 min after payment, declines it", async () => {
     const w = world({ ACCEPTANCE_TIMEOUT_MINUTES: "30" });
     w.telegram.failNext({ status: 403 });
     w.telegram.failNext({ status: 403 });
     const order = await placedOrder(w);
     expect(count(w.env, "SELECT COUNT(*) AS n FROM notifications WHERE kind = 'new_order' AND status = 'sent'")).toBe(0);
-    w.advance(3 * 60 * 60_000);
+    w.advance(31 * 60_000);
     await runCron(w);
     expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "awaiting_acceptance", payment_status: "authorized" });
+    w.advance(30 * 60_000); // 61 min after payment
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "rejected", payment_status: "canceled" });
+  });
 
-    // A staff phone opens the board: from now on the 30 minutes run.
+  it("once a staff phone shows an order whose alerts failed, its 30 minutes run from then", async () => {
+    const w = world({ ACCEPTANCE_TIMEOUT_MINUTES: "30" });
+    w.telegram.failNext({ status: 403 });
+    w.telegram.failNext({ status: 403 });
+    const order = await placedOrder(w);
+    w.advance(20 * 60_000);
     const cookie = await staff(w);
-    await staffCall(w, cookie, "/api/admin/board");
+    await staffCall(w, cookie, "/api/admin/board"); // seen at minute 20
     w.advance(29 * 60_000);
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
+    w.advance(2 * 60_000); // minute 51: 31 min after it was seen, before the hard limit
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "rejected", payment_status: "canceled" });
+  });
+
+  it("without any alert channel configured, the 30-minute clock waits for the panel; the hard limit still releases the hold", async () => {
+    const w = world({ TELEGRAM_BOT_TOKEN: "", TELEGRAM_CHAT_IDS: "" });
+    const order = await placedOrder(w);
+    w.advance(59 * 60_000);
     await runCron(w);
     expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
     w.advance(2 * 60_000);
@@ -327,22 +347,16 @@ describe("timeouts and reminders (cron)", () => {
     expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "rejected", payment_status: "canceled" });
   });
 
-  it("without Telegram configured, waits for the panel instead of declining blindly", async () => {
-    const w = world({ TELEGRAM_BOT_TOKEN: "", TELEGRAM_CHAT_IDS: "" });
-    const order = await placedOrder(w);
-    w.advance(2 * 60 * 60_000);
-    await runCron(w);
-    expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
-  });
-
-  it("can switch the automatic decline off (0) until the owner confirms the policy", async () => {
+  it("ACCEPTANCE_TIMEOUT_MINUTES=0 switches off only the 30-minute clock: reminders still go out and the hard limit still applies", async () => {
     const w = world({ ACCEPTANCE_TIMEOUT_MINUTES: "0" });
     const order = await placedOrder(w);
-    w.advance(5 * 60 * 60_000);
+    w.advance(31 * 60_000); // told at once (Telegram works): the 30-minute clock would have declined it by now
     await runCron(w);
     expect(orderRow(w.env, order.orderId)?.status).toBe("awaiting_acceptance");
-    // Reminders still go out.
     expect(w.telegram.messages().some((m) => m.text.includes("sin aceptar"))).toBe(true);
+    w.advance(30 * 60_000); // 61 min after payment
+    await runCron(w);
+    expect(orderRow(w.env, order.orderId)).toMatchObject({ status: "rejected", payment_status: "canceled" });
   });
 
   it("recovers an authorisation whose webhook never arrived", async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   deliver,
+  gateStripe,
   orderRow,
   placedOrder,
   runCron,
@@ -17,26 +18,6 @@ import {
  * can undo or decline an order whose payment operation may still be running, and an
  * abandoned lock is always recovered from Stripe's real state, visibly.
  */
-
-/** Holds the first Stripe request matching `match` until release(): a slow or hanging Stripe call. */
-function gateStripe(w: World, match: (url: string) => boolean) {
-  const inner = w.deps.fetch;
-  let release!: () => void;
-  let reached!: () => void;
-  const opened = new Promise<void>((r) => (release = r));
-  const arrived = new Promise<void>((r) => (reached = r));
-  let armed = true;
-  w.deps.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    if (armed && match(url)) {
-      armed = false;
-      reached();
-      await opened;
-    }
-    return inner(input, init);
-  }) as typeof fetch;
-  return { release, arrived };
-}
 
 const pi = (w: World, id: string) => orderRow(w.env, id)?.stripe_payment_intent_id as string;
 const executedCaptures = (w: World, id: string) => {

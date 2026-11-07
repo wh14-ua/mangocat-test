@@ -1,7 +1,8 @@
 # Avisos por WhatsApp (WhatsApp Business Cloud API)
 
 Canal principal de avisos al restaurante y de códigos de acceso al panel. Telegram queda como
-alternativa (se puede activar a la vez o dejar desactivado). Documentación oficial consultada en
+alternativa (se puede activar a la vez o dejar desactivado). Para probarlo de verdad con el número
+de prueba de Meta y Stripe en modo test: entorno público de pruebas, [`SHANG_HAI_DEMO.md`](SHANG_HAI_DEMO.md). Documentación oficial consultada en
 noviembre de 2026: developers.facebook.com/documentation/business-messaging/whatsapp (mensajes,
 plantillas, códigos de error, límites, webhooks, precios, coexistencia).
 
@@ -34,7 +35,8 @@ plantillas, códigos de error, límites, webhooks, precios, coexistencia).
 | Plantilla no aprobada / pausada (132xxx) | Igual: visible en el panel como «Plantilla no aprobada o pausada». |
 | Número no autorizado en el número de prueba (131030), emisor = destinatario (131021), permisos o cuenta (10, 368…) | Visible en el panel como configuración a revisar. |
 | Número sin WhatsApp (131026) | Fallido sin reintentos; el panel lo muestra. |
-| Rechazo automático | Solo cuenta desde que WhatsApp **confirma la entrega** (o el pedido se ve en el panel). Un aviso aceptado pero no entregado no inicia el plazo. |
+| Rechazo automático | El plazo de 30 min cuenta desde que WhatsApp **confirma la entrega** (o el pedido se ve en el panel): un aviso aceptado pero no entregado no lo inicia. |
+| Meta falla para siempre (token, plantilla, número, webhook) | **Límite máximo independiente de WhatsApp:** 60 min después del pago el pedido se rechaza y se libera el dinero aunque nadie haya sido avisado. Stripe se consulta antes de anular o devolver nada; si no responde, el pedido sigue igual y aceptable, y se reintenta al minuto siguiente. |
 
 ## 3. ¿Sirve el número de WhatsApp Business que ya tiene el restaurante?
 

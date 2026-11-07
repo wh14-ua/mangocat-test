@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ensureSchema, migrate } from "../../../scripts/local-stack/run.mjs";
-import { cloudState, d1, eventually, http, placedOrder, printLogsOnFailure, staff, staffSignIn, suiteStack, type Stack } from "./stack-client";
+import { cloudState, customerView, d1, eventually, http, placedOrder, printLogsOnFailure, staff, staffSignIn, suiteStack, type Stack } from "./stack-client";
 
 /**
  * WhatsApp Cloud API alerts on the real Worker (workerd + local D1) against the fake Cloud API:
@@ -93,6 +93,33 @@ describe("WhatsApp alerts on the real Worker", () => {
       return Boolean((await whatsappAlert(order.orderId))?.deliveredAt);
     }, "the alert after the token is renewed", 60_000);
     expect((await board()).health.whatsapp.problem).toBeNull();
+  }, 90_000);
+
+  it("WhatsApp failing for good: the hard limit still releases the customer's money (Stripe read before the cancel)", async () => {
+    await control("token", { expired: true });
+    try {
+      const order = await placedOrder(stack);
+      await eventually(async () => (await whatsappAlert(order.orderId))?.lastError?.startsWith("190:"), "the 190 failure");
+      // Nobody was told and nobody opens the panel. Two hours pass (one-off write: the payment's time).
+      const twoHoursAgo = new Date(Date.now() - 2 * 3_600_000).toISOString();
+      d1(stack, `UPDATE orders SET authorized_at = '${twoHoursAgo}' WHERE id = '${order.orderId}'`);
+      const before = (await cloudState(stack)).calls.length;
+      const view = await eventually(async () => {
+        await stack.runCron();
+        const seen = await customerView(stack, order);
+        return seen.status === "rejected" ? seen : null;
+      }, "the decline at the hard limit", 60_000);
+      expect(view).toMatchObject({ status: "rejected", paymentStatus: "canceled", rejectionReason: "El restaurante no ha podido confirmar el pedido a tiempo" });
+      const cloud = await cloudState(stack);
+      const intent = cloud.intents.find((i) => i.order === order.orderId);
+      expect(intent?.status).toBe("canceled");
+      const calls = cloud.calls.slice(before).map((c) => `${c.method} ${c.path.split("?")[0]}`);
+      const cancel = calls.indexOf(`POST /v1/payment_intents/${intent?.id}/cancel`);
+      expect(cancel).toBeGreaterThan(0);
+      expect(calls.slice(0, cancel)).toContain(`GET /v1/payment_intents/${intent?.id}`);
+    } finally {
+      await control("token", { expired: false });
+    }
   }, 90_000);
 
   it("receipts sent while the Worker restarts are retried by Meta and still arrive", async () => {

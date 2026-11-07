@@ -85,8 +85,11 @@ export interface Env {
   PREP_TIME_OPTIONS?: string;
   /** Minutes without a decision before a reminder alert (0 = never). */
   ACCEPTANCE_REMINDER_MINUTES?: string;
-  /** Minutes without a decision before the order is declined and the hold released (0 = never). */
+  /** Minutes without a decision, counted from when the restaurant was told, before the order is
+   *  declined and the hold released (0 = only the hard limit below applies). */
   ACCEPTANCE_TIMEOUT_MINUTES?: string;
+  /** Hard limit in minutes from the payment, whatever the alerts did (default 60; cannot be 0). */
+  ACCEPTANCE_DEADLINE_MINUTES?: string;
   /** "all" (default), "api" (storefront API + webhook + cron) or "panel" (staff panel only). */
   WORKER_ROLE?: string;
 

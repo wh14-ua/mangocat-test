@@ -1,11 +1,13 @@
 # Shang Hai — informe de QA del sistema de pedidos
 
-Fecha: 2026-11-06 · Rama: `feat/shang-hai-ordering` (PR #2) · Pagos: solo modo de pruebas, sin dinero real.
+Fecha: 2026-11-07 · Rama: `feat/shang-hai-ordering` (PR #2) · Pagos: solo modo de pruebas, sin dinero real.
 
 ## 1. Resultado
 
 - **Errores críticos o altos conocidos sin resolver: ninguno.** Los dos fallos de la demostración
-  (A y B) y los dos fallos altos de la auditoría (bloqueos sin dueño y avisos perdidos) están
+  (A y B), los dos fallos altos de la auditoría (bloqueos sin dueño y avisos perdidos) y los dos
+  de la revisión del rechazo automático (WA-4: dinero retenido sin límite si Meta falla para
+  siempre; AUTO-1: el cron podía rechazar y reembolsar un pedido recién aceptado) están
   reproducidos con pruebas que fallaban antes de la corrección y pasan después.
 - **Verificación automática completa:** `npm run qa:full` termina en verde (tabla del apartado 3).
 - **Nivel de verificación:** A (unitarias y simulaciones) y B (navegador + Worker real + D1 local,
@@ -97,6 +99,8 @@ código anterior y falló.
 | WA-1 | Media | Varios pedidos pagados a la vez: dos avisos al mismo WhatsApp salían a la vez y Meta rechazaba uno (131056, reintento más tarde) | El ritmo de 6 s se comprobaba leyendo y luego enviando: dos ejecuciones simultáneas (webhook + cron) pasaban la comprobación | Turno por destinatario tomado con una sola operación condicional en D1 | `whatsapp.test.ts` «take turns atomically» (falla con comprobar-y-luego-enviar → pasa) |
 | WA-2 | Media | Con carga (30 pedidos pagados a la vez en integración) aún aparecía algún 131056 | El turno se contaba desde el inicio de la petición; Meta cuenta entre llegadas: una petición lenta seguida de una rápida llegaba con menos de 6 s | El siguiente turno se cuenta desde la respuesta de Meta (nunca retrocede) | `whatsapp.test.ts` «from Meta's answer» (falla sin la corrección → pasa); integración |
 | WA-3 | Baja | En una ráfaga de pedidos, el segundo aviso y siguientes al mismo número esperaban a la siguiente pasada del cron (≈1 por minuto) | El aviso aplazado por el ritmo solo lo recogía el cron | Cada envío espera su turno en la misma ejecución (15 s tras el pago, 40 s por pasada del cron); si el pedido se gestionó mientras esperaba, no se envía; el código de acceso también espera su turno (≤ 7 s) | `whatsapp.test.ts` (ráfaga de 9 pedidos, pedido gestionado durante la espera, código tras un aviso) |
+| WA-4 | Alta | Si Meta fallaba para siempre (token caducado, plantilla sin aprobar, número no autorizado, webhook sin suscribir) y nadie abría el panel, el pedido quedaba pendiente con el dinero del cliente retenido hasta que la autorización caducara en Stripe (unos 7 días) | El rechazo automático solo empezaba a contar cuando WhatsApp confirmaba la entrega o el panel mostraba el pedido | **Límite máximo independiente de WhatsApp** (`ACCEPTANCE_DEADLINE_MINUTES`, 60 min desde el pago, no desactivable): se consulta Stripe antes de nada; si no responde, el pedido queda igual y se reintenta; una retención EN REVISIÓN se libera 60 min después de empezar la incidencia; desde revisión nunca se devuelve un cobro | `deadline.test.ts` (fallaba entero antes), propiedad «ninguna retención en la tarjeta al estabilizarse» con WhatsApp caído, integración |
+| AUTO-1 | Alta | El rechazo automático podía rechazar **y reembolsar** un pedido que un móvil acababa de aceptar (ya en preparación, cobrado) | El cron seleccionaba los pedidos vencidos y luego los rechazaba uno a uno sin comprobar que seguían pendientes: un pedido aceptado mientras el cron trabajaba con otro se trataba como «en preparación → cancelar» | El rechazo automático solo actúa sobre el estado en que seleccionó el pedido y vuelve a comprobar, justo antes, que nadie del personal ha empezado a decidir | `deadline.test.ts` «a phone accepts while the cron is busy» (antes: pedido rechazado y reembolsado → ahora sigue en preparación) |
 | CI-1 | Baja (pruebas) | CI de integración rojo de forma intermitente: `SQLITE_BUSY_SNAPSHOT` y esperas agotadas | Las pruebas leían D1 con `wrangler d1 execute` (otro proceso sobre el mismo SQLite) dentro de bucles de espera mientras el Worker escribía | Bucles de espera a través de la API del Worker; lecturas sueltas con reintento ante `SQLITE_BUSY`; volcado de los logs del Worker y del simulador cuando una prueba falla | integración repetida (ver sección 3) |
 
 ## 5. Garantías comprobadas automáticamente
@@ -115,9 +119,12 @@ autorizaciones caducadas, en los dos modos de captura. Tras **cada paso** se com
 
 Y **al estabilizarse** (Stripe sano, webhooks entregados, cron ejecutado): ningún bloqueo
 pendiente, ningún pedido rechazado se queda con el dinero ni con la retención en la tarjeta,
-toda incidencia EN REVISIÓN tiene su aviso y D1 coincide con Stripe. Comprobación de que estas
-pruebas detectan errores reales: tres mutaciones deliberadas del código (reembolso pendiente
-mostrado como completado; rechazo sin devolución; bloqueos siempre caducados) fueron detectadas.
+**ninguna retención queda en la tarjeta de un pedido que nadie aceptó** —también en las
+secuencias en las que WhatsApp falla para siempre y nadie es avisado—, toda incidencia EN
+REVISIÓN tiene su aviso (cuando hay un canal que funcione) y D1 coincide con Stripe. Comprobación
+de que estas pruebas detectan errores reales: cuatro mutaciones deliberadas del código (reembolso
+pendiente mostrado como completado; rechazo sin devolución; bloqueos siempre caducados; límite
+máximo desactivado) fueron detectadas.
 El fuzzing de checkout, acciones del personal y webhooks nunca obtiene un 500 ni un precio
 distinto al del servidor.
 
@@ -220,7 +227,8 @@ Implementado sobre la misma cola de avisos (Telegram queda como alternativa). Gu
 | Turnos por destinatario **atómicos**: dos entregas simultáneas (cron + webhook, varios pedidos pagados a la vez) no envían a la vez | `whatsapp.test.ts` (fallaba antes de la corrección: comprobar-y-luego-enviar), `integration/concurrency.test.ts` (30 pedidos pagados a la vez) | ✅ |
 | Los 6 s se cuentan desde la **respuesta** de Meta: una petición lenta seguida de una rápida ya no llega con menos de 6 s (131056 visto en integración con carga) | `whatsapp.test.ts` (falla sin la corrección), integración | ✅ |
 | Ráfaga de pedidos: avisos cada ~6 s dentro de la misma ejecución (antes: uno por pasada del cron, un minuto); un aviso que esperó turno no sale si el pedido ya se gestionó; el código de acceso espera su turno | `whatsapp.test.ts` | ✅ |
-| Rechazo automático: solo cuenta un aviso de WhatsApp **entregado** | `whatsapp.test.ts` | ✅ |
+| Rechazo automático: el plazo de 30 min solo cuenta un aviso de WhatsApp **entregado** | `whatsapp.test.ts` | ✅ |
+| **Límite máximo independiente de WhatsApp** (60 min desde el pago): con el token caducado, la plantilla sin aprobar, el número no autorizado o el webhook sin suscribir, el pedido se rechaza y la retención se libera; Stripe se lee antes de anular (GET antes de `cancel`) o devolver; Stripe sin responder deja el pedido igual y aceptable; una retención que Stripe ya soltó no se anula otra vez; desde EN REVISIÓN nunca se devuelve un cobro (tampoco si se cobró desde el Dashboard un instante antes, ni en la recuperación tras un corte) | `deadline.test.ts` (26 pruebas, 6 mutaciones detectadas), propiedades, `integration/whatsapp.test.ts` (Worker real) | ✅ |
 | Código de acceso al panel por WhatsApp (plantilla de autenticación con «Copiar código»), solo a números autorizados | `whatsapp.test.ts`, E2E | ✅ |
 | Migración 0004 (reconstrucción de avisos y sesiones sin perder datos ni ids) | `migration.test.ts`, migraciones con wrangler | ✅ |
 | Recorrido en navegador: aviso en el WhatsApp del propietario → «Ver pedido» → panel → ACEPTAR → Stripe cobra → el cliente lo ve; recibos de entrega y lectura en D1 | E2E del sistema real | ✅ |

@@ -215,11 +215,25 @@ export function reminderMinutes(env: Env): number {
 }
 
 /**
- * Without a decision for this long, the order is declined automatically and the hold on
- * the customer's card released, so nobody waits days for an answer (0 disables it).
+ * Without a decision for this long after the restaurant was told (alert delivered, or the panel
+ * showed it), the order is declined automatically and the hold on the customer's card released
+ * (0 switches this clock off; the hard limit, acceptanceDeadlineMinutes, still applies).
  */
 export function acceptanceTimeoutMinutes(env: Env): number {
   return minutesVar(env.ACCEPTANCE_TIMEOUT_MINUTES, 30, 24 * 60);
+}
+
+const DEFAULT_DEADLINE_MINUTES = 60;
+
+/**
+ * The hard limit, counted from the payment and independent of every alert channel: an order
+ * nobody decided this long after the customer paid is declined and the money released, even if
+ * WhatsApp (or Telegram, or the panel) never showed it to anyone. It cannot be switched off
+ * (0 means the default) and is never shorter than the acceptance timeout. Default 60, max 24 h.
+ */
+export function acceptanceDeadlineMinutes(env: Env): number {
+  const configured = minutesVar(env.ACCEPTANCE_DEADLINE_MINUTES, DEFAULT_DEADLINE_MINUTES, 24 * 60) || DEFAULT_DEADLINE_MINUTES;
+  return Math.max(configured, acceptanceTimeoutMinutes(env));
 }
 
 export type TelegramConfig = { token: string; chatIds: string[] };
